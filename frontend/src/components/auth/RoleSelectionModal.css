@@ -1,0 +1,176 @@
+.role-modal {
+  max-width: 700px;
+}
+
+.modal-back {
+  position: absolute;
+  top: var(--spacing-4);
+  left: var(--spacing-4);
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  padding: var(--spacing-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  z-index: 10;
+}
+
+.modal-back:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.role-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-8);
+}
+
+@media (min-width: 600px) {
+  .role-cards-container {
+    flex-direction: row;
+    align-items: stretch;
+  }
+}
+
+.role-card {
+  flex: 1;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-6);
+  cursor: pointer;
+  position: relative;
+  transition: all var(--transition-base);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+  /* Reset min-width to prevent cards from becoming too narrow on very small screens if placed side by side */
+  min-width: 0;
+}
+
+.role-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.parent-card:hover {
+  border-color: var(--color-secondary);
+}
+
+.tutor-card:hover {
+  border-color: var(--color-primary);
+}
+
+.role-card.selected {
+  background-color: rgba(var(--color-primary-rgb), 0.05); /* Assuming rgb vars exist, but let's just use hex fallback */
+  background-color: var(--color-surface); /* Fallback */
+}
+@supports (background-color: color-mix(in srgb, var(--color-primary) 5%, transparent)) {
+  .role-card.selected.parent-card {
+    background-color: color-mix(in srgb, var(--color-secondary) 5%, transparent);
+  }
+  .role-card.selected.tutor-card {
+    background-color: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  }
+}
+
+.role-card.selected.parent-card {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 1px var(--color-secondary);
+}
+
+.role-card.selected.tutor-card {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.role-icon-wrapper {
+  margin-bottom: var(--spacing-4);
+}
+
+.role-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-base);
+}
+
+.parent-card:hover .role-icon, .parent-card.selected .role-icon {
+  color: var(--color-secondary);
+}
+
+.tutor-card:hover .role-icon, .tutor-card.selected .role-icon {
+  color: var(--color-primary);
+}
+
+.role-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-2);
+  color: var(--color-text);
+}
+
+.role-desc {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+.role-check {
+  position: absolute;
+  top: var(--spacing-4);
+  right: var(--spacing-4);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all var(--transition-base);
+}
+
+.parent-card .role-check {
+  background-color: var(--color-secondary);
+}
+
+.tutor-card .role-check {
+  background-color: var(--color-primary);
+}
+
+.role-card.selected .role-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.continue-btn {
+  margin-bottom: var(--spacing-4);
+}
+
+.role-footer {
+  text-align: center;
+}
+
+.text-btn {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.text-btn:hover {
+  text-decoration: underline;
+}

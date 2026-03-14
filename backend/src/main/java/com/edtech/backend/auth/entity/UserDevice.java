@@ -1,0 +1,49 @@
+package com.edtech.backend.auth.entity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "user_devices")
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+public class UserDevice {
+
+    @Id
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @Column(updatable = false, nullable = false)
+    private UUID id;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(name = "fcm_token", nullable = false, unique = true)
+    private String fcmToken;
+
+    @Column(name = "device_name", length = 100)
+    private String deviceName;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @Builder.Default
+    private Instant createdAt = Instant.now();
+}

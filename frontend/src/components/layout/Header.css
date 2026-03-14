@@ -1,0 +1,91 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: rgba(var(--color-surface-rgb), 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface); /* Fallback */
+}
+
+/* To support opacity with css variables, we need to redefine them as rgb values if we want true glassmorphism, 
+but for now we just use a slight opacity on the surface color by using the hex color and opacity or modern css.
+Modern CSS supports relative colors, but let's stick to simple backdrop. */
+.header {
+  background-color: var(--color-surface);
+}
+@supports (backdrop-filter: blur(10px)) {
+  .header {
+    background-color: color-mix(in srgb, var(--color-surface) 85%, transparent);
+    backdrop-filter: blur(10px);
+  }
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4rem; /* 64px */
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.logo-text {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .nav-links {
+    display: flex;
+    gap: var(--spacing-6);
+  }
+}
+
+.nav-link {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-base);
+}
+
+.nav-link:hover {
+  color: var(--color-primary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.theme-toggle:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
+}

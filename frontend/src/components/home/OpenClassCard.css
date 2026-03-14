@@ -1,0 +1,87 @@
+.class-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-5);
+  transition: all var(--transition-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-width: 320px;
+  position: relative;
+  overflow: hidden;
+}
+
+.class-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background-color: var(--color-success);
+}
+
+.class-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+  border-color: var(--color-success);
+}
+
+.class-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.class-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.class-fee {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  margin-top: var(--spacing-1);
+}
+
+.fee-unit {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.class-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  flex-grow: 1;
+  padding-top: var(--spacing-2);
+  border-top: 1px dashed var(--color-border);
+}
+
+.class-info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+.class-icon {
+  color: var(--color-primary-light);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.class-footer {
+  margin-top: auto;
+  padding-top: var(--spacing-2);
+}

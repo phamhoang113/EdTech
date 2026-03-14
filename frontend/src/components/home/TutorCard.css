@@ -1,0 +1,131 @@
+.tutor-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-5);
+  transition: all var(--transition-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-width: 300px;
+}
+
+.tutor-card:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-light);
+  transform: translateY(-4px);
+}
+
+.tutor-header {
+  display: flex;
+  gap: var(--spacing-4);
+  align-items: center;
+}
+
+.avatar-wrapper {
+  position: relative;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-background), var(--color-surface-hover));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid var(--color-border);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.online-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--color-surface);
+}
+
+.online-badge.online {
+  background-color: var(--color-success);
+}
+
+.online-badge.offline {
+  background-color: var(--color-text-muted);
+}
+
+.tutor-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-1);
+}
+
+.tutor-rating {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: 0.875rem;
+}
+
+.rating-score {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.rating-count {
+  color: var(--color-text-secondary);
+}
+
+.tutor-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  flex-grow: 1;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+.info-icon {
+  color: var(--color-primary-light);
+}
+
+.highlight-rate {
+  margin-top: auto;
+  padding-top: var(--spacing-2);
+}
+
+.rate-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.rate-unit {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.tutor-footer {
+  margin-top: var(--spacing-2);
+}
