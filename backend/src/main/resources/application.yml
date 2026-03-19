@@ -1,0 +1,75 @@
+spring:
+  application:
+    name: edtech-backend
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/edtech}
+    username: ${DB_USER:edtech}
+    password: ${DB_PASS:edtech_secret}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: EdTech Backend
+    version: 0.0.1-SNAPSHOT
+    description: Hệ thống kết nối gia sư - phụ huynh - học sinh
+
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET:849c73b0a701b22e176da93c5d6df2400f4f9f7baaa53e1a0b6d91cd369a13b6}
+      expiration: ${JWT_EXPIRY_MS:900000}
+      refresh-token:
+        expiration: ${JWT_REFRESH_EXPIRY_MS:604800000}
+
+
+
+logging:
+  level:
+    com.edtech: DEBUG
+    org.springframework.security: WARN
+
+app:
+  environment: ${APP_ENV:development}
+  # Set APP_ENV=production để bật OTP thật (sinh ngẫu nhiên, gửi SMS)
+  # Mặc định development → OTP luôn là 123456

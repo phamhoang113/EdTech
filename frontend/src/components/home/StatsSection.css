@@ -1,5 +1,6 @@
 .stats-section {
-  padding: var(--spacing-12) 0;
+  display: none;
+  padding: var(--spacing-6) 0;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
   background-color: var(--color-surface-hover);
@@ -8,12 +9,17 @@
 .stats-container {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-8);
+  gap: var(--spacing-5);
 }
 
 @media (min-width: 640px) {
+  .stats-section {
+    display: block;
+    padding: var(--spacing-12) 0;
+  }
   .stats-container {
     flex-direction: row;
+    gap: var(--spacing-8);
     justify-content: space-around;
     align-items: center;
   }
@@ -47,10 +53,16 @@
 }
 
 .stat-number {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: var(--color-text);
   margin-bottom: 2px;
+}
+
+@media (min-width: 640px) {
+  .stat-number {
+    font-size: 1.5rem;
+  }
 }
 
 .stat-text {

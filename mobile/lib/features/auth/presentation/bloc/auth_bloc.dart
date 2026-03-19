@@ -1,36 +1,26 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../domain/usecases/get_auth_user_usecase.dart';
-import '../../domain/usecases/login_usecase.dart';
-import '../../domain/usecases/logout_usecase.dart';
-import '../../domain/usecases/register_usecase.dart';
+import '../../data/repositories/auth_repository_impl.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
 @injectable
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final LoginUseCase _loginUseCase;
-  final RegisterUseCase _registerUseCase;
-  final LogoutUseCase _logoutUseCase;
-  final GetAuthUserUseCase _getAuthUserUseCase;
+  final AuthRepositoryImpl _authRepository;
 
-  AuthBloc(
-    this._loginUseCase,
-    this._registerUseCase,
-    this._logoutUseCase,
-    this._getAuthUserUseCase,
-  ) : super(AuthInitial()) {
+  AuthBloc(this._authRepository) : super(AuthInitial()) {
     on<AuthStarted>(_onAuthStarted);
     on<AuthLoginRequested>(_onAuthLoginRequested);
     on<AuthRegisterRequested>(_onAuthRegisterRequested);
+    on<AuthVerifyOtpRequested>(_onAuthVerifyOtpRequested);
     on<AuthLogoutRequested>(_onAuthLogoutRequested);
   }
 
   Future<void> _onAuthStarted(AuthStarted event, Emitter<AuthState> emit) async {
-    final user = await _getAuthUserUseCase();
+    final user = await _authRepository.getAuthenticatedUser();
     if (user != null) {
-      emit(AuthAuthenticated(user));
+      emit(user);
     } else {
       emit(AuthUnauthenticated());
     }
@@ -38,26 +28,44 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onAuthLoginRequested(AuthLoginRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
-    final result = await _loginUseCase(LoginParams(phone: event.phone, password: event.password));
+    final result = await _authRepository.login(event.phone, event.password);
     result.fold(
       (failure) => emit(AuthError(failure.message)),
-      (user) => emit(AuthAuthenticated(user)),
+      (authState) => emit(authState),
     );
   }
 
-  Future<void> _onAuthRegisterRequested(AuthRegisterRequested event, Emitter<AuthState> emit) async {
+  Future<void> _onAuthRegisterRequested(
+    AuthRegisterRequested event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
-    final result = await _registerUseCase(
-      RegisterParams(phone: event.phone, password: event.password, role: event.role),
+    final result = await _authRepository.register(
+      event.phone,
+      event.password,
+      event.role,
+      fullName: event.fullName,
     );
     result.fold(
       (failure) => emit(AuthError(failure.message)),
-      (user) => emit(AuthAuthenticated(user)),
+      (otpToken) => emit(AuthOtpSent(phone: event.phone, otpToken: otpToken)),
+    );
+  }
+
+  Future<void> _onAuthVerifyOtpRequested(
+    AuthVerifyOtpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    final result = await _authRepository.verifyOtp(event.otpToken, event.code);
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (authState) => emit(authState),
     );
   }
 
   Future<void> _onAuthLogoutRequested(AuthLogoutRequested event, Emitter<AuthState> emit) async {
-    await _logoutUseCase();
+    await _authRepository.logout();
     emit(AuthUnauthenticated());
   }
 }

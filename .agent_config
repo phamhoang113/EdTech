@@ -1,0 +1,61 @@
+---
+version: "1.0"
+project: EdTech Platform
+
+rules:
+  - path: docs/backend-coding-standards.md
+    scope: backend
+    enforce: always
+    description: "Backend coding standards: Entity naming, DTO split, enum constants, no hardcode"
+---
+
+# EdTech Agent Config
+
+## Project Overview
+Nền tảng kết nối gia sư - phụ huynh - học sinh.  
+Stack: Spring Boot 3.5 / Java 21 · React 19/Vite · Flutter · PostgreSQL · Redis
+
+## Backend Rules (BẮTBUỘC tuân thủ)
+
+Đọc `docs/backend-coding-standards.md` trước khi code backend. Tóm tắt:
+
+### 1. Entity — hậu tố `Entity`
+```
+UserEntity, OtpCodeEntity, BookingSessionEntity
+```
+
+### 2. DTO — tách 3 loại rõ ràng
+```
+dto/request/   → *Request.java      (client → server)
+dto/response/  → *Response.java     (server → client, wrap bằng ApiResponse<T>)
+dto/payload/   → *Payload.java      (nội bộ: event, queue, job)
+```
+
+### 3. Enum — không hardcode String
+```java
+// ✅ enum OtpPurpose { REGISTER, RESET_PASSWORD }
+// ✅ enum UserRole { ADMIN, TUTOR, PARENT, STUDENT }
+// ✅ enum BookingStatus { PENDING, CONFIRMED, CANCELLED, COMPLETED }
+// ❌ String role = "TUTOR"
+// ❌ findBy...(phone, "REGISTER")
+```
+
+### 4. Constants — không hardcode số/chuỗi ma thuật
+```java
+// ✅ private static final int MAX_FAILED_ATTEMPTS = 5;
+// ✅ @Value("${app.otp.expiration-minutes:5}") private int otpExpMinutes;
+// ❌ if (failedAttempts >= 5)
+// ❌ if (env.equals("production"))
+```
+
+### 5. API Response — luôn dùng `ApiResponse<T>`
+### 6. Exception — dùng `BusinessRuleException`, `EntityNotFoundException`
+### 7. Inject — dùng `@RequiredArgsConstructor`, không `@Autowired` field
+
+## Frontend Rules
+- Design system: `docs/` (primary #6366F1, font Inter, glassmorphism)
+- Đồng bộ màu sắc web ↔ mobile
+
+## Mobile Rules  
+- Dùng BLoC pattern
+- API call qua DioClient (baseURL từ BuildConfig)

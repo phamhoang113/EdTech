@@ -1,14 +1,17 @@
 package com.edtech.backend.auth.service.impl;
 
-import com.edtech.backend.auth.dto.LoginRequest;
-import com.edtech.backend.auth.dto.RegisterRequest;
-import com.edtech.backend.auth.dto.TokenRefreshRequest;
-import com.edtech.backend.auth.dto.TokenResponse;
-import com.edtech.backend.auth.dto.VerifyOtpRequest;
-import com.edtech.backend.auth.entity.OtpCode;
-import com.edtech.backend.auth.entity.RefreshToken;
-import com.edtech.backend.auth.entity.User;
-import com.edtech.backend.auth.entity.UserDevice;
+import com.edtech.backend.auth.dto.request.LoginRequest;
+import com.edtech.backend.auth.dto.request.RegisterRequest;
+import com.edtech.backend.auth.dto.request.TokenRefreshRequest;
+import com.edtech.backend.auth.dto.request.VerifyOtpRequest;
+import com.edtech.backend.auth.dto.response.RegisterResponse;
+import com.edtech.backend.auth.dto.response.TokenResponse;
+import com.edtech.backend.auth.entity.OtpCodeEntity;
+import com.edtech.backend.auth.entity.RefreshTokenEntity;
+import com.edtech.backend.auth.entity.UserDeviceEntity;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.enums.OtpPurpose;
+import com.edtech.backend.auth.enums.UserRole;
 import com.edtech.backend.auth.repository.OtpCodeRepository;
 import com.edtech.backend.auth.repository.RefreshTokenRepository;
 import com.edtech.backend.auth.repository.UserDeviceRepository;
@@ -19,6 +22,7 @@ import com.edtech.backend.core.exception.EntityNotFoundException;
 import com.edtech.backend.security.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +33,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -44,118 +49,125 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    private static final int MAX_FAILED_ATTEMPTS = 5;
-    private static final int LOCKOUT_EXPIRATION_MINUTES = 15;
-    private static final int OTP_EXPIRATION_MINUTES = 5;
+    /** Nếu không phải PRODUCTION → OTP mặc định là 123456 */
+    @Value("${app.environment:development}")
+    private String appEnvironment;
+
+    // ─────────── Constants ───────────
+    private static final String DEV_OTP_CODE        = "123456";
+    private static final int    MAX_FAILED_ATTEMPTS  = 5;
+    private static final int    LOCKOUT_MINUTES      = 15;
+    private static final int    OTP_EXPIRY_MINUTES   = 5;
+    private static final long   REFRESH_TOKEN_TTL_MS = 604_800_000L; // 7 days
+    private static final String PROD_ENV             = "production";
+
+    // ─────────── Auth API ───────────
 
     @Override
     @Transactional
-    public void register(RegisterRequest request) {
+    public RegisterResponse register(RegisterRequest request) {
         log.info("Registering user with phone: {}", request.getPhone());
-        
+
         if (request.getPhone() != null && userRepository.existsByPhoneAndIsDeletedFalse(request.getPhone())) {
             throw new BusinessRuleException("Phone number already exists.");
         }
-        if (request.getUsername() != null && userRepository.existsByUsernameAndIsDeletedFalse(request.getUsername())) {
-            throw new BusinessRuleException("Username already exists.");
-        }
-        if (request.getPhone() == null && request.getUsername() == null) {
-            throw new BusinessRuleException("Either phone or username must be provided.");
+        if (request.getPhone() == null) {
+            throw new BusinessRuleException("Phone must be provided.");
         }
 
-        User user = User.builder()
+        UserEntity user = UserEntity.builder()
                 .phone(request.getPhone())
-                .username(request.getUsername())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .role(request.getRole())
-                .isActive(false) // Needs OTP verification
+                .isActive(false)
                 .isDeleted(false)
                 .failedAttempts(0)
                 .build();
         userRepository.save(user);
 
         if (request.getPhone() != null) {
-            generateAndSendOtp(request.getPhone(), "REGISTER");
+            OtpCodeEntity otp = generateAndSendOtp(request.getPhone(), OtpPurpose.REGISTER);
+            return RegisterResponse.builder()
+                    .otpToken(otp.getOtpToken().toString())
+                    .message(isProduction()
+                            ? "OTP has been sent to your phone."
+                            : "[DEV] OTP is " + DEV_OTP_CODE + ". otpToken: " + otp.getOtpToken())
+                    .build();
         } else {
-            // For students without phone, auto-activate for now, or require parent to activate.
             user.setIsActive(true);
             userRepository.save(user);
+            return RegisterResponse.builder()
+                    .message("Account created and activated (no phone, no OTP required).")
+                    .build();
         }
     }
 
     @Override
     @Transactional
     public TokenResponse verifyOtp(VerifyOtpRequest request) {
-        OtpCode otp = otpCodeRepository.findTopByPhoneAndPurposeAndIsUsedFalseOrderByCreatedAtDesc(request.getPhone(), "REGISTER")
-                .orElseThrow(() -> new BusinessRuleException("No active OTP found."));
+        OtpCodeEntity otp = otpCodeRepository.findByOtpTokenAndIsUsedFalse(UUID.fromString(request.getOtpToken()))
+                .orElseThrow(() -> new BusinessRuleException("Invalid or already used OTP token."));
 
         if (otp.getExpiresAt().isBefore(Instant.now())) {
             throw new BusinessRuleException("OTP has expired.");
         }
-
         if (!otp.getCode().equals(request.getCode())) {
             throw new BusinessRuleException("Invalid OTP code.");
         }
 
-        // Mark OTP as used
         otp.setIsUsed(true);
         otpCodeRepository.save(otp);
 
-        // Activate User
-        User user = userRepository.findByPhoneAndIsDeletedFalse(request.getPhone())
+        UserEntity user = userRepository.findByPhoneAndIsDeletedFalse(otp.getPhone())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         user.setIsActive(true);
         userRepository.save(user);
 
-        return generateTokenResponse(user, null);
+        return generateTokenResponse(user);
     }
 
     @Override
     @Transactional
     public TokenResponse login(LoginRequest request) {
-        String identifier = request.getPhone() != null ? request.getPhone() : request.getUsername();
+        String identifier = request.getPhone();
         log.info("Logging in user: {}", identifier);
 
-        User user = userRepository.findByPhoneAndIsDeletedFalse(identifier)
-                .orElseGet(() -> userRepository.findByUsernameAndIsDeletedFalse(identifier)
-                        .orElseThrow(() -> new BusinessRuleException("Invalid credentials.")));
+        UserEntity user = userRepository.findByPhoneAndIsDeletedFalse(identifier)
+                .orElseThrow(() -> new BusinessRuleException("Invalid credentials."));
 
-        // Check lock status
         if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(Instant.now())) {
             throw new BusinessRuleException("Account is temporarily locked due to too many failed attempts.");
         }
 
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(identifier, request.getPassword()));
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(identifier, request.getPassword()));
         } catch (Exception ex) {
-            // Handle failed attempt
             int newAttempts = user.getFailedAttempts() + 1;
             user.setFailedAttempts(newAttempts);
             if (newAttempts >= MAX_FAILED_ATTEMPTS) {
-                user.setLockedUntil(Instant.now().plus(LOCKOUT_EXPIRATION_MINUTES, ChronoUnit.MINUTES));
+                user.setLockedUntil(Instant.now().plus(LOCKOUT_MINUTES, ChronoUnit.MINUTES));
             }
             userRepository.save(user);
             throw new BusinessRuleException("Invalid credentials.");
         }
 
-        // Reset failed attempts on success
         user.setFailedAttempts(0);
         user.setLockedUntil(null);
         userRepository.save(user);
 
-        // Handle Device FCM Token
         if (request.getFcmToken() != null && !request.getFcmToken().isBlank()) {
             saveUserDevice(user, request.getFcmToken());
         }
 
-        return generateTokenResponse(user, null); // Provide actual Spring security user details below
+        return generateTokenResponse(user);
     }
 
     @Override
     @Transactional
     public TokenResponse refreshToken(TokenRefreshRequest request) {
-        RefreshToken token = refreshTokenRepository.findByTokenHash(request.getRefreshToken())
+        RefreshTokenEntity token = refreshTokenRepository.findByTokenHash(request.getRefreshToken())
                 .orElseThrow(() -> new BusinessRuleException("Invalid refresh token."));
 
         if (token.getExpiresAt().isBefore(Instant.now())) {
@@ -163,25 +175,25 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessRuleException("Refresh token has expired.");
         }
 
-        User user = token.getUser();
-        return generateTokenResponse(user, null);
+        return generateTokenResponse(token.getUser());
     }
 
-    private TokenResponse generateTokenResponse(User user, String fcmToken) {
-        org.springframework.security.core.userdetails.User userDetails = new org.springframework.security.core.userdetails.User(
-                user.getPhone() != null ? user.getPhone() : user.getUsername(),
-                user.getPasswordHash(),
-                java.util.Collections.emptyList() // Normally map authorities
-        );
+    // ─────────── Private Helpers ───────────
+
+    private TokenResponse generateTokenResponse(UserEntity user) {
+        org.springframework.security.core.userdetails.User userDetails =
+                new org.springframework.security.core.userdetails.User(
+                        user.getPhone(),
+                        user.getPasswordHash(),
+                        java.util.Collections.emptyList());
 
         String jwt = jwtService.generateToken(userDetails);
         String refreshTokenStr = jwtService.generateRefreshToken(userDetails);
 
-        // Save refresh token
-        RefreshToken rt = RefreshToken.builder()
+        RefreshTokenEntity rt = RefreshTokenEntity.builder()
                 .user(user)
                 .tokenHash(refreshTokenStr)
-                .expiresAt(Instant.now().plusMillis(604800000)) // 7 days from JwtService
+                .expiresAt(Instant.now().plusMillis(REFRESH_TOKEN_TTL_MS))
                 .build();
         refreshTokenRepository.save(rt);
 
@@ -194,26 +206,44 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-    private void generateAndSendOtp(String phone, String purpose) {
-        String code = String.format("%06d", new Random().nextInt(999999));
-        OtpCode otp = OtpCode.builder()
+    /**
+     * Sinh OTP, lưu DB và trả về OtpCodeEntity để lấy otpToken.
+     * Non-PRODUCTION: OTP luôn là 123456 để dễ test.
+     */
+    private OtpCodeEntity generateAndSendOtp(String phone, OtpPurpose purpose) {
+        String code = isProduction()
+                ? String.format("%06d", new Random().nextInt(999_999))
+                : DEV_OTP_CODE;
+
+        OtpCodeEntity otp = OtpCodeEntity.builder()
                 .phone(phone)
                 .code(code)
                 .purpose(purpose)
-                .expiresAt(Instant.now().plus(OTP_EXPIRATION_MINUTES, ChronoUnit.MINUTES))
+                .expiresAt(Instant.now().plus(OTP_EXPIRY_MINUTES, ChronoUnit.MINUTES))
                 .build();
         otpCodeRepository.save(otp);
-        log.info("Generated OTP {} for phone {}", code, phone); // Simulate SMS send
+
+        if (isProduction()) {
+            log.info("OTP sent via SMS to phone {}", phone);
+            // TODO: Integrate SMS provider (e.g. Twilio, ESMS)
+        } else {
+            log.warn("[DEV] OTP for phone {} is {} (otpToken: {})", phone, code, otp.getOtpToken());
+        }
+        return otp;
     }
 
-    private void saveUserDevice(User user, String fcmToken) {
-        Optional<UserDevice> existing = userDeviceRepository.findByFcmToken(fcmToken);
+    private void saveUserDevice(UserEntity user, String fcmToken) {
+        Optional<UserDeviceEntity> existing = userDeviceRepository.findByFcmToken(fcmToken);
         if (existing.isEmpty()) {
-            UserDevice device = UserDevice.builder()
+            UserDeviceEntity device = UserDeviceEntity.builder()
                     .user(user)
                     .fcmToken(fcmToken)
                     .build();
             userDeviceRepository.save(device);
         }
+    }
+
+    private boolean isProduction() {
+        return PROD_ENV.equalsIgnoreCase(appEnvironment);
     }
 }

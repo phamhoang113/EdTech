@@ -1,10 +1,11 @@
 package com.edtech.backend.auth.controller;
 
-import com.edtech.backend.auth.dto.LoginRequest;
-import com.edtech.backend.auth.dto.RegisterRequest;
-import com.edtech.backend.auth.dto.TokenRefreshRequest;
-import com.edtech.backend.auth.dto.TokenResponse;
-import com.edtech.backend.auth.dto.VerifyOtpRequest;
+import com.edtech.backend.auth.dto.request.LoginRequest;
+import com.edtech.backend.auth.dto.request.RegisterRequest;
+import com.edtech.backend.auth.dto.request.TokenRefreshRequest;
+import com.edtech.backend.auth.dto.request.VerifyOtpRequest;
+import com.edtech.backend.auth.dto.response.RegisterResponse;
+import com.edtech.backend.auth.dto.response.TokenResponse;
 import com.edtech.backend.auth.service.AuthService;
 import com.edtech.backend.core.dto.ApiResponse;
 import jakarta.validation.Valid;
@@ -22,9 +23,9 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ApiResponse<Void> register(@Valid @RequestBody RegisterRequest request) {
-        authService.register(request);
-        return ApiResponse.ok(null, "Registration initiated. Please verify OTP.");
+    public ApiResponse<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
+        RegisterResponse response = authService.register(request);
+        return ApiResponse.ok(response, response.getMessage());
     }
 
     @PostMapping("/verify-otp")

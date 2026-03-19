@@ -11,7 +11,7 @@ interface Tutor {
   reviews: number;
   hourlyRate: number;
   isOnline: boolean;
-  avatarUrl?: string;
+  avatarBase64?: string;
 }
 
 interface TutorCardProps {
@@ -42,8 +42,8 @@ export const TutorCard = ({ tutor, onAuthRequired }: TutorCardProps) => {
       <div className="tutor-header">
         <div className="avatar-wrapper">
           <div className="avatar">
-            {tutor.avatarUrl ? (
-              <img src={tutor.avatarUrl} alt={tutor.name} />
+            {tutor.avatarBase64 ? (
+              <img src={tutor.avatarBase64} alt={tutor.name} />
             ) : (
               <span className="avatar-placeholder">{tutor.name.charAt(0)}</span>
             )}

@@ -1,6 +1,6 @@
 package com.edtech.backend.auth.repository;
 
-import com.edtech.backend.auth.entity.RefreshToken;
+import com.edtech.backend.auth.entity.RefreshTokenEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,10 +10,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID> {
-    Optional<RefreshToken> findByTokenHash(String tokenHash);
+public interface RefreshTokenRepository extends JpaRepository<RefreshTokenEntity, UUID> {
+    Optional<RefreshTokenEntity> findByTokenHash(String tokenHash);
 
     @Modifying
-    @Query("DELETE FROM RefreshToken r WHERE r.user.id = :userId")
+    @Query("DELETE FROM RefreshTokenEntity r WHERE r.user.id = :userId")
     void deleteAllByUserId(UUID userId);
 }

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EdTech Admin — Design Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #0F172A;
+      color: #F8FAFC;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+      border-bottom: 1px solid #334155;
+      padding: 24px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #818CF8, #8B5CF6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header .badge {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #818CF8;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* Navigation */
+    .nav {
+      display: flex;
+      gap: 8px;
+      padding: 16px 48px;
+      background: #1E293B;
+      border-bottom: 1px solid #334155;
+      overflow-x: auto;
+    }
+    .nav button {
+      background: transparent;
+      border: 1px solid #334155;
+      color: #94A3B8;
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 200ms ease;
+      white-space: nowrap;
+    }
+    .nav button:hover {
+      border-color: #6366F1;
+      color: #C7D2FE;
+      background: rgba(99, 102, 241, 0.08);
+    }
+    .nav button.active {
+      background: linear-gradient(135deg, #6366F1, #4F46E5);
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Content */
+    .content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 48px;
+    }
+
+    .section {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+    .section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .section-desc {
+      color: #94A3B8;
+      font-size: 15px;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    /* Image container */
+    .mockup-container {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #334155;
+      background: #1E293B;
+      margin-bottom: 32px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transition: transform 300ms ease, box-shadow 300ms ease;
+    }
+    .mockup-container:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+    }
+    .mockup-container img {
+      width: 100%;
+      display: block;
+    }
+    .mockup-label {
+      padding: 16px 24px;
+      background: rgba(99, 102, 241, 0.08);
+      border-top: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mockup-label .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #6366F1;
+    }
+    .mockup-label span {
+      font-size: 14px;
+      font-weight: 500;
+      color: #C7D2FE;
+    }
+
+    /* Details table */
+    .details-card {
+      background: #1E293B;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .details-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #818CF8;
+    }
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    .detail-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 8px;
+      border: 1px solid rgba(51, 65, 85, 0.5);
+    }
+    .detail-item .label {
+      color: #94A3B8;
+      font-size: 13px;
+      min-width: 100px;
+    }
+    .detail-item .value {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* Route table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid #334155;
+      font-size: 14px;
+    }
+    th {
+      color: #94A3B8;
+      font-weight: 500;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    td code {
+      background: rgba(99, 102, 241, 0.12);
+      color: #818CF8;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .priority-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .p0 { background: rgba(239, 68, 68, 0.15); color: #FCA5A5; }
+    .p1 { background: rgba(245, 158, 11, 0.15); color: #FCD34D; }
+    .p2 { background: rgba(16, 185, 129, 0.15); color: #6EE7B7; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🎓 EdTech Admin — Design Preview</h1>
+    <div class="badge">4 Mockups</div>
+  </div>
+
+  <div class="nav">
+    <button class="active" onclick="show('login', this)">1. Login Page</button>
+    <button onclick="show('dashboard', this)">2. Dashboard</button>
+    <button onclick="show('users', this)">3. Người dùng</button>
+    <button onclick="show('verification', this)">4. Xác minh Gia sư</button>
+    <button onclick="show('routes', this)">📋 Tổng kết Routes</button>
+  </div>
+
+  <div class="content">
+    <!-- LOGIN -->
+    <div id="login" class="section active">
+      <div class="section-title">Admin Login Page</div>
+      <div class="section-desc">
+        Landing page chính của Admin. Layout <strong>split-screen</strong>: hero showcase bên trái, form đăng nhập bên phải.<br>
+        Route: <code>/admin/login</code> — Hoàn toàn tách biệt khỏi landing page user.
+      </div>
+      <div class="mockup-container">
+        <img src="/admin-design/admin_login.png" alt="Admin Login Page">
+        <div class="mockup-label"><div class="dot"></div><span>admin_login_page.png</span></div>
+      </div>
+      <div class="details-card">
+        <h3>Chi tiết Layout</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="label">Left Hero (60%)</span>
+            <span class="value">Gradient #0F172A → #1E293B, glassmorphism stat cards, logo 🎓</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Right Form (40%)</span>
+            <span class="value">Surface #1E293B, form fields rounded, CTA gradient Indigo</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Form Fields</span>
+            <span class="value">Username/Email + Password (toggle visibility)</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Extras</span>
+            <span class="value">Checkbox "Ghi nhớ", "Quên mật khẩu?", "🔒 Kết nối bảo mật"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="section">
+      <div class="section-title">Dashboard — Tổng quan</div>
+      <div class="section-desc">
+        Trang chính sau đăng nhập. Hiển thị metrics tổng quan platform, charts, và danh sách xác minh chờ duyệt.<br>
+        Route: <code>/admin/dashboard</code>
+      </div>
+      <div class="mockup-container">
+        <img src="/admin-design/admin_dashboard.png" alt="Admin Dashboard">
+        <div class="mockup-label"><div class="dot"></div><span>admin_dashboard.png</span></div>
+      </div>
+      <div class="details-card">
+        <h3>Stat Cards (4 cards)</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="label">Card 1</span>
+            <span class="value">Tổng người dùng — Blue icon</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Card 2</span>
+            <span class="value">Gia sư hoạt động — Green icon</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Card 3</span>
+            <span class="value">Lớp đang diễn ra — Violet icon</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Card 4</span>
+            <span class="value">Doanh thu tháng — Amber icon</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div id="users" class="section">
+      <div class="section-title">Quản lý Người dùng</div>
+      <div class="section-desc">
+        Data table với search, filter theo role/status, pagination, và action buttons (edit/lock/delete).<br>
+        Route: <code>/admin/users</code>
+      </div>
+      <div class="mockup-container">
+        <img src="/admin-design/admin_users.png" alt="Admin Users Page">
+        <div class="mockup-label"><div class="dot"></div><span>admin_users_page.png</span></div>
+      </div>
+      <div class="details-card">
+        <h3>Role Badges</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="label">ADMIN</span>
+            <span class="value" style="color: #FCA5A5;">Badge đỏ</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">TUTOR</span>
+            <span class="value" style="color: #818CF8;">Badge indigo</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">PARENT</span>
+            <span class="value" style="color: #6EE7B7;">Badge xanh lá</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">STUDENT</span>
+            <span class="value" style="color: #FCD34D;">Badge vàng</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VERIFICATION -->
+    <div id="verification" class="section">
+      <div class="section-title">Xác minh Gia sư</div>
+      <div class="section-desc">
+        Layout <strong>list-detail split</strong>: danh sách yêu cầu bên trái, chi tiết hồ sơ xác minh bên phải.<br>
+        Route: <code>/admin/verification</code>
+      </div>
+      <div class="mockup-container">
+        <img src="/admin-design/admin_verification.png" alt="Admin Verification Page">
+        <div class="mockup-label"><div class="dot"></div><span>admin_verification_page.png</span></div>
+      </div>
+      <div class="details-card">
+        <h3>Detail Panel (bên phải)</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="label">Section 1</span>
+            <span class="value">Thông tin cá nhân (Tên, SĐT, Email, Ngày sinh)</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Section 2</span>
+            <span class="value">Trình độ học vấn (Trường, bằng cấp, năm tốt nghiệp)</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Section 3</span>
+            <span class="value">Kinh nghiệm giảng dạy (Năm KN, môn, cấp độ)</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Section 4</span>
+            <span class="value">Tài liệu đính kèm (CMND, bằng cấp, chứng chỉ)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROUTES SUMMARY -->
+    <div id="routes" class="section">
+      <div class="section-title">📋 Tổng kết Routes & Ưu tiên</div>
+      <div class="section-desc">Danh sách tất cả các trang Admin theo thứ tự ưu tiên triển khai.</div>
+      <div class="details-card">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Trang</th>
+              <th>Route</th>
+              <th>Mô tả</th>
+              <th>Ưu tiên</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td><strong>Login</strong></td><td><code>/admin/login</code></td><td>Landing page + form đăng nhập</td><td><span class="priority-badge p0">P0</span></td></tr>
+            <tr><td>2</td><td><strong>Dashboard</strong></td><td><code>/admin/dashboard</code></td><td>Thống kê tổng quan</td><td><span class="priority-badge p0">P0</span></td></tr>
+            <tr><td>3</td><td><strong>Người dùng</strong></td><td><code>/admin/users</code></td><td>CRUD users, filter, search</td><td><span class="priority-badge p0">P0</span></td></tr>
+            <tr><td>4</td><td><strong>Xác minh</strong></td><td><code>/admin/verification</code></td><td>Duyệt/từ chối hồ sơ gia sư</td><td><span class="priority-badge p0">P0</span></td></tr>
+            <tr><td>5</td><td>Gia sư</td><td><code>/admin/tutors</code></td><td>Chi tiết profile gia sư</td><td><span class="priority-badge p1">P1</span></td></tr>
+            <tr><td>6</td><td>Lớp học</td><td><code>/admin/classes</code></td><td>Quản lý classes</td><td><span class="priority-badge p1">P1</span></td></tr>
+            <tr><td>7</td><td>Thanh toán</td><td><code>/admin/payments</code></td><td>Lịch sử giao dịch</td><td><span class="priority-badge p1">P1</span></td></tr>
+            <tr><td>8</td><td>Báo cáo</td><td><code>/admin/reports</code></td><td>Charts, analytics</td><td><span class="priority-badge p2">P2</span></td></tr>
+            <tr><td>9</td><td>Cài đặt</td><td><code>/admin/settings</code></td><td>Platform configs</td><td><span class="priority-badge p2">P2</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function show(id, btn) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      btn.classList.add('active');
+    }
+  </script>
+</body>
+</html>

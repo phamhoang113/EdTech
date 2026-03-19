@@ -1,7 +1,14 @@
+/* =============================================
+   Role Selection Modal — Vertical Row Layout
+   Light & Dark compatible
+   ============================================= */
+
 .role-modal {
-  max-width: 700px;
+  max-width: 520px;
+  width: 95vw;
 }
 
+/* ---------- Back button ---------- */
 .modal-back {
   position: absolute;
   top: var(--spacing-4);
@@ -18,147 +25,139 @@
   transition: all var(--transition-fast);
   z-index: 10;
 }
-
 .modal-back:hover {
   background-color: var(--color-surface-hover);
   color: var(--color-text);
 }
 
-.role-cards-container {
+/* ---------- Role vertical list ---------- */
+.role-list {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4);
-  margin-bottom: var(--spacing-8);
+  gap: 10px;
+  margin-bottom: var(--spacing-5);
 }
 
-@media (min-width: 600px) {
-  .role-cards-container {
-    flex-direction: row;
-    align-items: stretch;
-  }
-}
-
-.role-card {
-  flex: 1;
+/* ---------- Role row ---------- */
+.role-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
   border: 2px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-6);
+  border-radius: 16px;
+  background: var(--color-background);
   cursor: pointer;
-  position: relative;
   transition: all var(--transition-base);
-  display: flex;
-  flex-direction: column;
-  background-color: var(--color-background);
-  /* Reset min-width to prevent cards from becoming too narrow on very small screens if placed side by side */
-  min-width: 0;
+  outline: none;
 }
 
-.role-card:hover {
-  transform: translateY(-2px);
+.role-row:hover {
+  transform: translateX(4px);
   box-shadow: var(--shadow-md);
 }
 
-.parent-card:hover {
+.role-row:focus-visible {
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.3);
+}
+
+/* ---------- Accent colours ---------- */
+.accent-violet:hover, .accent-violet.selected {
   border-color: var(--color-secondary);
+  box-shadow: 0 4px 20px rgba(139,92,246,0.18);
+  background: color-mix(in srgb, var(--color-secondary) 5%, var(--color-background));
 }
-
-.tutor-card:hover {
+.accent-cyan:hover, .accent-cyan.selected {
+  border-color: #06b6d4;
+  box-shadow: 0 4px 20px rgba(6,182,212,0.18);
+  background: color-mix(in srgb, #06b6d4 5%, var(--color-background));
+}
+.accent-indigo:hover, .accent-indigo.selected {
   border-color: var(--color-primary);
+  box-shadow: 0 4px 20px rgba(99,102,241,0.18);
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-background));
 }
 
-.role-card.selected {
-  background-color: rgba(var(--color-primary-rgb), 0.05); /* Assuming rgb vars exist, but let's just use hex fallback */
-  background-color: var(--color-surface); /* Fallback */
-}
-@supports (background-color: color-mix(in srgb, var(--color-primary) 5%, transparent)) {
-  .role-card.selected.parent-card {
-    background-color: color-mix(in srgb, var(--color-secondary) 5%, transparent);
-  }
-  .role-card.selected.tutor-card {
-    background-color: color-mix(in srgb, var(--color-primary) 5%, transparent);
-  }
+/* ---------- Emoji ---------- */
+.role-row-emoji {
+  font-size: 2.2rem;
+  flex-shrink: 0;
+  line-height: 1;
+  width: 48px;
+  text-align: center;
 }
 
-.role-card.selected.parent-card {
-  border-color: var(--color-secondary);
-  box-shadow: 0 0 0 1px var(--color-secondary);
+/* ---------- Text block ---------- */
+.role-row-text {
+  flex: 1;
+  min-width: 0;
 }
 
-.role-card.selected.tutor-card {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 1px var(--color-primary);
+.role-row-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 4px;
+  flex-wrap: wrap;
 }
 
-.role-icon-wrapper {
-  margin-bottom: var(--spacing-4);
-}
-
-.role-icon {
-  width: 32px;
-  height: 32px;
-  color: var(--color-text-secondary);
+.rr-icon {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
   transition: color var(--transition-base);
 }
+.accent-violet.selected .rr-icon, .accent-violet:hover .rr-icon { color: var(--color-secondary); }
+.accent-cyan.selected   .rr-icon, .accent-cyan:hover   .rr-icon { color: #06b6d4; }
+.accent-indigo.selected .rr-icon, .accent-indigo:hover .rr-icon { color: var(--color-primary); }
 
-.parent-card:hover .role-icon, .parent-card.selected .role-icon {
-  color: var(--color-secondary);
+.role-row-sub {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  font-style: italic;
+  white-space: nowrap;
 }
+.accent-violet.selected .role-row-sub, .accent-violet:hover .role-row-sub { color: var(--color-secondary); }
+.accent-cyan.selected   .role-row-sub, .accent-cyan:hover   .role-row-sub { color: #06b6d4; }
+.accent-indigo.selected .role-row-sub, .accent-indigo:hover .role-row-sub { color: var(--color-primary); }
 
-.tutor-card:hover .role-icon, .tutor-card.selected .role-icon {
-  color: var(--color-primary);
-}
-
-.role-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  margin-bottom: var(--spacing-2);
-  color: var(--color-text);
-}
-
-.role-desc {
-  font-size: 0.875rem;
+.role-row-desc {
+  font-size: 0.82rem;
   color: var(--color-text-secondary);
-  line-height: 1.5;
-  flex-grow: 1;
+  line-height: 1.55;
+  margin: 0;
 }
 
-.role-check {
-  position: absolute;
-  top: var(--spacing-4);
-  right: var(--spacing-4);
+/* ---------- Radio indicator ---------- */
+.role-radio {
   width: 24px;
   height: 24px;
   border-radius: 50%;
+  border: 2px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 14px;
-  font-weight: bold;
-  opacity: 0;
-  transform: scale(0.8);
+  flex-shrink: 0;
   transition: all var(--transition-base);
+  color: #fff;
 }
 
-.parent-card .role-check {
-  background-color: var(--color-secondary);
-}
+.accent-violet .role-radio.checked { background: var(--color-secondary); border-color: var(--color-secondary); }
+.accent-cyan   .role-radio.checked { background: #06b6d4; border-color: #06b6d4; }
+.accent-indigo .role-radio.checked { background: var(--color-primary);   border-color: var(--color-primary);   }
 
-.tutor-card .role-check {
-  background-color: var(--color-primary);
-}
-
-.role-card.selected .role-check {
-  opacity: 1;
-  transform: scale(1);
-}
-
+/* ---------- Continue button ---------- */
 .continue-btn {
-  margin-bottom: var(--spacing-4);
+  margin-bottom: var(--spacing-3);
 }
 
-.role-footer {
+/* ---------- Footer ---------- */
+.role-footer-text {
   text-align: center;
+  margin: 0;
 }
 
 .text-btn {
@@ -169,8 +168,6 @@
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
+  transition: opacity var(--transition-fast);
 }
-
-.text-btn:hover {
-  text-decoration: underline;
-}
+.text-btn:hover { text-decoration: underline; opacity: 0.8; }

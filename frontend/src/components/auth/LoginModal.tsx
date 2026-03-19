@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Button } from '../ui/Button';
-import { X, Eye, EyeOff } from 'lucide-react';
+import { X, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { RoleSelectionModal } from './RoleSelectionModal';
+import { loginApi } from '../../services/authApi';
 import './LoginModal.css';
 
 interface LoginModalProps {
@@ -16,6 +17,7 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showRoleSelection, setShowRoleSelection] = useState(initialMode === 'register');
 
   const { login, redirectUrl, setRedirectUrl } = useAuthStore();
@@ -24,25 +26,39 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    // Mock API Call
-    setTimeout(() => {
-      login({ id: 'u123', phone, role: 'PARENT', name: 'Phụ Huynh Demo' });
-      setIsLoading(false);
+    try {
+      const data = await loginApi({ phone, password });
+      login(
+        { phone, role: data.role, fullName: data.fullName },
+        data.accessToken,
+        data.refreshToken
+      );
       onClose();
-
       if (redirectUrl) {
         navigate(redirectUrl);
         setRedirectUrl(null);
+      } else if (data.role === 'ADMIN') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
       }
-    }, 1000);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Đăng nhập thất bại, vui lòng thử lại.';
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (showRoleSelection) {
     return (
-      <RoleSelectionModal 
-        onClose={onClose} 
-        onBack={() => setShowRoleSelection(false)} 
+      <RoleSelectionModal
+        onClose={onClose}
+        onBack={() => setShowRoleSelection(false)}
       />
     );
   }
@@ -60,13 +76,20 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
         </div>
 
         <form className="modal-body" onSubmit={handleLogin}>
+          {error && (
+            <div className="form-error">
+              <AlertCircle size={16} />
+              <span>{error}</span>
+            </div>
+          )}
+
           <div className="form-group">
             <label htmlFor="phone">Số điện thoại</label>
-            <input 
+            <input
               id="phone"
-              type="tel" 
-              className="form-input" 
-              placeholder="Nhập số điện thoại" 
+              type="tel"
+              className="form-input"
+              placeholder="Nhập số điện thoại"
               value={phone}
               onChange={e => setPhone(e.target.value)}
               required
@@ -76,17 +99,17 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
           <div className="form-group">
             <label htmlFor="password">Mật khẩu</label>
             <div className="password-input-wrapper">
-              <input 
+              <input
                 id="password"
-                type={showPassword ? "text" : "password"} 
-                className="form-input" 
-                placeholder="Nhập mật khẩu" 
+                type={showPassword ? 'text' : 'password'}
+                className="form-input"
+                placeholder="Nhập mật khẩu"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label="Toggle password visibility"
@@ -107,10 +130,10 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
             <span>Hoặc</span>
           </div>
 
-          <Button 
-            type="button" 
-            variant="ghost" 
-            fullWidth 
+          <Button
+            type="button"
+            variant="ghost"
+            fullWidth
             onClick={() => setShowRoleSelection(true)}
           >
             Chưa có tài khoản? Đăng ký ngay

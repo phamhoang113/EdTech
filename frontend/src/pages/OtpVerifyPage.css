@@ -1,0 +1,262 @@
+/* ====================================
+   OTP Verify Page — Light & Dark
+   ==================================== */
+
+.otp-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-4);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    var(--auth-bg-from) 0%,
+    var(--auth-bg-mid)  50%,
+    var(--auth-bg-to)   100%
+  );
+}
+
+.otp-page::before,
+.otp-page::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+}
+.otp-page::before {
+  width: 380px; height: 380px;
+  background: var(--auth-orb-1);
+  top: -100px; right: -60px;
+}
+.otp-page::after {
+  width: 300px; height: 300px;
+  background: var(--auth-orb-2);
+  bottom: -80px; left: -40px;
+}
+
+/* ---------- Card ---------- */
+.otp-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  background: var(--auth-card-bg);
+  border: 1px solid var(--auth-card-border);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-8) var(--spacing-6);
+  box-shadow: var(--auth-card-shadow);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  text-align: center;
+}
+
+/* ---------- Back button ---------- */
+.otp-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--auth-back-bg);
+  border: 1px solid var(--auth-back-border);
+  color: var(--auth-back-color);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  margin-bottom: var(--spacing-6);
+  transition: all var(--transition-base);
+  font-family: inherit;
+}
+.otp-back:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+/* ---------- Header ---------- */
+.otp-header {
+  margin-bottom: var(--spacing-6);
+}
+
+.otp-phone-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--spacing-4);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+  font-size: 2rem;
+  animation: otp-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes otp-pulse {
+  0%, 100% { box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35); transform: scale(1);    }
+  50%       { box-shadow: 0 8px 36px rgba(99, 102, 241, 0.55); transform: scale(1.04); }
+}
+
+.otp-header h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--auth-heading-color);
+  margin: 0 0 10px;
+}
+
+.otp-header p {
+  font-size: 0.875rem;
+  color: var(--auth-label-color);
+  line-height: 1.55;
+}
+
+.otp-header strong {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+/* ---------- OTP form ---------- */
+.otp-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-5);
+}
+
+/* ---------- 6-digit boxes ---------- */
+.otp-inputs {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.otp-input {
+  width: 52px;
+  height: 60px;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  border: 2px solid var(--auth-input-border);
+  border-radius: var(--radius-lg);
+  background: var(--auth-input-bg);
+  color: var(--auth-input-color);
+  caret-color: var(--color-primary);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-fast);
+  outline: none;
+}
+
+.otp-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+  transform: translateY(-2px);
+}
+
+.otp-input.filled {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--auth-input-bg));
+}
+
+/* Separator between 3rd and 4th box */
+.otp-inputs .otp-sep {
+  align-self: center;
+  width: 10px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-text-muted);
+}
+
+@media (max-width: 380px) {
+  .otp-input { width: 44px; height: 52px; font-size: 1.2rem; }
+  .otp-inputs { gap: 6px; }
+}
+
+/* ---------- Progress bar ---------- */
+.otp-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--auth-input-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.otp-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  border-radius: 2px;
+  transition: width var(--transition-base);
+}
+
+/* ---------- Error ---------- */
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--auth-error-bg);
+  border: 1px solid var(--auth-error-border);
+  border-radius: var(--radius-lg);
+  padding: 9px 13px;
+  color: var(--auth-error-color);
+  font-size: 0.82rem;
+  width: 100%;
+  text-align: left;
+}
+
+/* ---------- Submit button ---------- */
+.otp-submit-btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.32);
+  transition: opacity var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
+}
+.otp-submit-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.42);
+}
+.otp-submit-btn:active:not(:disabled) { transform: translateY(0); }
+.otp-submit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ---------- Resend ---------- */
+.otp-resend {
+  font-size: 0.82rem;
+  color: var(--auth-terms-color);
+  margin: 0;
+}
+
+.resend-btn {
+  background: none;
+  border: none;
+  color: var(--auth-terms-link);
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity var(--transition-fast);
+}
+.resend-btn:hover { opacity: 0.75; }
+.resend-btn:disabled { color: var(--color-text-muted); text-decoration: none; cursor: default; }
+
+/* ---------- Timer ---------- */
+.otp-timer {
+  font-size: 0.8rem;
+  color: var(--color-warning);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

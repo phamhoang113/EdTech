@@ -1,7 +1,13 @@
 .how-it-works {
-  padding: var(--spacing-16) 0;
+  padding: var(--spacing-8) 0;
   background-color: var(--color-surface-hover);
   border-top: 1px solid var(--color-border);
+}
+
+@media (min-width: 768px) {
+  .how-it-works {
+    padding: var(--spacing-16) 0;
+  }
 }
 
 .section-header.center {

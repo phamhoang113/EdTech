@@ -40,19 +40,14 @@ Modern CSS supports relative colors, but let's stick to simple backdrop. */
 
 .logo-text {
   background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .nav-links {
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .nav-links {
-    display: flex;
-    gap: var(--spacing-6);
-  }
+  display: flex;
+  gap: var(--spacing-6);
 }
 
 .nav-link {
@@ -68,7 +63,136 @@ Modern CSS supports relative colors, but let's stick to simple backdrop. */
 .header-actions {
   display: flex;
   align-items: center;
+  gap: var(--spacing-3);
+  position: relative;
+}
+
+/* Container for nav links and actions */
+.nav-actions-container {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+  margin-left: var(--spacing-6);
+}
+
+.auth-buttons {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.mobile-controls {
+  display: flex;
+  align-items: center;
   gap: var(--spacing-2);
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: var(--spacing-2);
+  border-radius: var(--radius-md);
+  transition: background var(--transition-base);
+}
+
+.mobile-menu-btn:hover {
+  background: var(--color-surface-hover);
+}
+
+@media (max-width: 768px) {
+  .nav-actions-container {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--color-surface);
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--spacing-5) var(--spacing-6);
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.15);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    gap: var(--spacing-5);
+    margin-left: 0;
+    
+    /* Animation state hidden */
+    transform: translateY(-10px);
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 99;
+  }
+
+  .nav-actions-container.mobile-open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    gap: var(--spacing-4);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--spacing-5);
+  }
+
+  .header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: var(--spacing-4);
+  }
+
+  .auth-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: var(--spacing-3);
+  }
+
+  .auth-buttons button {
+    width: 100%;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.header-dash-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  border-radius: var(--radius-full);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all var(--transition-base);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+.header-dash-link:hover {
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  transform: translateY(-1px);
+}
+
+.hd-text {
+  display: none;
+}
+
+@media (min-width: 600px) {
+  .hd-text {
+    display: inline;
+  }
 }
 
 .theme-toggle {
@@ -88,4 +212,124 @@ Modern CSS supports relative colors, but let's stick to simple backdrop. */
 .theme-toggle:hover {
   background-color: var(--color-surface-hover);
   color: var(--color-text);
+}
+
+/* ── User menu khi đã đăng nhập ── */
+.header-user-menu {
+  position: relative;
+}
+
+.header-avatar-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: 0.375rem 0.75rem 0.375rem 0.375rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  color: var(--color-text);
+}
+
+.header-avatar-btn:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface-hover);
+}
+
+.header-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.header-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.header-user-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-user-role {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+}
+
+.header-chevron {
+  transition: transform var(--transition-base);
+  color: var(--color-text-secondary);
+}
+.header-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* ── Dropdown ── */
+.header-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 180px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  padding: 0.375rem;
+  z-index: 200;
+  animation: dropdown-in 0.15s ease;
+}
+
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.header-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-base);
+}
+
+.header-dropdown-item:hover {
+  background: var(--color-surface-hover);
+}
+
+.header-dropdown-item.danger {
+  color: #ef4444;
+}
+.header-dropdown-item.danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.header-dropdown-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 0.25rem 0;
 }

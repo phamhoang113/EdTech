@@ -7,8 +7,10 @@ import { TutorSection } from '../../components/home/TutorSection';
 import { OpenClassesSection } from '../../components/home/OpenClassesSection';
 import { HowItWorksSection } from '../../components/home/HowItWorksSection';
 import { LoginModal } from '../../components/auth/LoginModal';
+import './LandingPage.css';
 
 export const LandingPage: React.FC = () => {
+
   const [authModalState, setAuthModalState] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({
     isOpen: false,
     mode: 'login'
@@ -21,7 +23,9 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="landing-page">
       <Header onLoginClick={openLogin} onRegisterClick={openRegister} />
-      
+
+
+
       <main>
         <HeroSection onRegisterClick={openRegister} />
         <StatsSection />
@@ -36,5 +40,3 @@ export const LandingPage: React.FC = () => {
     </div>
   );
 };
-
-

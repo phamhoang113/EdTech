@@ -1,0 +1,238 @@
+.verification-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.verification-modal {
+  background: var(--bg-card, #ffffff);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 560px;
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color, #e5e7eb);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  margin-bottom: 8px;
+}
+
+.modal-header p {
+  font-size: 0.95rem;
+  color: var(--text-secondary, #4b5563);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.verification-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary, #111827);
+}
+
+.form-group label.required::after {
+  content: " *";
+  color: #ef4444;
+}
+
+.info-text {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #6b7280);
+  font-weight: normal;
+}
+
+.v-input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #d1d5db);
+  background: var(--bg-body, #ffffff);
+  color: var(--text-primary, #111827);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.v-input:focus {
+  border-color: var(--primary-color, #6366f1);
+}
+
+.file-upload-box {
+  position: relative;
+  display: flex;
+}
+
+.file-upload-box input[type="file"] {
+  display: none;
+}
+
+.file-label {
+  flex: 1;
+  padding: 12px;
+  border: 2px dashed var(--border-color, #d1d5db);
+  border-radius: 8px;
+  background: var(--bg-body, #f9fafb);
+  color: var(--text-secondary, #6b7280);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.file-label:hover {
+  border-color: var(--primary-color, #6366f1);
+  background: rgba(99, 102, 241, 0.05); /* Indigo tint */
+}
+
+.error-message {
+  padding: 10px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.form-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-primary {
+  background: var(--primary-color, #6366f1);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ─── Chip Grid ─── */
+.chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #d1d5db;
+  background: transparent;
+  color: #374151;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.chip:hover:not(:disabled) {
+  border-color: #6366f1;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.chip-selected {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #ffffff;
+}
+
+.chip-selected:hover {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #ffffff !important;
+}
+
+.chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.chip-count {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin: 2px 0 0;
+}
+
+/* ─── Textarea ─── */
+.v-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+/* ─── Success Screen ─── */
+.verify-success-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 12px;
+}
+
+.verify-success-icon {
+  font-size: 3rem;
+  animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pop-in {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.verify-success-screen h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #10b981;
+  margin: 0;
+}
+
+.verify-success-screen p {
+  color: var(--text-secondary, #6b7280);
+  margin: 0;
+}
+
+.verify-success-note {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+

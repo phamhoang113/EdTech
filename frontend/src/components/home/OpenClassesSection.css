@@ -1,7 +1,14 @@
 .open-classes-section {
-  padding: var(--spacing-16) 0;
+  padding: var(--spacing-8) 0;
   background-color: var(--color-background);
 }
+
+@media (min-width: 768px) {
+  .open-classes-section {
+    padding: var(--spacing-16) 0;
+  }
+}
+
 
 .section-title .highlight-green {
   color: var(--color-success);

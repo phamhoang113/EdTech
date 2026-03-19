@@ -1,47 +1,32 @@
-import { OpenClassCard } from './OpenClassCard';
+import { useState, useEffect } from 'react';
+import { OpenClassCard, type OpenClass } from './OpenClassCard';
 import { Button } from '../ui/Button';
 import { useNavigate } from 'react-router-dom';
+import { classApi } from '../../services/classApi';
 import './OpenClassesSection.css';
 
 interface OpenClassesSectionProps {
   onAuthRequired: () => void;
 }
 
-const mockClasses = [
-  {
-    id: 'c1',
-    title: 'Tìm Gia Sư Dạy Toán Lớp 10 Bồi Dưỡng Học Sinh Giỏi',
-    subject: 'Toán',
-    grade: 'Lớp 10',
-    location: 'Quận Cầu Giấy, Hà Nội (Học online)',
-    schedule: '2 buổi / tuần (Tối T3, T5)',
-    fee: 2000000,
-    timeFramte: 'Bắt đầu tuần tới'
-  },
-  {
-    id: 'c2',
-    title: 'Giao Tiếp Tiếng Anh Cơ Bản Luyện Speaking',
-    subject: 'Tiếng Anh',
-    grade: 'Sinh Viên',
-    location: 'Quận 1, TP. HCM (Tại nhà)',
-    schedule: '3 buổi / tuần (Linh hoạt)',
-    fee: 3500000,
-    timeFramte: 'Gấp'
-  },
-  {
-    id: 'c3',
-    title: 'Ôn Thi Đại Học Môn Vật Lý Khối A',
-    subject: 'Vật Lý',
-    grade: 'Lớp 12',
-    location: 'Học Trực Tuyến',
-    schedule: '2 buổi / tuần',
-    fee: 2500000,
-    timeFramte: 'Trong tháng này'
-  }
-];
-
 export const OpenClassesSection = ({ onAuthRequired }: OpenClassesSectionProps) => {
   const navigate = useNavigate();
+  const [classes, setClasses] = useState<OpenClass[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const data = await classApi.getOpenClasses();
+        setClasses(data);
+      } catch (error) {
+        console.error("Failed to fetch open classes", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClasses();
+  }, []);
 
   return (
     <section className="open-classes-section">
@@ -57,11 +42,15 @@ export const OpenClassesSection = ({ onAuthRequired }: OpenClassesSectionProps) 
         </div>
 
         <div className="class-list-wrapper">
-          <div className="class-list">
-            {mockClasses.map((cl) => (
-              <OpenClassCard key={cl.id} classInfo={cl} onAuthRequired={onAuthRequired} />
-            ))}
-          </div>
+          {loading ? (
+             <div style={{ textAlign: 'center', padding: '2rem' }}>Đang tải lớp học...</div>
+          ) : (
+            <div className="class-list">
+              {classes.slice(0, 6).map((cl) => (
+                <OpenClassCard key={cl.id} classInfo={cl} onAuthRequired={onAuthRequired} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

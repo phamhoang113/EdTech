@@ -24,17 +24,11 @@ public class ApplicationConfig {
     public UserDetailsService userDetailsService() {
         return identifier -> userRepository.findByPhoneAndIsDeletedFalse(identifier)
                 .map(user -> User.builder()
-                        .username(user.getPhone() != null ? user.getPhone() : user.getUsername())
+                        .username(user.getPhone())
                         .password(user.getPasswordHash())
                         .roles(user.getRole().name())
                         .build())
-                .orElseGet(() -> userRepository.findByUsernameAndIsDeletedFalse(identifier)
-                        .map(user -> User.builder()
-                                .username(user.getUsername())
-                                .password(user.getPasswordHash())
-                                .roles(user.getRole().name())
-                                .build())
-                        .orElseThrow(() -> new EntityNotFoundException("User not found: " + identifier)));
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + identifier));
     }
 
     @Bean
