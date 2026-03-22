@@ -22,9 +22,9 @@ public class ApplicationConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return identifier -> userRepository.findByPhoneAndIsDeletedFalse(identifier)
+        return identifier -> userRepository.findByIdentifierAndIsDeletedFalse(identifier)
                 .map(user -> User.builder()
-                        .username(user.getPhone())
+                        .username(user.getPhone() != null ? user.getPhone() : user.getUsername())
                         .password(user.getPasswordHash())
                         .roles(user.getRole().name())
                         .build())

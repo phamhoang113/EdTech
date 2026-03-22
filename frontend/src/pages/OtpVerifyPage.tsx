@@ -65,7 +65,7 @@ export const OtpVerifyPage = () => {
     try {
       const data = await verifyOtpApi({ otpToken, code });
       login(
-        { phone, role: data.role, fullName: data.fullName },
+        { phone, role: data.role, fullName: data.fullName, avatarBase64: data.avatarBase64 ?? undefined },
         data.accessToken,
         data.refreshToken
       );

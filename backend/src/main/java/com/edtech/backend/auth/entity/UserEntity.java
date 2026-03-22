@@ -30,6 +30,9 @@ public class UserEntity extends BaseEntity {
     @Column(unique = true, length = 20)
     private String phone;
 
+    @Column(unique = true, length = 50)
+    private String username;
+
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 

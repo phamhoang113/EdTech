@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import App from '../App';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
+import ErrorPage from '../pages/ErrorPage';
 
 /* ====================================================
    Route config
@@ -12,8 +13,8 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+    errorElement: <ErrorPage />,
     children: [
-      /* ── Public routes ── */
       {
         path: '/',
         lazy: async () => {
@@ -68,9 +69,28 @@ export const router = createBrowserRouter([
               return { Component: mod.default };
             },
           },
+          {
+            path: '/my-children',
+            lazy: async () => {
+              const { MyChildrenPage } = await import('../pages/dashboard/MyChildrenPage');
+              return { Component: MyChildrenPage };
+            },
+          },
+          {
+            path: '/applicants',
+            lazy: async () => {
+              const { ApplicantsPage } = await import('../pages/dashboard/ApplicantsPage');
+              return { Component: ApplicantsPage };
+            },
+          },
           // Thêm các route mới vào đây khi phát triển thêm:
-          // { path: '/profile',   lazy: ... },
-          // { path: '/schedule',  lazy: ... },
+          {
+            path: '/schedule',
+            lazy: async () => {
+              const { ParentSchedulePage } = await import('../pages/dashboard/ParentSchedulePage');
+              return { Component: ParentSchedulePage };
+            },
+          },
           // { path: '/messages',  lazy: ... },
           // { path: '/payment',   lazy: ... },
         ],
@@ -116,6 +136,60 @@ export const router = createBrowserRouter([
           return { Component: AdminVerification };
         },
       },
+      {
+        path: 'class-applications',
+        lazy: async () => {
+          const { AdminClassApplications } = await import('../pages/admin/AdminClassApplications');
+          return { Component: AdminClassApplications };
+        },
+      },
+      {
+        path: 'tutors',
+        lazy: async () => {
+          const { AdminTutors } = await import('../pages/admin/AdminTutors');
+          return { Component: AdminTutors };
+        },
+      },
+      {
+        path: 'classes',
+        lazy: async () => {
+          const { AdminClasses } = await import('../pages/admin/AdminClasses');
+          return { Component: AdminClasses };
+        },
+      },
+      {
+        path: 'reports',
+        lazy: async () => {
+          const { AdminReports } = await import('../pages/admin/AdminReports');
+          return { Component: AdminReports };
+        },
+      },
+      {
+        path: 'settings',
+        lazy: async () => {
+          const { AdminSettings } = await import('../pages/admin/AdminSettings');
+          return { Component: AdminSettings };
+        },
+      },
+      {
+        path: 'payments',
+        lazy: async () => {
+          const { AdminReports } = await import('../pages/admin/AdminReports');
+          return { Component: AdminReports };
+        },
+      },
+      {
+        path: 'class-requests',
+        lazy: async () => {
+          const { AdminClassRequests } = await import('../pages/admin/AdminClassRequests');
+          return { Component: AdminClassRequests };
+        },
+      },
+      // Catch-all 404 trong admin
+      { path: '*', element: <ErrorPage /> },
     ],
+    errorElement: <ErrorPage />,
   },
+  // Catch-all 404 toàn cục
+  { path: '*', element: <ErrorPage /> },
 ]);

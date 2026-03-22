@@ -11,5 +11,6 @@ public class TokenResponse {
     private String refreshToken;
     private UserRole role;
     private String fullName;
+    private String avatarBase64;
     private Boolean isActive;
 }

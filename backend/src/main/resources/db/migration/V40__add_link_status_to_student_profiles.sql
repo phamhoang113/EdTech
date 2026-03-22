@@ -1,0 +1,1 @@
+﻿ALTER TABLE student_profiles ADD COLUMN link_status VARCHAR(20) NOT NULL DEFAULT 'ACCEPTED';

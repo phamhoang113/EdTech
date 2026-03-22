@@ -26,8 +26,15 @@ export function AdminVerification() {
   const [tutors, setTutors] = useState<AdminTutorVerificationResponse[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [rateInput, setRateInput] = useState<number>(140000);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+
+  const showToast = (type: 'success' | 'error', msg: string) => {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const fetchTutors = async () => {
     try {
@@ -51,26 +58,34 @@ export function AdminVerification() {
   }, []);
 
   const handleApprove = async (id: string) => {
-    if (!window.confirm(`Phê duyệt với giá dạy ${rateInput.toLocaleString('vi-VN')} VNĐ/h?`)) return;
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       await adminApi.approveTutor(id, rateInput);
-      alert('Đã phê duyệt thành công!');
+      showToast('success', `Đã phê duyệt thành công với giá ${rateInput.toLocaleString('vi-VN')} VNĐ/h!`);
+      window.dispatchEvent(new Event('refetchBadgeCounts'));
       fetchTutors();
     } catch (error) {
       console.error('Lỗi duyệt:', error);
-      alert('Phê duyệt thất bại!');
+      showToast('error', 'Phê duyệt thất bại, vui lòng thử lại!');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleReject = async (id: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn từ chối hồ sơ này?')) return;
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       await adminApi.rejectTutor(id);
-      alert('Đã từ chối hồ sơ!');
+      showToast('success', 'Đã từ chối hồ sơ!');
+      window.dispatchEvent(new Event('refetchBadgeCounts'));
       fetchTutors();
     } catch (error) {
       console.error('Lỗi từ chối:', error);
-      alert('Từ chối thất bại!');
+      showToast('error', 'Từ chối thất bại, vui lòng thử lại!');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -289,20 +304,38 @@ export function AdminVerification() {
               </div>
             </div>
 
+            {/* Toast notification */}
+            {toast && (
+              <div style={{
+                position: 'fixed', bottom: '24px', right: '24px', zIndex: 10000,
+                background: toast.type === 'success' ? '#10b981' : '#ef4444',
+                color: '#fff', padding: '12px 20px', borderRadius: '10px',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+                fontSize: '14px', fontWeight: 500,
+                animation: 'fadeIn 0.2s ease',
+              }}>
+                {toast.type === 'success' ? '✓ ' : '✕ '}{toast.msg}
+              </div>
+            )}
+
             {/* Actions */}
             {selected.status === 'PENDING' && (
               <div className="admin-verification__actions">
-                <button 
+                <button
                   className="admin-verification__action-btn admin-verification__action-btn--approve"
                   onClick={() => handleApprove(selected.id)}
+                  disabled={isSubmitting}
+                  style={{ opacity: isSubmitting ? 0.7 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
                 >
-                  ✓ Phê duyệt
+                  {isSubmitting ? '⏳ Đang xử lý...' : '✓ Phê duyệt'}
                 </button>
-                <button 
+                <button
                   className="admin-verification__action-btn admin-verification__action-btn--reject"
                   onClick={() => handleReject(selected.id)}
+                  disabled={isSubmitting}
+                  style={{ opacity: isSubmitting ? 0.7 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
                 >
-                  ✕ Từ chối
+                  {isSubmitting ? '⏳ Đang xử lý...' : '✕ Từ chối'}
                 </button>
               </div>
             )}

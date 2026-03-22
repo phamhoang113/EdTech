@@ -30,7 +30,7 @@ public class TutorProfileService {
     private final StorageService storageService;
 
     public TutorProfileResponse getMyProfileByUsername(String username) {
-        UserEntity user = userRepository.findByPhoneAndIsDeletedFalse(username)
+        UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(username)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng."));
 
         TutorProfileEntity profile = tutorProfileRepository.findByUserId(user.getId())
@@ -40,7 +40,7 @@ public class TutorProfileService {
 
     @Transactional
     public TutorProfileResponse updateMyProfile(String username, UpdateTutorProfileRequest req) {
-        UserEntity user = userRepository.findByPhoneAndIsDeletedFalse(username)
+        UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(username)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng."));
 
         TutorProfileEntity profile = tutorProfileRepository.findByUserId(user.getId())
@@ -82,7 +82,7 @@ public class TutorProfileService {
             Integer experienceYears,
             String location
     ) {
-        UserEntity user = userRepository.findByPhoneAndIsDeletedFalse(username)
+        UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(username)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng."));
 
         TutorProfileEntity profile = tutorProfileRepository.findByUserId(user.getId())

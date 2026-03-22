@@ -47,7 +47,7 @@ export function AdminLoginPage() {
       }
       
       login(
-        { phone: username, role: data.role, fullName: data.fullName },
+        { phone: username, role: data.role, fullName: data.fullName, avatarBase64: data.avatarBase64 ?? undefined },
         data.accessToken,
         data.refreshToken
       );

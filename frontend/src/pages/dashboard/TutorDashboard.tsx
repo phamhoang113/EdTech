@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useBadgeCounts } from '../../hooks/useBadgeCounts';
 import {
   BookOpen, Star, TrendingUp, Users,
   ChevronRight, Clock, MessageSquare, Calendar,
@@ -27,6 +28,8 @@ const activities = [
 export const TutorDashboard = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const badgeCounts = useBadgeCounts();
+  const openClasses = badgeCounts['openClasses'] ?? 0;
   // Verification states
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -40,11 +43,9 @@ export const TutorDashboard = () => {
       const res = await apiClient.get('/api/v1/tutors/profile/me');
       setVerificationStatus(res.data?.data?.verificationStatus ?? 'UNVERIFIED');
     } catch (err: any) {
-      // 404 = chưa có profile → UNVERIFIED
       if (err.response?.status === 404) {
         setVerificationStatus('UNVERIFIED');
       } else {
-        // Lỗi khác (mạng, server) → ẩn modal, không bắt user submit
         setVerificationStatus(null);
       }
     } finally {
@@ -71,9 +72,14 @@ export const TutorDashboard = () => {
           <span className="dash-sidebar-section-label">Dạy học</span>
           <button className="dash-sidebar-item active"><TrendingUp size={18}/> Tổng quan</button>
           <button className="dash-sidebar-item"><Users size={18}/> Học sinh của tôi</button>
-          <button className="dash-sidebar-item"><BookOpen size={18}/> Lớp học</button>
+          <button className="dash-sidebar-item">
+            <BookOpen size={18}/> Lớp học
+            {openClasses > 0 && (
+              <span className="item-badge badge-pulse">{openClasses > 99 ? '99+' : openClasses}</span>
+            )}
+          </button>
           <button className="dash-sidebar-item"><Calendar size={18}/> Lịch dạy</button>
-          <button className="dash-sidebar-item"><MessageSquare size={18}/> Tin nhắn <span className="item-badge">4</span></button>
+          <button className="dash-sidebar-item"><MessageSquare size={18}/> Tin nhắn</button>
 
           <span className="dash-sidebar-section-label">Hồ sơ & Tài chính</span>
           <button className="dash-sidebar-item"><Star size={18}/> Hồ sơ gia sư</button>

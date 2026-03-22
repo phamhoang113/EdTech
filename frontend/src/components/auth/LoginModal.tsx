@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { RoleSelectionModal } from './RoleSelectionModal';
 import { loginApi } from '../../services/authApi';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import './LoginModal.css';
 
 interface LoginModalProps {
@@ -22,6 +23,7 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
 
   const { login, redirectUrl, setRedirectUrl } = useAuthStore();
   const navigate = useNavigate();
+  useEscapeKey(onClose);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +33,7 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
     try {
       const data = await loginApi({ phone, password });
       login(
-        { phone, role: data.role, fullName: data.fullName },
+        { phone, role: data.role, fullName: data.fullName, avatarBase64: data.avatarBase64 ?? undefined },
         data.accessToken,
         data.refreshToken
       );
@@ -84,12 +86,12 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
           )}
 
           <div className="form-group">
-            <label htmlFor="phone">Số điện thoại</label>
+            <label htmlFor="phone">Số điện thoại hoặc Tên đăng nhập</label>
             <input
               id="phone"
-              type="tel"
+              type="text"
               className="form-input"
-              placeholder="Nhập số điện thoại"
+              placeholder="Nhập SĐT hoặc tên đăng nhập"
               value={phone}
               onChange={e => setPhone(e.target.value)}
               required

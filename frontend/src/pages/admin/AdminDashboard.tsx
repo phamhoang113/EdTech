@@ -1,103 +1,106 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, GraduationCap, BookOpen, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import {
+  Users, GraduationCap, BookOpen, DollarSign,
+  Clock, AlertTriangle,
+} from 'lucide-react';
 import { adminApi } from '../../services/adminApi';
-import type { AdminTutorVerificationResponse } from '../../services/adminApi';
+import type { AdminTutorVerificationResponse, DashboardStats } from '../../services/adminApi';
 import './AdminDashboard.css';
 
-/* ── Mock data ── */
-const STATS = [
-  { icon: <Users size={22} />, value: '5,234', label: 'Tổng người dùng', trend: '+12%', trendDir: 'up' as const, color: 'blue' },
-  { icon: <GraduationCap size={22} />, value: '1,247', label: 'Gia sư hoạt động', trend: '+8%', trendDir: 'up' as const, color: 'green' },
-  { icon: <BookOpen size={22} />, value: '892', label: 'Lớp đang diễn ra', trend: '+5%', trendDir: 'up' as const, color: 'violet' },
-  { icon: <DollarSign size={22} />, value: '125.4M', label: 'Doanh thu tháng (VNĐ)', trend: '-2%', trendDir: 'down' as const, color: 'amber' },
-];
-
-const CHART_DATA = [
-  { label: 'T10', value: 65 },
-  { label: 'T11', value: 80 },
-  { label: 'T12', value: 72 },
-  { label: 'T1', value: 90 },
-  { label: 'T2', value: 85 },
-  { label: 'T3', value: 95 },
-];
-
-const DONUT_SEGMENTS = [
-  { label: 'Gia sư', pct: 24, color: '#6366f1' },
-  { label: 'Phụ huynh', pct: 35, color: '#10b981' },
-  { label: 'Học sinh', pct: 38, color: '#f59e0b' },
-  { label: 'Admin', pct: 3, color: '#ef4444' },
-];
-
-function buildConicGradient() {
-  let acc = 0;
-  const stops = DONUT_SEGMENTS.map((s) => {
-    const start = acc;
-    acc += s.pct;
-    return `${s.color} ${start}% ${acc}%`;
-  });
-  return `conic-gradient(${stops.join(', ')})`;
-}
-
-// Hàm lấy màu avatar 
+/* ── Helpers ── */
 const stringToColor = (str: string) => {
   if (!str) return '#ccc';
   let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
   const c = (hash & 0x00ffffff).toString(16).toUpperCase();
   return '#' + '00000'.substring(0, 6 - c.length) + c;
 };
 
+function fmtVnd(n: number) {
+  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace('.0', '') + 'B';
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace('.0', '') + 'M';
+  if (n >= 1_000) return (n / 1_000).toFixed(0) + 'K';
+  return n.toLocaleString('vi-VN');
+}
+
 export function AdminDashboard() {
   const navigate = useNavigate();
-  const maxChart = Math.max(...CHART_DATA.map((d) => d.value));
+
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const [pendingVerifications, setPendingVerifications] = useState<AdminTutorVerificationResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [verificationsLoading, setVerificationsLoading] = useState(true);
 
-  const fetchVerifications = async () => {
-    try {
-      setLoading(true);
-      const res = await adminApi.getTutorVerifications();
-      // Only keep PENDING and slice top 5
-      const pending = res.data.filter((v) => v.status === 'PENDING').slice(0, 5);
-      setPendingVerifications(pending);
-    } catch (error) {
-      console.error('Lỗi khi tải danh sách gia sư chờ duyệt:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  /* ── Fetch dashboard stats ── */
   useEffect(() => {
-    fetchVerifications();
+    adminApi.getDashboardStats()
+      .then(res => setStats(res.data))
+      .catch(e => console.error('Dashboard stats error:', e))
+      .finally(() => setStatsLoading(false));
   }, []);
 
-  const handleApprove = async (id: string, name: string) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn phê duyệt gia sư ${name}?`)) return;
+  /* ── Fetch pending verifications (top 5) ── */
+  const fetchVerifications = async () => {
     try {
-      await adminApi.approveTutor(id);
-      alert('Đã phê duyệt thành công!');
-      fetchVerifications();
-    } catch (error) {
-      console.error('Lỗi duyệt:', error);
-      alert('Phê duyệt thất bại!');
+      setVerificationsLoading(true);
+      const res = await adminApi.getTutorVerifications();
+      setPendingVerifications(res.data.filter(v => v.status === 'PENDING').slice(0, 5));
+    } catch (e) {
+      console.error('Verifications error:', e);
+    } finally {
+      setVerificationsLoading(false);
     }
   };
 
+  useEffect(() => { fetchVerifications(); }, []);
+
+  const handleApprove = (id: string) => navigate(`/admin/verification?highlight=${id}`);
   const handleReject = async (id: string, name: string) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn từ chối gia sư ${name}?`)) return;
+    if (!window.confirm(`Từ chối gia sư ${name}?`)) return;
     try {
       await adminApi.rejectTutor(id);
-      alert('Đã từ chối hồ sơ!');
+      window.dispatchEvent(new Event('refetchBadgeCounts'));
       fetchVerifications();
-    } catch (error) {
-      console.error('Lỗi từ chối:', error);
-      alert('Từ chối thất bại!');
-    }
+    } catch { alert('Từ chối thất bại!'); }
   };
+
+  /* ── Stat cards (từ BE) ── */
+  const statCards = useMemo(() => {
+    if (!stats) return [];
+    return [
+      { icon: <Users size={22}/>, value: stats.totalUsers.toLocaleString(), label: 'Tổng người dùng', color: 'blue' },
+      { icon: <GraduationCap size={22}/>, value: stats.activeTutors.toLocaleString(), label: 'Gia sư đã duyệt', color: 'green' },
+      { icon: <BookOpen size={22}/>, value: (stats.openClasses + stats.activeClasses).toLocaleString(), label: 'Lớp đang hoạt động', color: 'violet' },
+      { icon: <DollarSign size={22}/>, value: fmtVnd(stats.estimatedMonthlyRevenue), label: 'Doanh thu ước tính (VNĐ)', color: 'amber' },
+    ];
+  }, [stats]);
+
+  /* ── Bar chart (user mới theo tháng) ── */
+  const chartData = stats?.newUsersPerMonth ?? [];
+  const maxChart = Math.max(...chartData.map(d => d.count), 1);
+
+  /* ── Donut chart (phân bổ role) ── */
+  const donutSegments = useMemo(() => {
+    if (!stats) return [];
+    const total = stats.tutorCount + stats.parentCount + stats.studentCount + stats.adminCount || 1;
+    return [
+      { label: 'Gia sư', count: stats.tutorCount, pct: Math.round(stats.tutorCount / total * 100), color: '#6366f1' },
+      { label: 'Phụ huynh', count: stats.parentCount, pct: Math.round(stats.parentCount / total * 100), color: '#10b981' },
+      { label: 'Học sinh', count: stats.studentCount, pct: Math.round(stats.studentCount / total * 100), color: '#06b6d4' },
+      { label: 'Admin', count: stats.adminCount, pct: Math.round(stats.adminCount / total * 100), color: '#ef4444' },
+    ];
+  }, [stats]);
+
+  const conicGradient = useMemo(() => {
+    let acc = 0;
+    const stops = donutSegments.map(s => {
+      const start = acc; acc += s.pct;
+      return `${s.color} ${start}% ${acc}%`;
+    });
+    return stops.length ? `conic-gradient(${stops.join(', ')})` : 'conic-gradient(#e5e7eb 0% 100%)';
+  }, [donutSegments]);
 
   return (
     <div className="admin-dashboard">
@@ -109,67 +112,95 @@ export function AdminDashboard() {
 
       {/* Stat Cards */}
       <div className="admin-dashboard__stats">
-        {STATS.map((stat) => (
-          <div className="admin-stat-card" key={stat.label}>
-            <div className={`admin-stat-card__icon admin-stat-card__icon--${stat.color}`}>
-              {stat.icon}
-            </div>
-            <div className="admin-stat-card__info">
-              <div className="admin-stat-card__value">{stat.value}</div>
-              <div className="admin-stat-card__label">{stat.label}</div>
-              <div className={`admin-stat-card__trend admin-stat-card__trend--${stat.trendDir}`}>
-                {stat.trendDir === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                {' '}{stat.trend} so với tháng trước
+        {statsLoading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="admin-stat-card" style={{ opacity: 0.5 }}>
+                <div className="admin-stat-card__icon admin-stat-card__icon--blue"><Clock size={22}/></div>
+                <div className="admin-stat-card__info">
+                  <div className="admin-stat-card__value">—</div>
+                  <div className="admin-stat-card__label">Đang tải...</div>
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
+            ))
+          : statCards.map(s => (
+              <div className="admin-stat-card" key={s.label}>
+                <div className={`admin-stat-card__icon admin-stat-card__icon--${s.color}`}>{s.icon}</div>
+                <div className="admin-stat-card__info">
+                  <div className="admin-stat-card__value">{s.value}</div>
+                  <div className="admin-stat-card__label">{s.label}</div>
+                </div>
+              </div>
+            ))
+        }
       </div>
+
+      {/* Alert: hồ sơ chờ duyệt */}
+      {!statsLoading && stats && stats.pendingVerifications > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 16px', borderRadius: 10, marginBottom: 16,
+          background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.35)',
+          color: '#d97706', fontSize: '0.88rem', fontWeight: 600,
+        }}>
+          <AlertTriangle size={16}/>
+          Có <strong style={{ margin: '0 4px' }}>{stats.pendingVerifications}</strong> hồ sơ gia sư chờ duyệt.
+          <button
+            onClick={() => navigate('/admin/verification')}
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#d97706', cursor: 'pointer', fontWeight: 700, textDecoration: 'underline' }}
+          >Xem ngay →</button>
+        </div>
+      )}
 
       {/* Charts Row */}
       <div className="admin-dashboard__charts">
-        {/* Bar Chart */}
+        {/* Bar Chart: User mới */}
         <div className="admin-chart-card">
           <div className="admin-chart-card__header">
-            <div className="admin-chart-card__title">Người dùng mới</div>
+            <div className="admin-chart-card__title">Người dùng mới (6 tháng)</div>
           </div>
-          <div className="admin-bar-chart">
-            {CHART_DATA.map((d) => (
-              <div className="admin-bar-chart__col" key={d.label}>
-                <div
-                  className="admin-bar-chart__bar"
-                  style={{ height: `${(d.value / maxChart) * 160}px` }}
-                />
-                <span className="admin-bar-chart__label">{d.label}</span>
-              </div>
-            ))}
-          </div>
+          {statsLoading ? (
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--color-text-muted)' }}>Đang tải...</div>
+          ) : (
+            <div className="admin-bar-chart">
+              {chartData.map(d => (
+                <div className="admin-bar-chart__col" key={d.label}>
+                  <div
+                    className="admin-bar-chart__bar"
+                    style={{ height: `${(d.count / maxChart) * 160}px` }}
+                    title={`${d.label}: ${d.count} người`}
+                  />
+                  <span className="admin-bar-chart__label">{d.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Donut Chart */}
+        {/* Donut Chart: Phân bổ role */}
         <div className="admin-chart-card">
           <div className="admin-chart-card__header">
             <div className="admin-chart-card__title">Phân bổ vai trò</div>
           </div>
-          <div className="admin-donut">
-            <div
-              className="admin-donut__chart"
-              style={{ background: buildConicGradient() }}
-            >
-              <div className="admin-donut__center">
-                <span className="admin-donut__center-value">5,234</span>
-                <span className="admin-donut__center-label">Tổng</span>
+          {statsLoading ? (
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--color-text-muted)' }}>Đang tải...</div>
+          ) : (
+            <div className="admin-donut">
+              <div className="admin-donut__chart" style={{ background: conicGradient }}>
+                <div className="admin-donut__center">
+                  <span className="admin-donut__center-value">{stats?.totalUsers.toLocaleString()}</span>
+                  <span className="admin-donut__center-label">Tổng</span>
+                </div>
+              </div>
+              <div className="admin-donut__legend">
+                {donutSegments.map(s => (
+                  <div className="admin-donut__legend-item" key={s.label}>
+                    <span className="admin-donut__legend-dot" style={{ background: s.color }} />
+                    {s.label} ({s.pct}% — {s.count.toLocaleString()})
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="admin-donut__legend">
-              {DONUT_SEGMENTS.map((s) => (
-                <div className="admin-donut__legend-item" key={s.label}>
-                  <span className="admin-donut__legend-dot" style={{ background: s.color }} />
-                  {s.label} ({s.pct}%)
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -181,8 +212,8 @@ export function AdminDashboard() {
             Xem tất cả →
           </button>
         </div>
-        
-        {loading ? (
+
+        {verificationsLoading ? (
           <div style={{ padding: '20px', textAlign: 'center' }}>Đang tải dữ liệu...</div>
         ) : pendingVerifications.length === 0 ? (
           <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
@@ -200,7 +231,7 @@ export function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {pendingVerifications.map((v) => (
+              {pendingVerifications.map(v => (
                 <tr key={v.id}>
                   <td>
                     <div className="admin-table__user">
@@ -215,7 +246,7 @@ export function AdminDashboard() {
                       <strong>{v.subjects?.length ? `${v.subjects.length} môn` : 'Chưa cập nhật'}</strong>
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                      {v.experience ? `${v.experience} năm KN` : ''} 
+                      {v.experience ? `${v.experience} năm KN` : ''}
                     </div>
                   </td>
                   <td>
@@ -229,16 +260,10 @@ export function AdminDashboard() {
                   <td><span className="admin-badge admin-badge--pending">Chờ duyệt</span></td>
                   <td>
                     <div className="admin-table__actions">
-                      <button 
-                        className="admin-table__action-btn admin-table__action-btn--approve"
-                        onClick={() => handleApprove(v.id, v.name)}
-                      >
+                      <button className="admin-table__action-btn admin-table__action-btn--approve" onClick={() => handleApprove(v.id)}>
                         Duyệt
                       </button>
-                      <button 
-                        className="admin-table__action-btn admin-table__action-btn--reject"
-                        onClick={() => handleReject(v.id, v.name)}
-                      >
+                      <button className="admin-table__action-btn admin-table__action-btn--reject" onClick={() => handleReject(v.id, v.name)}>
                         Từ chối
                       </button>
                     </div>

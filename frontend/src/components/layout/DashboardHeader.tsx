@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useBadgeCounts } from '../../hooks/useBadgeCounts';
 import { Search, Sun, Moon, Bell, User as UserIcon, LogOut } from 'lucide-react';
 import '../../pages/dashboard/Dashboard.css';
 
@@ -10,6 +11,8 @@ export const DashboardHeader = () => {
   const [isDark, setIsDark] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const badgeCounts = useBadgeCounts();
+  const totalBadges = Object.values(badgeCounts).reduce((s, v) => s + v, 0);
 
   useEffect(() => {
     setIsDark(localStorage.getItem('theme') === 'dark');
@@ -51,7 +54,9 @@ export const DashboardHeader = () => {
         </button>
         <button className="topbar-icon-btn" aria-label="notifications">
           <Bell size={18} />
-          <span className="notif-dot">2</span>
+          {totalBadges > 0 && (
+            <span className="notif-dot">{totalBadges > 99 ? '99+' : totalBadges}</span>
+          )}
         </button>
 
         <div className="topbar-profile-wrap" ref={dropdownRef}>

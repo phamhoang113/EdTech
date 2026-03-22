@@ -1,17 +1,26 @@
-package com.edtech.backend.tutor.service;
+package com.edtech.backend.admin.service;
 
 import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.repository.RefreshTokenRepository;
 import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.cls.enums.ClassStatus;
 import com.edtech.backend.core.exception.EntityNotFoundException;
-import com.edtech.backend.tutor.dto.response.AdminTutorVerificationResponse;
+import com.edtech.backend.admin.dto.AdminTutorListItem;
+import com.edtech.backend.admin.dto.AdminTutorVerificationResponse;
+import com.edtech.backend.cls.entity.ClassApplicationEntity;
+import com.edtech.backend.cls.entity.ClassEntity;
 import com.edtech.backend.tutor.entity.TutorProfileEntity;
+import com.edtech.backend.cls.enums.ApplicationStatus;
 import com.edtech.backend.tutor.enums.VerificationStatus;
+import com.edtech.backend.cls.repository.ClassApplicationRepository;
+import com.edtech.backend.cls.repository.ClassRepository;
 import com.edtech.backend.tutor.repository.TutorProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +36,98 @@ public class AdminTutorService {
 
     private final TutorProfileRepository tutorProfileRepository;
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final ClassRepository classRepository;
+    private final ClassApplicationRepository applicationRepository;
+
+    /** Lấy toàn bộ gia sư (kể cả đã xóa mềm) để admin xem */
+    public List<AdminTutorListItem> getAllTutors() {
+        List<TutorProfileEntity> profiles = tutorProfileRepository.findAll();
+        if (profiles.isEmpty()) return new ArrayList<>();
+
+        List<UUID> userIds = profiles.stream()
+                .map(TutorProfileEntity::getUserId)
+                .collect(Collectors.toList());
+        Map<UUID, UserEntity> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(UserEntity::getId, u -> u));
+
+        List<AdminTutorListItem> result = new ArrayList<>();
+        for (TutorProfileEntity p : profiles) {
+            UserEntity u = userMap.get(p.getUserId());
+            if (u == null) continue;
+
+            // Lớp đang phụ trách = ASSIGNED + ACTIVE
+            List<ClassStatus> teachingStatuses = List.of(ClassStatus.ASSIGNED, ClassStatus.ACTIVE);
+            List<ClassEntity> teachingClasses = classRepository.findByTutorIdAndStatusInAndIsDeletedFalse(u.getId(), teachingStatuses);
+            long activeCnt = teachingClasses.size();
+
+            // Thu nhập GS/tháng = sum(tutorFee)
+            BigDecimal monthlyEarnings = teachingClasses.stream()
+                    .filter(c -> c.getTutorFee() != null)
+                    .map(ClassEntity::getTutorFee)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // Phí nền tảng/tháng = sum(platformFee)
+            BigDecimal platformFee = teachingClasses.stream()
+                    .filter(c -> c.getPlatformFee() != null)
+                    .map(ClassEntity::getPlatformFee)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            result.add(AdminTutorListItem.builder()
+                    .userId(u.getId())
+                    .fullName(u.getFullName())
+                    .phone(u.getPhone())
+                    .tutorType(p.getTutorType() != null ? p.getTutorType().getDisplayName() : null)
+                    .verificationStatus(p.getVerificationStatus())
+                    .isDeleted(Boolean.TRUE.equals(u.getIsDeleted()))
+                    .isActive(Boolean.TRUE.equals(u.getIsActive()))
+                    .subjects(p.getSubjects() != null ? java.util.Arrays.asList(p.getSubjects()) : null)
+                    .location(p.getLocation())
+                    .hourlyRate(p.getHourlyRate())
+                    .activeClassCount(activeCnt)
+                    .estimatedMonthlyEarnings(monthlyEarnings)
+                    .platformFeePerMonth(platformFee)
+                    .createdAt(u.getCreatedAt())
+                    .build());
+        }
+        return result;
+    }
+
+    /** Xóa mềm gia sư: revoke login, revert classes, reject pending apps */
+    @Transactional
+    public void deleteTutor(UUID userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy gia sư."));
+
+        // 1. Soft delete user
+        user.setIsDeleted(true);
+        user.setIsActive(false);
+        userRepository.save(user);
+
+        // 2. Revoke tất cả refresh token → mất login
+        refreshTokenRepository.deleteAllByUserId(userId);
+
+        // 3. Revert các lớp ASSIGNED + ACTIVE của gia sư về OPEN
+        List<ClassEntity> assignedClasses = classRepository.findByTutorIdAndStatusInAndIsDeletedFalse(
+                userId, List.of(ClassStatus.ASSIGNED, ClassStatus.ACTIVE));
+        assignedClasses.forEach(cls -> {
+            cls.setTutorId(null);
+            cls.setStatus(ClassStatus.OPEN);
+            cls.setTutorFee(null);
+        });
+        classRepository.saveAll(assignedClasses);
+
+        // 4. Reject tất cả đơn PENDING của gia sư
+        List<ClassApplicationEntity> pendingApps = applicationRepository.findByTutorId(userId).stream()
+                .filter(a -> a.getStatus() == ApplicationStatus.PENDING)
+                .collect(Collectors.toList());
+        pendingApps.forEach(a -> a.setStatus(ApplicationStatus.REJECTED));
+        applicationRepository.saveAll(pendingApps);
+
+        log.info("Admin soft-deleted tutor userId={}, reverted {} classes, rejected {} applications",
+                userId, assignedClasses.size(), pendingApps.size());
+    }
+
 
     public List<AdminTutorVerificationResponse> getAllVerifications() {
         // Fetch all tutor profiles

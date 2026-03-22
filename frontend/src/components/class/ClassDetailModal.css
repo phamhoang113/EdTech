@@ -1,0 +1,437 @@
+/* ─── Overlay ─────────────────────────────────────────────────────────────── */
+.cdm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: cdm-fade-in 0.15s ease;
+}
+
+@keyframes cdm-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ─── Modal ────────────────────────────────────────────────────────────────── */
+.cdm-modal {
+  background: var(--color-surface, #fff);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+  animation: cdm-slide-up 0.2s ease;
+  overflow: hidden;
+}
+
+@keyframes cdm-slide-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ─── Header ───────────────────────────────────────────────────────────────── */
+.cdm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  gap: 12px;
+}
+
+.cdm-header-left { flex: 1; min-width: 0; }
+
+.cdm-class-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-primary, #6366f1);
+  background: rgba(99, 102, 241, 0.1);
+  padding: 2px 10px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}
+
+.cdm-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text, #111827);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.cdm-close {
+  flex-shrink: 0;
+  background: var(--color-background, #f3f4f6);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-muted, #6b7280);
+  transition: background 0.15s, color 0.15s;
+}
+.cdm-close:hover { background: var(--color-border); color: var(--color-text); }
+
+/* ─── Eligibility banner ───────────────────────────────────────────────────── */
+.cdm-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 24px;
+  font-size: 0.855rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.cdm-banner--error {
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.cdm-banner--success {
+  background: rgba(16, 185, 129, 0.08);
+  color: #059669;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* ─── Body ─────────────────────────────────────────────────────────────────── */
+.cdm-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ─── Section ──────────────────────────────────────────────────────────────── */
+.cdm-section { display: flex; flex-direction: column; gap: 12px; }
+
+.cdm-section-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted, #6b7280);
+  margin-bottom: 4px;
+}
+
+/* ─── Info grid ────────────────────────────────────────────────────────────── */
+.cdm-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.cdm-info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: var(--color-background, #f9fafb);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.cdm-info-item--wide { grid-column: span 2; }
+
+.cdm-icon { flex-shrink: 0; margin-top: 2px; color: var(--color-primary, #6366f1); }
+
+.cdm-info-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.cdm-info-value {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text, #111827);
+  display: block;
+}
+
+/* ─── Fee rows ─────────────────────────────────────────────────────────────── */
+.cdm-fee-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--color-background, #f9fafb);
+  border: 1px solid var(--color-border);
+}
+
+.cdm-fee-parent { border-color: rgba(99,102,241,0.3); }
+
+.cdm-fee-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #374151);
+}
+
+.cdm-fee-amount {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.cdm-fee-amount.highlight { color: var(--color-primary, #6366f1); font-size: 1.15rem; }
+
+.cdm-fee-unit {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-left: 2px;
+}
+
+.cdm-fee-percent {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+/* ─── Level fees table ─────────────────────────────────────────────────────── */
+.cdm-level-fees {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Header 3 cột: trình độ | lương | phí nhận lớp */
+.cdm-level-fees-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+}
+
+.cdm-level-fee-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.1s;
+}
+.cdm-level-fee-row:last-child { border-bottom: none; }
+
+.cdm-level-fee-row.my-level {
+  background: rgba(99, 102, 241, 0.07);
+  border-left: 3px solid var(--color-primary, #6366f1);
+}
+
+.cdm-level-badge {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.cdm-level-fee-row.my-level .cdm-level-badge { color: var(--color-primary, #6366f1); }
+
+.cdm-level-amount {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+.cdm-level-fee-row.my-level .cdm-level-amount { color: var(--color-primary, #6366f1); }
+
+/* Phí nhận lớp = tutor_fee × fee% */
+.cdm-admission-fee {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+.cdm-my-level-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-primary, #6366f1);
+  background: rgba(99,102,241,0.12);
+  padding: 1px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* Chú thích phí nhận lớp */
+.cdm-fee-note {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  background: rgba(245,158,11,0.07);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+  line-height: 1.5;
+}
+
+/* Thông tin tham khảo PH / Trung tâm */
+.cdm-fee-ref {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cdm-fee-ref-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: 2px;
+}
+
+.cdm-fee-ref-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+.cdm-fee-ref-row span:last-child { font-weight: 600; color: var(--color-text); }
+
+/* ─── Requirement tags ─────────────────────────────────────────────────────── */
+.cdm-req-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.cdm-req-tag {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--color-background);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.cdm-req-tag.active {
+  background: rgba(99,102,241,0.1);
+  border-color: var(--color-primary, #6366f1);
+  color: var(--color-primary, #6366f1);
+}
+
+/* ─── Error ────────────────────────────────────────────────────────────────── */
+.cdm-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(239,68,68,0.08);
+  color: #dc2626;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* ─── Footer ───────────────────────────────────────────────────────────────── */
+.cdm-footer {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-border);
+  justify-content: flex-end;
+}
+
+.cdm-btn-cancel {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.cdm-btn-cancel:hover { background: var(--color-background); }
+
+.cdm-btn-apply {
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  box-shadow: 0 4px 12px rgba(99,102,241,0.35);
+}
+.cdm-btn-apply:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.cdm-btn-apply:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ─── Note textarea ────────────────────────────────────────────────────────── */
+.cdm-note-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--color-border, #e5e7eb);
+  border-radius: 10px;
+  background: var(--color-background, #f9fafb);
+  color: var(--color-text, #111827);
+  font-size: 0.875rem;
+  font-family: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+.cdm-note-input:focus {
+  outline: none;
+  border-color: var(--color-primary, #6366f1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+.cdm-note-input::placeholder { color: var(--color-text-muted, #9ca3af); }
+
+.cdm-note-count {
+  display: block;
+  text-align: right;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+/* ─── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .cdm-info-grid { grid-template-columns: 1fr; }
+  .cdm-info-item--wide { grid-column: span 1; }
+  .cdm-modal { border-radius: 16px 16px 0 0; max-height: 95vh; }
+  .cdm-overlay { align-items: flex-end; padding: 0; }
+}

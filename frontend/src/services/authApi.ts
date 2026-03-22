@@ -5,6 +5,7 @@ export interface TokenResponse {
   refreshToken: string;
   role: 'PARENT' | 'STUDENT' | 'TUTOR' | 'ADMIN';
   fullName: string;
+  avatarBase64: string | null;
   isActive: boolean;
 }
 

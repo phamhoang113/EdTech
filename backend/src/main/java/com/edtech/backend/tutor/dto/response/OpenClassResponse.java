@@ -28,4 +28,5 @@ public class OpenClassResponse {
     private Integer sessionsPerWeek;
     private Integer sessionDurationMin;
     private Integer studentCount;
+    private String levelFees; // raw JSON: [{level, tutor_fee}]
 }

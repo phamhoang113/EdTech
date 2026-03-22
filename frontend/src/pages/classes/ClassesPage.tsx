@@ -4,9 +4,13 @@ import { Button } from '../../components/ui/Button';
 import { Header } from '../../components/layout/Header';
 import { Footer } from '../../components/layout/Footer';
 import { LoginModal } from '../../components/auth/LoginModal';
+import { ClassDetailModal } from '../../components/class/ClassDetailModal';
 import './ClassesPage.css';
 
 import { classApi } from '../../services/classApi';
+import type { OpenClassResponse, LevelFeeItem } from '../../services/classApi';
+import { tutorApi } from '../../services/tutorApi';
+import { useAuthStore } from '../../store/useAuthStore';
 
 
 
@@ -127,7 +131,39 @@ export function ClassesPage() {
   // Responsive mode tracking
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   
+  const { isAuthenticated, user, setRedirectUrl } = useAuthStore();
+
+  // Login modal state
+  const [authModalState, setAuthModalState] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({ isOpen: false, mode: 'login' });
+
+  /**
+   * Mở modal login.
+   * forced=true: user bị bắt buộc login (từ một action) → sau khi login sẽ ở lại trang này.
+   * forced=false: user chủ động login → sau khi login redirect về dashboard.
+   */
+  const openLogin = (forced = false) => {
+    if (forced) {
+      // Lưu lại URL hiện tại để quay lại sau khi login
+      setRedirectUrl(window.location.pathname + window.location.search);
+    } else {
+      setRedirectUrl(null);
+    }
+    setAuthModalState({ isOpen: true, mode: 'login' });
+  };
+
+  const closeAuth = () => setAuthModalState({ isOpen: false, mode: 'login' });
+
   const [dbClasses, setDbClasses] = useState<any[]>([]);
+  const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+
+  // Modal state
+  const [selectedClass, setSelectedClass] = useState<OpenClassResponse | null>(null);
+  const [tutorFeeForLevel, setTutorFeeForLevel] = useState<number | null>(null);
+  const [isEligible, setIsEligible] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [tutorType, setTutorType] = useState<string | null>(null);
+
   const [filterOptions, setFilterOptions] = useState({
     subjects: [] as string[],
     levels: [] as string[],
@@ -162,7 +198,6 @@ export function ClassesPage() {
             setFilterTutorLevels(filtersData.tutorLevels || []);
         }
 
-        // Ánh xạ dữ liệu trả về từ API sang format mà ClassesPage đang cần
         const mapped = classData.map((c: any) => {
           let sessions = [2];
           let scheduleStr = c.schedule || '';
@@ -175,7 +210,7 @@ export function ClassesPage() {
             if (typeof scheduleStr === 'string' && scheduleStr.startsWith('[')) {
                 const slots = JSON.parse(scheduleStr);
                 if (Array.isArray(slots) && slots.length > 0) {
-                   sessions = [slots.length]; // Base runtime sessions on physical DB slots count
+                   sessions = [slots.length];
                    formattedTimeSlot = slots.map((s:any) => {
                       const day = s.dayOfWeek.charAt(0).toUpperCase() + s.dayOfWeek.slice(1).toLowerCase();
                       const start = s.startTime.substring(0, 5);
@@ -191,7 +226,8 @@ export function ClassesPage() {
           }
 
           return {
-            id: c.classCode || c.id.substring(0, 6).toUpperCase(), // Use 6-digit code
+            id: c.classCode || c.id.substring(0, 6).toUpperCase(),
+            classId: c.id, // UUID thực để gọi API apply
             subject: c.subject,
             level: c.grade,
             location: c.location,
@@ -207,10 +243,21 @@ export function ClassesPage() {
             tutorLevelRequirement: c.tutorLevelRequirement || ['Sinh viên', 'Giáo viên'],
             distance: 5,
             feePercentage: c.feePercentage || 30,
-            postedAt: new Date().toLocaleDateString('vi-VN')
+            postedAt: new Date().toLocaleDateString('vi-VN'),
+            _raw: c as OpenClassResponse, // giữ ngêyn bản gốc cho ClassDetailModal
           };
         });
         setDbClasses(mapped);
+
+        // Load trạng thái đã apply (chỉ khi là TUTOR)
+        if (isAuthenticated && user?.role === 'TUTOR') {
+          try {
+            const myApps = await classApi.getMyApplications();
+            setAppliedIds(new Set(myApps.map(a => a.classId)));
+          } catch {
+            // Bỏ qua nếu không lấy được
+          }
+        }
       } catch (err) {
         console.error(err);
       }
@@ -267,9 +314,66 @@ export function ClassesPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isMobile, showAdvanced]);
 
-  const openLogin = () => setAuthModalState({ isOpen: true, mode: 'login' });
   const openRegister = () => setAuthModalState({ isOpen: true, mode: 'register' });
-  const closeAuth = () => setAuthModalState((prev) => ({ ...prev, isOpen: false }));
+
+  const showToast = (type: 'success' | 'error', msg: string) => {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  /** Mở modal chi tiết lớp. Ai cũng xem được, chỉ TUTOR mới check eligibility & fee */
+  const handleViewDetail = async (rawClass: any) => {
+    const originalClass: OpenClassResponse = rawClass._raw;
+    setSelectedClass(originalClass);
+    setIsEligible(false);
+    setTutorFeeForLevel(null);
+
+    // Chỉ load thêm thông tin TUTOR khi là TUTOR
+    if (isAuthenticated && user?.role === 'TUTOR') {
+      setLoadingDetail(true);
+      try {
+        // Load tutor profile nếu chưa có
+        let currentTutorType = tutorType;
+        if (!currentTutorType) {
+          const profile = await tutorApi.getMyProfile();
+          currentTutorType = profile.tutorType;
+          setTutorType(currentTutorType);
+        }
+
+        // Check eligibility
+        const requirements = originalClass.tutorLevelRequirement;
+        const eligible = currentTutorType != null && requirements.includes(currentTutorType);
+        setIsEligible(eligible);
+
+        // Tính học phí đúng level
+        let fee: number | null = null;
+        if (currentTutorType && originalClass.levelFees) {
+          try {
+            const levels: LevelFeeItem[] = JSON.parse(originalClass.levelFees);
+            const match = levels.find(l => l.level === currentTutorType);
+            if (match) fee = match.tutor_fee;
+          } catch { /* ignore */ }
+        }
+        if (fee === null) fee = originalClass.minTutorFee;
+        setTutorFeeForLevel(fee);
+      } catch (err) {
+        console.error('Lỗi load tutor profile', err);
+      } finally {
+        setLoadingDetail(false);
+      }
+    }
+  };
+
+  const handleApplyFromModal = async (note: string) => {
+    if (!selectedClass) return;
+    try {
+      await classApi.applyForClass(selectedClass.id, note);
+      setAppliedIds(prev => new Set([...prev, selectedClass.id]));
+      showToast('success', 'Đã đăng ký nhận lớp! Admin sẽ xem xét và liên hệ sớm.');
+    } catch (err: any) {
+      throw err; // re-throw để modal xử lý error display
+    }
+  };
 
   // Lọc dữ liệu
   const filteredClasses = useMemo(() => {
@@ -338,10 +442,6 @@ export function ClassesPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const [authModalState, setAuthModalState] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({
-    isOpen: false,
-    mode: 'login'
-  });
 
   return (
     <div className="classes-page">
@@ -537,9 +637,31 @@ export function ClassesPage() {
                     </div>
 
                     <div className="card-actions">
-                      <Button variant="primary" className="btn-apply w-full">
-                        Nhận Lớp Ngay
-                      </Button>
+                      {(() => {
+                        const isApplied = appliedIds.has(cls.classId);
+                        if (isApplied) {
+                          return (
+                            <button disabled style={{
+                              width: '100%', padding: '12px', borderRadius: '10px',
+                              background: 'rgba(16,185,129,0.1)', color: '#10b981',
+                              border: '1.5px solid #10b981', fontWeight: 600,
+                              fontSize: '0.95rem', cursor: 'not-allowed', fontFamily: 'inherit',
+                            }}>
+                              ✓ Đã đăng ký
+                            </button>
+                          );
+                        }
+                        return (
+                          <Button
+                            variant="primary"
+                            className="btn-apply w-full"
+                            onClick={() => handleViewDetail(cls)}
+                            disabled={loadingDetail}
+                          >
+                            {loadingDetail ? '⏳ Đang tải...' : 'Xem Chi Tiết'}
+                          </Button>
+                        );
+                      })()}
                     </div>
                   </div>
                 );
@@ -615,6 +737,32 @@ export function ClassesPage() {
       </button>
 
       {authModalState.isOpen && <LoginModal onClose={closeAuth} initialMode={authModalState.mode} />}
+
+      {/* Class Detail Modal */}
+      {selectedClass && (
+        <ClassDetailModal
+          cls={selectedClass}
+          tutorType={tutorType}
+          tutorFeeForLevel={tutorFeeForLevel}
+          isEligible={isEligible}
+          isApplied={appliedIds.has(selectedClass.id)}
+          onApply={handleApplyFromModal}
+          onClose={() => setSelectedClass(null)}
+        />
+      )}
+
+      {/* Toast notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999,
+          background: toast.type === 'success' ? '#10b981' : '#ef4444',
+          color: '#fff', padding: '12px 20px', borderRadius: '10px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+          fontSize: '14px', fontWeight: 500, maxWidth: '360px',
+        }}>
+          {toast.type === 'success' ? '✓ ' : '✕ '}{toast.msg}
+        </div>
+      )}
     </div>
   );
 }

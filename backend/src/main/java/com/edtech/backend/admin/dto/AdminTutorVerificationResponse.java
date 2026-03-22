@@ -1,4 +1,4 @@
-package com.edtech.backend.tutor.dto.response;
+package com.edtech.backend.admin.dto;
 
 import com.edtech.backend.tutor.enums.TutorType;
 import com.edtech.backend.tutor.enums.VerificationStatus;

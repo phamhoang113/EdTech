@@ -1,33 +1,38 @@
 import { useState, useRef, useEffect } from 'react';
 import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, GraduationCap, FileCheck, BookOpen,
+  LayoutDashboard, Users, GraduationCap, FileCheck, BookOpen, ClipboardList,
   CreditCard, BarChart3, Settings, LogOut, Search, Bell,
-  Sun, Moon, Menu, X, User as UserIcon,
+  Sun, Moon, Menu, X, User as UserIcon, ClipboardCheck,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useBadgeCounts } from '../../hooks/useBadgeCounts';
 import './AdminLayout.css';
 
 const NAV_ITEMS = [
-  { to: '/admin/dashboard',    icon: LayoutDashboard, label: 'Tổng quan' },
-  { to: '/admin/users',        icon: Users,           label: 'Người dùng' },
-  { to: '/admin/tutors',       icon: GraduationCap,   label: 'Gia sư' },
-  { to: '/admin/verification', icon: FileCheck,       label: 'Xác minh' },
-  { to: '/admin/classes',      icon: BookOpen,        label: 'Lớp học' },
-  { to: '/admin/payments',     icon: CreditCard,      label: 'Thanh toán' },
-  { to: '/admin/reports',      icon: BarChart3,       label: 'Báo cáo' },
-  { to: '/admin/settings',     icon: Settings,        label: 'Cài đặt' },
+  { to: '/admin/dashboard',          icon: LayoutDashboard, label: 'Tổng quan' },
+  { to: '/admin/users',              icon: Users,           label: 'Người dùng' },
+  { to: '/admin/tutors',             icon: GraduationCap,   label: 'Gia sư' },
+  { to: '/admin/verification',       icon: FileCheck,       label: 'Xác minh',           badgeKey: 'pendingVerifications' },
+  { to: '/admin/class-requests',     icon: ClipboardCheck,  label: 'Yêu cầu mở lớp',    badgeKey: 'pendingClassRequests' },
+  { to: '/admin/classes',            icon: BookOpen,        label: 'Lớp học' },
+  { to: '/admin/class-applications', icon: ClipboardList,   label: 'Đơn nhận lớp',       badgeKey: 'pendingApplications' },
+  { to: '/admin/payments',           icon: CreditCard,      label: 'Thanh toán' },
+  { to: '/admin/reports',            icon: BarChart3,       label: 'Báo cáo' },
+  { to: '/admin/settings',           icon: Settings,        label: 'Cài đặt' },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
-  '/admin/dashboard':    'Tổng quan',
-  '/admin/users':        'Người dùng',
-  '/admin/tutors':       'Gia sư',
-  '/admin/verification': 'Xác minh',
-  '/admin/classes':      'Lớp học',
-  '/admin/payments':     'Thanh toán',
-  '/admin/reports':      'Báo cáo',
-  '/admin/settings':     'Cài đặt',
+  '/admin/dashboard':          'Tổng quan',
+  '/admin/users':              'Người dùng',
+  '/admin/tutors':             'Gia sư',
+  '/admin/verification':       'Xác minh',
+  '/admin/class-requests':     'Yêu cầu mở lớp',
+  '/admin/classes':            'Lớp học',
+  '/admin/class-applications': 'Đơn nhận lớp',
+  '/admin/payments':           'Thanh toán',
+  '/admin/reports':            'Báo cáo',
+  '/admin/settings':           'Cài đặt',
 };
 
 export function AdminLayout() {
@@ -37,6 +42,7 @@ export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const badgeCounts = useBadgeCounts();
 
   const adminName = user?.fullName ?? 'Admin';
   const adminInitial = adminName.trim().split(' ').pop()?.charAt(0).toUpperCase() ?? 'A';
@@ -68,6 +74,7 @@ export function AdminLayout() {
   };
 
   const currentTitle = PAGE_TITLES[location.pathname] ?? 'Admin';
+  const totalBadges = Object.values(badgeCounts).reduce((s, v) => s + v, 0);
 
   return (
     <div className="admin-layout">
@@ -94,21 +101,27 @@ export function AdminLayout() {
         </div>
 
         <nav className="admin-sidebar__nav">
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `admin-sidebar__nav-item ${isActive ? 'active' : ''}`
-              }
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className="admin-sidebar__nav-icon">
-                <item.icon size={18} />
-              </span>
-              {item.label}
-            </NavLink>
-          ))}
+          {NAV_ITEMS.map((item) => {
+            const count = item.badgeKey ? (badgeCounts[item.badgeKey] ?? 0) : 0;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `admin-sidebar__nav-item ${isActive ? 'active' : ''}`
+                }
+                onClick={() => setSidebarOpen(false)}
+              >
+                <span className="admin-sidebar__nav-icon">
+                  <item.icon size={18} />
+                </span>
+                {item.label}
+                {count > 0 && (
+                  <span className="admin-sidebar__badge">{count > 99 ? '99+' : count}</span>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div className="admin-sidebar__footer">
@@ -146,7 +159,9 @@ export function AdminLayout() {
             </button>
             <button className="admin-topbar__icon-btn">
               <Bell size={18} />
-              <span className="admin-topbar__notification-dot" />
+              {totalBadges > 0 && (
+                <span className="admin-topbar__notification-badge">{totalBadges > 99 ? '99+' : totalBadges}</span>
+              )}
             </button>
             <div className="admin-topbar__avatar-wrap" ref={dropdownRef}>
               <button

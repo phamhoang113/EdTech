@@ -1,0 +1,210 @@
+.admin-reports {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ar-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.ar-subtitle {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  margin: 4px 0 0;
+}
+
+.ar-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ar-export-btn:hover {
+  border-color: var(--color-primary, #6366f1);
+  color: var(--color-primary, #6366f1);
+}
+
+.ar-loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+/* ── Summary cards ── */
+.ar-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.ar-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border, #e5e7eb);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s;
+}
+
+.ar-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.ar-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ar-card__value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.ar-card__label {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: 3px;
+}
+
+.ar-card__sub {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 6px;
+  opacity: 0.7;
+}
+
+/* ── Charts ── */
+.ar-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .ar-charts { grid-template-columns: 1fr; }
+}
+
+.ar-chart-card {
+  padding: 20px 24px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border, #e5e7eb);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+}
+
+.ar-chart-card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 20px;
+}
+
+/* Bar chart */
+.ar-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  height: 200px;
+  padding-bottom: 28px;
+  position: relative;
+}
+
+.ar-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  height: 100%;
+  position: relative;
+}
+
+.ar-bar-val {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.ar-bar {
+  width: 100%;
+  max-width: 40px;
+  background: linear-gradient(to top, #6366f1, #818cf8);
+  border-radius: 6px 6px 0 0;
+  min-height: 4px;
+  transition: height 0.4s ease;
+}
+
+.ar-bar:hover {
+  opacity: 0.8;
+}
+
+.ar-bar-label {
+  position: absolute;
+  bottom: 0;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+/* Role bars */
+.ar-role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ar-role-row__header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.ar-role-bar-bg {
+  height: 8px;
+  border-radius: 99px;
+  background: var(--color-border, #e5e7eb);
+  overflow: hidden;
+}
+
+.ar-role-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.5s ease;
+}

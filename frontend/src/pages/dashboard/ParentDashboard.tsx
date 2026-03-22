@@ -1,79 +1,284 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import {
   BookOpen, Award, TrendingUp, Calendar,
-  ChevronRight, Clock, MessageSquare,
-  UserPlus, Users, X, Sparkles, Link2,
-  Search, LogOut
+  ChevronRight, Clock,
+  Users, X, Sparkles, Link2,
+  Plus,
+  GraduationCap, Phone, Star, UserCheck,
+  CheckCircle, XCircle, Activity,
 } from 'lucide-react';
 import { DashboardHeader } from '../../components/layout/DashboardHeader';
+import { RequestClassModal } from '../../components/parent/RequestClassModal';
+import { ParentSidebar } from '../../components/parent/ParentSidebar';
+
+import { parentApi } from '../../services/parentApi';
+import type { ParentClass, TutorApplicant } from '../../services/parentApi';
 import './Dashboard.css';
 
+/* ─── Static mock data (giữ nguyên từ bản gốc) ─────────────────────────── */
 const upcomingClasses = [
   { subject: 'Toán lớp 10',      who: 'GS Nguyễn Minh Anh', time: 'Hôm nay, 19:00', avatar: '🧑‍🏫' },
   { subject: 'Tiếng Anh IELTS',  who: 'GS Trần Lan Phương',  time: 'Thứ 6, 08:00',   avatar: '👩‍🏫' },
 ];
 
-const activities = [
-  { text: 'Con Bảo Nguyên vừa hoàn thành bài kiểm tra Toán',   time: '1 giờ trước',  type: 'act-lesson'  },
-  { text: 'Thanh toán học phí tháng 3 — 2.400.000đ',            time: '1 ngày trước', type: 'act-payment' },
-  { text: 'Đặt lịch học Anh văn cho con vào thứ 6',             time: '2 ngày trước', type: 'act-booking' },
-  { text: 'Con Bảo Nguyên đánh giá gia sư Lan Phương ★★★★★',    time: '3 ngày trước', type: 'act-review'  },
-];
+// const activities = [
+//   { text: 'Con Bảo Nguyên vừa hoàn thành bài kiểm tra Toán',   time: '1 giờ trước',  type: 'act-lesson'  },
+//   { text: 'Thanh toán học phí tháng 3 — 2.400.000đ',            time: '1 ngày trước', type: 'act-payment' },
+//   { text: 'Đặt lịch học Anh văn cho con vào thứ 6',             time: '2 ngày trước', type: 'act-booking' },
+//   { text: 'Con Bảo Nguyên đánh giá gia sư Lan Phương ★★★★★',    time: '3 ngày trước', type: 'act-review'  },
+// ];
 
-// Mock học sinh đã liên kết — để [] để test trạng thái chưa liên kết
-const initStudents: { name: string; meta: string }[] = [];
 
+/* ─── Helpers ────────────────────────────────────────────────────────────── */
+function fmtCurrency(n: number | null | undefined) {
+  if (n == null) return '—';
+  return n.toLocaleString('vi-VN') + ' ₫';
+}
+
+function fmtDate(iso: string | null | undefined) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+}
+
+function formatShortCurrency(amount: number) {
+  if (amount === 0) return '0 ₫';
+  if (amount >= 1_000_000) {
+    const m = amount / 1_000_000;
+    return Number.isInteger(m) ? `${m}M` : `${m.toFixed(1)}M`;
+  }
+  if (amount >= 1_000) {
+    const k = amount / 1_000;
+    return Number.isInteger(k) ? `${k}K` : `${k.toFixed(1)}K`;
+  }
+  return amount.toString();
+}
+
+/* ─── Status Badge ───────────────────────────────────────────────────────── */
+const STATUS_CFG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  PENDING_APPROVAL: { label: 'Chờ duyệt',  color: '#f59e0b', icon: <Clock size={11}/> },
+  OPEN:             { label: 'Đang mở',     color: '#6366f1', icon: <BookOpen size={11}/> },
+  ASSIGNED:         { label: 'Đã ghép GS',  color: '#8b5cf6', icon: <UserCheck size={11}/> },
+  MATCHED:          { label: 'Đã ghép GS',  color: '#8b5cf6', icon: <UserCheck size={11}/> },
+  ACTIVE:           { label: 'Đang dạy',    color: '#10b981', icon: <Activity size={11}/> },
+  COMPLETED:        { label: 'Hoàn thành',  color: '#6b7280', icon: <CheckCircle size={11}/> },
+  CANCELLED:        { label: 'Đã huỷ',      color: '#ef4444', icon: <XCircle size={11}/> },
+  AUTO_CLOSED:      { label: 'Hết hạn',     color: '#f59e0b', icon: <Clock size={11}/> },
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const cfg = STATUS_CFG[status] ?? { label: status, color: '#6b7280', icon: null };
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      padding: '2px 8px', borderRadius: 20, fontSize: '0.7rem', fontWeight: 700,
+      background: cfg.color + '18', color: cfg.color, border: `1px solid ${cfg.color}40`,
+    }}>
+      {cfg.icon} {cfg.label}
+    </span>
+  );
+}
+
+
+/* ─── Tutors Modal (xem GS đăng ký nhận lớp) ────────────────────────────── */
+function TutorsModal({ cls, onClose, onSelect }: {
+  cls: ParentClass;
+  onClose: () => void;
+  onSelect: (appId: string, name: string) => void;
+}) {
+  const [tutors, setTutors] = useState<TutorApplicant[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    parentApi.getTutorApplicants(cls.id)
+      .then(r => setTutors(r.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [cls.id]);
+  useEscapeKey(onClose);
+
+  return (
+    <div className="ap-overlay" onClick={onClose}>
+      <div className="ap-modal" style={{ maxWidth: 520, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <h3>👨‍🏫 Gia sư đề xuất</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+            <X size={20}/>
+          </button>
+        </div>
+        <p style={{ marginBottom: 16, color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+          {cls.title} • {cls.subject} • {cls.grade}
+        </p>
+
+        {loading ? (
+          <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: 24 }}>Đang tải...</p>
+        ) : tutors.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 32, color: 'var(--color-text-muted)' }}>
+            <GraduationCap size={36} style={{ opacity: 0.3, marginBottom: 8 }}/>
+            <p>Chưa có gia sư nào được đề xuất</p>
+          </div>
+        ) : tutors.map(t => (
+          <div key={t.applicationId} style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
+            borderBottom: '1px solid var(--color-border)',
+          }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+              background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+              color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1rem', fontWeight: 800,
+            }}>
+              {(t.tutorName ?? '?').charAt(0).toUpperCase()}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{t.tutorName ?? '—'}</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', display: 'flex', gap: 8, marginTop: 2 }}>
+                {t.tutorType && <span style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1', padding: '1px 7px', borderRadius: 20, fontWeight: 600 }}>{t.tutorType}</span>}
+                {t.tutorPhone && <span><Phone size={10}/> {t.tutorPhone}</span>}
+              </div>
+              {t.note && <p style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', fontStyle: 'italic', margin: '4px 0 0' }}>"{t.note}"</p>}
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              {t.proposedSalary != null && (
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#6366f1', marginBottom: 6 }}>
+                  {fmtCurrency(t.proposedSalary)}/tháng
+                </div>
+              )}
+              {t.status === 'APPROVED' && (
+                <button onClick={() => onSelect(t.applicationId, t.tutorName ?? 'Gia sư')} style={{
+                  display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px',
+                  borderRadius: 8, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                  color: '#fff', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                }}>
+                  <Star size={12}/> Chọn GS này
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── My Classes Panel ───────────────────────────────────────────────────── */
+function MyClassesPanel({ classes, loading, onViewTutors }: { classes: ParentClass[], loading: boolean, onViewTutors: (cls: ParentClass) => void }) {
+
+  if (loading) return <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Đang tải...</p>;
+  if (classes.length === 0) return (
+    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Bạn chưa có lớp nào. Nhấn "Yêu cầu mở lớp" để bắt đầu.</p>
+  );
+
+  return (
+    <div className="people-list" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {classes.map(cls => (
+        <div key={cls.id} style={{
+          background: 'var(--color-bg)', borderRadius: 12, padding: '12px 14px',
+          border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 12,
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+            color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '0.8rem', fontWeight: 800, flexShrink: 0,
+          }}>
+            {cls.subject.slice(0, 2).toUpperCase()}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {cls.title}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: 2 }}>
+              {cls.subject} • {cls.grade}{cls.parentFee > 0 ? ` • ${fmtCurrency(cls.parentFee)}/tháng` : ''} • {fmtDate(cls.createdAt)}
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <StatusBadge status={cls.status}/>
+            {(cls.status === 'OPEN' || cls.hasPendingProposals) && (
+              <button onClick={() => onViewTutors(cls)} style={{
+                display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px',
+                borderRadius: 8, border: '1.5px solid rgba(99,102,241,0.3)',
+                background: 'rgba(99,102,241,0.06)', color: '#6366f1',
+                fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              }}>
+                <GraduationCap size={12}/> GS đề xuất
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Main ───────────────────────────────────────────────────────────────── */
 export const ParentDashboard = () => {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
-  const [students, setStudents] = useState(initStudents);
-  const [showAddStudent, setShowAddStudent] = useState(false);
-  const [newStudentPhone, setNewStudentPhone] = useState('');
-  // TODO: lấy từ API — false = chưa có gia sư nào đang hoạt động
-  const hasTutor = false;
-  const hasLinkedStudent = students.length > 0;
+  const [studentsCount, setStudentsCount] = useState<number>(0);
+  const [hasTutor, setHasTutor] = useState<boolean>(false);
+  const [showRequestClass, setShowRequestClass] = useState(false);
+  const [tutorsModal, setTutorsModal] = useState<ParentClass | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [classesKey, setClassesKey] = useState(0); // force re-fetch MyClassesPanel
 
+  // Lifted state for MyClasses
+  const [myClasses, setMyClasses] = useState<ParentClass[]>([]);
+  const [loadingClasses, setLoadingClasses] = useState(true);
 
+  useEffect(() => {
+    parentApi.getMyChildren().then(res => setStudentsCount(res.data?.length ?? 0)).catch(() => {});
+    
+    setLoadingClasses(true);
+    parentApi.getMyClasses().then(res => {
+      const data = res.data ?? [];
+      setMyClasses(data);
+      setHasTutor(data.length > 0);
+    }).catch(() => {})
+    .finally(() => setLoadingClasses(false));
+  }, [classesKey]);
 
-  const handleLogout = () => { logout(); navigate('/'); };
+  const hasLinkedStudent = studentsCount > 0;
 
-  const handleAddStudent = () => {
-    if (!newStudentPhone.trim()) return;
-    setStudents(p => [...p, { name: newStudentPhone, meta: 'Học sinh mới liên kết' }]);
-    setNewStudentPhone('');
-    setShowAddStudent(false);
+  const showToast = (type: 'success' | 'error', msg: string) => {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const handleRequestSuccess = () => {
+    setShowRequestClass(false);
+    setClassesKey(k => k + 1);
+    showToast('success', 'Đã gửi yêu cầu mở lớp! Admin sẽ xem xét sớm.');
+  };
+
+  const handleSelectTutor = async (applicationId: string, tutorName: string) => {
+    try {
+      await parentApi.selectTutor(applicationId);
+      showToast('success', `Đã chọn ${tutorName}! Lớp sẽ bắt đầu sớm.`);
+      setTutorsModal(null);
+      setClassesKey(k => k + 1);
+    } catch (e: any) {
+      showToast('error', e?.response?.data?.message ?? 'Chọn gia sư thất bại');
+    }
   };
 
   const name = user?.fullName ?? 'Phụ huynh';
   const h = new Date().getHours();
   const greeting = h < 12 ? 'Chào buổi sáng' : h < 18 ? 'Chào buổi chiều' : 'Chào buổi tối';
 
+  // Calculate Monthly Cost dynamically
+  const activeClasses = myClasses.filter(c => 
+    ['PENDING_APPROVAL', 'OPEN', 'ASSIGNED', 'MATCHED', 'ACTIVE'].includes(c.status)
+  );
+  const totalFeeRaw = activeClasses.reduce((sum, c) => sum + (c.parentFee || 0), 0);
+  const totalFeeFormatted = formatShortCurrency(totalFeeRaw);
+
   return (
     <div className="dash-page">
       {/* ===== SIDEBAR ===== */}
-      <aside className="dash-sidebar">
-        <Link to="/" className="dash-sidebar-logo">
-          <span className="dash-sidebar-logo-icon">🎓</span>
-          <span className="dash-sidebar-logo-name">EdTech</span>
-        </Link>
-
-        <div className="dash-sidebar-section">
-          <span className="dash-sidebar-section-label">Quản lý</span>
-          <button className="dash-sidebar-item active"><TrendingUp size={18}/> Tổng quan</button>
-          <button className="dash-sidebar-item" onClick={() => setShowAddStudent(true)}><Users size={18}/> Con em của tôi</button>
-          <button className="dash-sidebar-item"><Search size={18}/> Tìm gia sư</button>
-          <button className="dash-sidebar-item"><Calendar size={18}/> Lịch học</button>
-          <button className="dash-sidebar-item"><MessageSquare size={18}/> Tin nhắn <span className="item-badge">1</span></button>
-
-          <span className="dash-sidebar-section-label">Tài chính</span>
-          <button className="dash-sidebar-item"><TrendingUp size={18}/> Thanh toán</button>
-          <button className="dash-sidebar-item"><Award size={18}/> Báo cáo học tập</button>
-        </div>
-
-        <button className="dash-logout" onClick={handleLogout}><LogOut size={16}/> Đăng xuất</button>
-      </aside>
+      <ParentSidebar active="overview" onRequestClass={() => setShowRequestClass(true)} />
 
       {/* ===== MAIN ===== */}
       <main className="dash-main">
@@ -87,42 +292,44 @@ export const ParentDashboard = () => {
               <h1 className="greeting-name">{name}</h1>
               <span className="greeting-tag">👨‍👩‍👧 Phụ huynh</span>
             </div>
-            <div className="greeting-emoji">🏠</div>
+            <div className="greeting-emoji" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <button onClick={() => setShowRequestClass(true)} style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px',
+                borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', fontFamily: 'inherit',
+                boxShadow: '0 4px 12px rgba(99,102,241,0.35)',
+              }}>
+                <Plus size={16}/> Yêu cầu mở lớp
+              </button>
+              <span>🏠</span>
+            </div>
           </div>
 
-          {/* ===== ONBOARDING CTA BANNERS ===== */}
+          {/* Onboarding banners */}
           {(!hasLinkedStudent || !hasTutor) && (
             <div className="onboard-banners">
               {!hasLinkedStudent && (
-                <div className="onboard-card onboard-student" onClick={() => setShowAddStudent(true)}>
+                <div className="onboard-card onboard-student" onClick={() => navigate('/my-children')}>
                   <div className="onboard-card-glow" />
-                  <div className="onboard-icon-wrap">
-                    <Link2 size={26} />
-                  </div>
+                  <div className="onboard-icon-wrap"><Link2 size={26} /></div>
                   <div className="onboard-content">
                     <p className="onboard-step">Bước 1 · Bắt đầu ngay</p>
                     <h3 className="onboard-title">Liên kết học sinh</h3>
                     <p className="onboard-desc">Thêm con em để theo dõi lịch học, tiến độ và thanh toán tập trung.</p>
                   </div>
-                  <div className="onboard-arrow">
-                    <ChevronRight size={22} />
-                  </div>
+                  <div className="onboard-arrow"><ChevronRight size={22} /></div>
                 </div>
               )}
               {!hasTutor && (
-                <div className="onboard-card onboard-tutor" onClick={() => navigate('/search')}>
+                <div className="onboard-card onboard-tutor" onClick={() => setShowRequestClass(true)}>
                   <div className="onboard-card-glow" />
-                  <div className="onboard-icon-wrap">
-                    <Sparkles size={26} />
-                  </div>
+                  <div className="onboard-icon-wrap"><Sparkles size={26} /></div>
                   <div className="onboard-content">
                     <p className="onboard-step">{hasLinkedStudent ? 'Bước 2 · Tiếp theo' : 'Bước 2'} · Quan trọng</p>
-                    <h3 className="onboard-title">Tìm gia sư phù hợp</h3>
-                    <p className="onboard-desc">Khám phá hàng trăm gia sư chất lượng cao, lọc theo môn học, mức giá và đánh giá.</p>
+                    <h3 className="onboard-title">Yêu cầu mở lớp</h3>
+                    <p className="onboard-desc">Gửi yêu cầu mở lớp để admin xét duyệt và gia sư đăng ký nhận lớp.</p>
                   </div>
-                  <div className="onboard-arrow">
-                    <ChevronRight size={22} />
-                  </div>
+                  <div className="onboard-arrow"><ChevronRight size={22} /></div>
                 </div>
               )}
             </div>
@@ -132,10 +339,10 @@ export const ParentDashboard = () => {
           <section>
             <div className="dash-stats-grid">
               {[
-                { val: `${students.length}`, lbl: 'Con em đang học', icon: <Users size={20}/>,     cls: 'color-indigo'  },
-                { val: '6',                   lbl: 'Buổi học tuần',   icon: <Calendar size={20}/>,  cls: 'color-violet'  },
-                { val: '2.4M',                lbl: 'Chi phí tháng',   icon: <TrendingUp size={20}/>,cls: 'color-amber'   },
-                { val: '88%',                 lbl: 'Tiến độ trung bình', icon: <Award size={20}/>, cls: 'color-emerald' },
+                { val: `${studentsCount}`, lbl: 'Con em đang học', icon: <Users size={20}/>,      cls: 'color-indigo'  },
+                { val: `${activeClasses.length}`, lbl: 'Lớp học',  icon: <Calendar size={20}/>,   cls: 'color-violet'  },
+                { val: totalFeeFormatted,     lbl: 'Chi phí tháng',  icon: <TrendingUp size={20}/>, cls: 'color-amber'   },
+                { val: '88%',                 lbl: 'Tiến độ TB',     icon: <Award size={20}/>,      cls: 'color-emerald' },
               ].map((s, i) => (
                 <div key={i} className={`dash-stat-card ${s.cls}`}>
                   <div className="stat-icon-box">{s.icon}</div>
@@ -147,6 +354,19 @@ export const ParentDashboard = () => {
               ))}
             </div>
           </section>
+
+          {/* My Classes panel */}
+          <div className="dash-panel">
+            <div className="dash-section-head">
+              <h2 className="dash-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <BookOpen size={16} className="text-secondary"/> Lớp học của tôi
+              </h2>
+              <button className="dash-see-all" onClick={() => setShowRequestClass(true)}>
+                <Plus size={14}/> Yêu cầu mới
+              </button>
+            </div>
+            <MyClassesPanel classes={myClasses} loading={loadingClasses} onViewTutors={setTutorsModal} />
+          </div>
 
           {/* Two cols */}
           <div className="dash-cols">
@@ -169,6 +389,7 @@ export const ParentDashboard = () => {
               </div>
             </div>
 
+            {/* 
             <div className="dash-panel">
               <div className="dash-section-head">
                 <span className="dash-section-title">⚡ Hoạt động</span>
@@ -190,31 +411,7 @@ export const ParentDashboard = () => {
                 ))}
               </div>
             </div>
-          </div>
-
-          {/* Students panel */}
-          <div className="dash-panel">
-            <div className="dash-section-head">
-              <span className="dash-section-title">👦👧 Con em đã liên kết</span>
-              <button className="dash-see-all" onClick={() => setShowAddStudent(true)}>
-                <UserPlus size={14}/> Thêm học sinh
-              </button>
-            </div>
-            <div className="people-list">
-              {students.map((s, i) => (
-                <div key={i} className="person-card">
-                  <div className="person-avatar">{s.name.charAt(0)}</div>
-                  <div className="person-info">
-                    <p className="person-name">{s.name}</p>
-                    <p className="person-meta">{s.meta}</p>
-                  </div>
-                  <span className="person-badge">Đang học</span>
-                </div>
-              ))}
-              <button className="add-person-btn" onClick={() => setShowAddStudent(true)}>
-                <UserPlus size={16}/> Thêm học sinh bằng số điện thoại
-              </button>
-            </div>
+            */}
           </div>
 
           {/* Quick actions */}
@@ -224,10 +421,10 @@ export const ParentDashboard = () => {
             </div>
             <div className="dash-qa-grid">
               {[
-                { emoji: '🔍', label: 'Tìm gia sư',    onClick: () => navigate('/search')   },
-                { emoji: '👶', label: 'Quản lý con',   onClick: () => setShowAddStudent(true) },
-                { emoji: '📅', label: 'Lịch học',      onClick: () => navigate('/schedule') },
-                { emoji: '💳', label: 'Thanh toán',    onClick: () => navigate('/payment')  },
+                { emoji: '📋', label: 'Yêu cầu mở lớp', onClick: () => setShowRequestClass(true) },
+                { emoji: '🔍', label: 'Tìm gia sư',      onClick: () => navigate('/search')   },
+                { emoji: '👶', label: 'Quản lý con',     onClick: () => navigate('/my-children') },
+                { emoji: '💳', label: 'Thanh toán',      onClick: () => navigate('/payment')  },
               ].map((a, i) => (
                 <button key={i} className="dash-qa-card" onClick={a.onClick}>
                   <span className="qa-emoji">{a.emoji}</span>
@@ -240,31 +437,30 @@ export const ParentDashboard = () => {
         </div>
       </main>
 
-      {/* Modal: Add Student */}
-      {showAddStudent && (
-        <div className="ap-overlay" onClick={() => setShowAddStudent(false)}>
-          <div className="ap-modal" onClick={e => e.stopPropagation()}>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'4px'}}>
-              <h3>Thêm học sinh</h3>
-              <button onClick={() => setShowAddStudent(false)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--color-text-muted)'}}>
-                <X size={20}/>
-              </button>
-            </div>
-            <p>Nhập số điện thoại của học sinh để gửi yêu cầu liên kết. Học sinh cần có tài khoản EdTech.</p>
-            <input
-              className="ap-input"
-              type="tel"
-              placeholder="Số điện thoại học sinh"
-              value={newStudentPhone}
-              onChange={e => setNewStudentPhone(e.target.value)}
-              autoFocus
-            />
-            <div className="ap-actions">
-              <button className="ap-cancel" onClick={() => setShowAddStudent(false)}>Hủy</button>
-              <button className="ap-confirm" onClick={handleAddStudent}>Gửi yêu cầu</button>
-            </div>
-          </div>
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
+          padding: '10px 20px', borderRadius: 12, fontWeight: 600, fontSize: '0.88rem',
+          background: toast.type === 'success' ? '#ecfdf5' : '#fef2f2',
+          color: toast.type === 'success' ? '#065f46' : '#b91c1c',
+          border: `1px solid ${toast.type === 'success' ? 'rgba(5,150,105,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+        }}>
+          {toast.type === 'success' ? '✓ ' : '✕ '}{toast.msg}
         </div>
+      )}
+
+
+
+      {/* Modal: Request Class */}
+      {showRequestClass && (
+        <RequestClassModal onClose={() => setShowRequestClass(false)} onSuccess={handleRequestSuccess}/>
+      )}
+
+      {/* Modal: View Tutors */}
+      {tutorsModal && (
+        <TutorsModal cls={tutorsModal} onClose={() => setTutorsModal(null)} onSelect={handleSelectTutor}/>
       )}
     </div>
   );

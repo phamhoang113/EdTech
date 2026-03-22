@@ -1,8 +1,8 @@
-package com.edtech.backend.tutor.entity;
+package com.edtech.backend.cls.entity;
 
+import com.edtech.backend.cls.enums.ClassMode;
+import com.edtech.backend.cls.enums.ClassStatus;
 import com.edtech.backend.core.entity.BaseEntity;
-import com.edtech.backend.core.enums.ClassMode;
-import com.edtech.backend.core.enums.ClassStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -108,4 +108,17 @@ public class ClassEntity extends BaseEntity {
 
     @Column(name = "gender_requirement", length = 50)
     private String genderRequirement;
+
+    /**
+     * Danh sách gia sư được admin đề xuất cho PH, dạng JSON.
+     * Format: {"<tutorId>": <proposedSalary>, ...}
+     * Được cập nhật mỗi khi admin approve 1 đơn.
+     */
+    @Column(name = "tutor_proposals", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String tutorProposals;
+
+    /** Lý do từ chối yêu cầu mở lớp (admin điền khi reject PENDING_APPROVAL) */
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
 }

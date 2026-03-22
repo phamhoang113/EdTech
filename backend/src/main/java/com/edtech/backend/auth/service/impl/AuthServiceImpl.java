@@ -133,7 +133,7 @@ public class AuthServiceImpl implements AuthService {
         String identifier = request.getPhone();
         log.info("Logging in user: {}", identifier);
 
-        UserEntity user = userRepository.findByPhoneAndIsDeletedFalse(identifier)
+        UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(identifier)
                 .orElseThrow(() -> new BusinessRuleException("Invalid credentials."));
 
         if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(Instant.now())) {
@@ -181,14 +181,18 @@ public class AuthServiceImpl implements AuthService {
     // ─────────── Private Helpers ───────────
 
     private TokenResponse generateTokenResponse(UserEntity user) {
+        String subject = user.getPhone() != null ? user.getPhone() : user.getUsername();
         org.springframework.security.core.userdetails.User userDetails =
                 new org.springframework.security.core.userdetails.User(
-                        user.getPhone(),
+                        subject,
                         user.getPasswordHash(),
                         java.util.Collections.emptyList());
 
         String jwt = jwtService.generateToken(userDetails);
         String refreshTokenStr = jwtService.generateRefreshToken(userDetails);
+
+        // Xóa refresh token cũ để tránh duplicate key constraint
+        refreshTokenRepository.deleteAllByUserId(user.getId());
 
         RefreshTokenEntity rt = RefreshTokenEntity.builder()
                 .user(user)
@@ -202,6 +206,7 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(refreshTokenStr)
                 .role(user.getRole())
                 .fullName(user.getFullName())
+                .avatarBase64(user.getAvatarBase64())
                 .isActive(user.getIsActive())
                 .build();
     }

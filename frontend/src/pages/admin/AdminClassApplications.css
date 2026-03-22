@@ -1,0 +1,291 @@
+/* ─── Font & Base ──────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+.aca-page {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  padding: 28px 32px;
+  max-width: 900px;
+  color: var(--color-text, #111827);
+  margin: 0 auto;
+}
+.aca-page-detail { max-width: 1000px; }
+
+/* ─── Header ───────────────────────────────────────────────────────────────── */
+.aca-header { margin-bottom: 20px; }
+.aca-title  { font-size: 1.4rem; font-weight: 800; margin: 0 0 4px; }
+.aca-subtitle { font-size: 0.875rem; color: var(--color-text-muted, #6b7280); margin: 0; }
+
+/* ─── Filter tabs ──────────────────────────────────────────────────────────── */
+.aca-tabs { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; }
+.aca-tab {
+  padding: 7px 20px; border-radius: 999px; border: 1.5px solid var(--color-border, #e5e7eb);
+  background: transparent; color: var(--color-text-secondary, #374151);
+  font-size: 0.875rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s;
+}
+.aca-tab:hover  { background: var(--color-background, #f3f4f6); }
+.aca-tab.active { background: var(--color-primary, #6366f1); color: #fff; border-color: var(--color-primary); }
+
+/* ─── Empty ────────────────────────────────────────────────────────────────── */
+.aca-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 80px 20px; color: var(--color-text-muted); font-size: 0.95rem; gap: 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; }
+
+/* ─── Shared badges & tags ─────────────────────────────────────────────────── */
+.aca-card-code {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.07em;
+  color: var(--color-primary, #6366f1); background: rgba(99,102,241,0.1);
+  padding: 2px 10px; border-radius: 999px; margin-bottom: 6px;
+}
+.aca-status-badge { padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+.badge-pending  { background: rgba(245,158,11,0.12); color: #d97706; }
+.badge-approved { background: rgba(16,185,129,0.12); color: #059669; }
+.badge-rejected { background: rgba(239,68,68,0.12);  color: #dc2626; }
+
+.aca-req-tag {
+  font-size: 0.73rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+  background: rgba(99,102,241,0.06); color: var(--color-primary, #6366f1);
+  border: 1px solid rgba(99,102,241,0.25);
+}
+
+.aca-pending-dot {
+  font-size: 0.72rem; font-weight: 700; background: rgba(245,158,11,0.15); color: #d97706;
+  padding: 2px 8px; border-radius: 999px; white-space: nowrap; display: inline-flex; align-items: center;
+}
+
+/* ─── Action buttons ───────────────────────────────────────────────────────── */
+.aca-actions { display: flex; gap: 8px; }
+.aca-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 14px; border-radius: 8px; border: none;
+  font-size: 0.82rem; font-weight: 700; font-family: inherit;
+  cursor: pointer; transition: opacity 0.15s, transform 0.1s; white-space: nowrap;
+}
+.aca-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.aca-btn:not(:disabled):hover { opacity: 0.88; transform: translateY(-1px); }
+.aca-btn-approve { background: linear-gradient(135deg, #10b981, #059669); color: #fff; box-shadow: 0 2px 8px rgba(16,185,129,0.3); }
+.aca-btn-reject { background: var(--color-surface, #fff); border: 1.5px solid #fca5a5; color: #dc2626; }
+.aca-btn-reject:hover { background: rgba(239,68,68,0.05); }
+
+/* ─── Compact class card list (Main view) ──────────────────────────────────── */
+.aca-card-list { display: flex; flex-direction: column; gap: 14px; }
+.aca-class-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 20px 24px; background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e5e7eb); border-radius: 16px;
+  cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.aca-class-card:hover {
+  border-color: var(--color-primary, #6366f1);
+  box-shadow: 0 4px 16px rgba(99,102,241,0.12); transform: translateY(-2px);
+}
+.aca-class-card-left { flex: 1; min-width: 0; }
+.aca-card-title { font-size: 1.05rem; font-weight: 800; color: var(--color-text, #111827); margin: 0 0 6px; line-height: 1.4; }
+.aca-card-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 8px; }
+.aca-card-meta span { display: inline-flex; align-items: center; gap: 4px; font-weight: 500; }
+.aca-card-reqs { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.aca-class-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+.aca-applicant-count { display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; font-weight: 700; color: var(--color-text-secondary); }
+.aca-card-arrow { font-size: 0.85rem; font-weight: 700; color: var(--color-primary); transition: transform 0.15s; margin-top: auto; }
+.aca-class-card:hover .aca-card-arrow { transform: translateX(4px); }
+
+/* ─── DETAIL VIEW (Separate Page) ──────────────────────────────────────────── */
+.aca-detail-view { display: flex; flex-direction: column; gap: 24px; animation: fade-in 0.2s ease-out; }
+@keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+.aca-btn-back {
+  display: inline-flex; align-items: center; gap: 6px; padding: 0;
+  background: transparent; border: none; font-size: 0.9rem; font-weight: 600;
+  color: var(--color-text-muted); cursor: pointer; transition: color 0.15s;
+}
+.aca-btn-back:hover { color: var(--color-primary); }
+
+.aca-detail-content { display: flex; flex-direction: column; gap: 24px; }
+
+/* Class info box */
+.aca-detail-class-box {
+  background: var(--color-surface, #fff); border: 1px solid var(--color-border);
+  border-radius: 20px; padding: 28px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+.aca-detail-class-header { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px dashed var(--color-border); }
+.aca-detail-class-title { font-size: 1.3rem; font-weight: 800; margin: 0; line-height: 1.4; color: var(--color-text); }
+
+.aca-detail-desc {
+  background: rgba(99,102,241,0.04); border-left: 3px solid var(--color-primary, #6366f1);
+  padding: 14px 18px; border-radius: 0 8px 8px 0; margin-bottom: 24px;
+}
+.aca-detail-desc p { margin: 6px 0 0; font-size: 0.9rem; line-height: 1.6; color: var(--color-text-secondary); white-space: pre-wrap; font-weight: 500; }
+
+.aca-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.aca-info-box {
+  display: flex; flex-direction: column; justify-content: center; gap: 6px;
+  background: var(--color-background, #f9fafb); border: 1px solid var(--color-border);
+  border-radius: 12px; padding: 14px 16px; transition: border-color 0.15s;
+}
+.aca-info-box:hover { border-color: rgba(99,102,241,0.3); }
+.aca-info-label { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.aca-info-value { font-size: 0.95rem; font-weight: 700; color: var(--color-text); }
+
+/* Section label */
+.aca-section-label { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: 10px; }
+
+/* Fees embedded in Class */
+.aca-detail-fees { margin-bottom: 20px; }
+.aca-fee-rows { display: flex; flex-direction: column; gap: 8px; }
+.aca-fee-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 12px 16px; border-radius: 12px;
+  background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.25);
+}
+.aca-fee-level { font-size: 0.9rem; font-weight: 800; color: var(--color-text); flex: 1; }
+.aca-fee-salary { font-size: 0.95rem; font-weight: 800; color: #059669; }
+.aca-fee-admission { font-size: 0.85rem; color: #d97706; font-weight: 700; background: rgba(245,158,11,0.1); padding: 4px 10px; border-radius: 999px; }
+
+.aca-detail-reqs { display: flex; flex-direction: column; gap: 6px; }
+.aca-req-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Tutors applying box */
+.aca-tutors-header {
+  font-size: 1.15rem; font-weight: 800; color: var(--color-text);
+  margin: 0 0 16px; display: flex; align-items: center; gap: 12px;
+}
+
+.aca-toolbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 20px; background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.15); border-radius: 12px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.aca-checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; color: var(--color-text-secondary); }
+.aca-checkbox-label input[type="checkbox"], .aca-tutor-check input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--color-primary); cursor: pointer; }
+
+/* Tutor Card List */
+.aca-tutor-list-full { display: flex; flex-direction: column; gap: 12px; }
+
+.aca-tutor-card {
+  background: var(--color-surface, #fff); border: 1px solid var(--color-border);
+  border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); overflow: hidden;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.aca-tutor-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-color: rgba(99,102,241,0.3); }
+.aca-tutor-card.processed { opacity: 0.75; }
+
+.aca-tutor-card-main {
+  display: flex; align-items: center; gap: 16px; padding: 18px 20px; flex-wrap: wrap;
+}
+
+.aca-tutor-check { margin-right: 4px; display: flex; align-items: center; }
+
+.aca-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff; font-size: 1.3rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.aca-tutor-details { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px; }
+.aca-tutor-name-text { font-size: 1.05rem; font-weight: 800; color: var(--color-text); }
+.aca-tutor-phone-text { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--color-text-muted); font-weight: 500; }
+.aca-tutor-type-tag { font-size: 0.75rem; font-weight: 700; background: rgba(99,102,241,0.1); color: var(--color-primary); padding: 2px 8px; border-radius: 999px; }
+
+.aca-tutor-stats-inline { display: flex; gap: 12px; font-size: 0.8rem; font-weight: 700; margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 6px; }
+.aca-tutor-stats-inline span { display: inline-flex; align-items: center; gap: 4px; }
+.stat-active { color: #059669; }
+.stat-pending { color: #d97706; }
+
+/* Fee Info specific for tutor */
+.aca-tutor-fee-info {
+  flex-shrink: 0; border-left: 1px solid var(--color-border); padding-left: 20px;
+  display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 140px;
+}
+.fee-lbl { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--color-text-muted); display: block; margin-bottom: 2px; }
+.tutor-salary-expected { font-size: 0.95rem; font-weight: 800; color: #059669; }
+.tutor-admission-expected { font-size: 0.85rem; font-weight: 700; color: #d97706; }
+.tutor-fee-na { font-size: 0.8rem; color: var(--color-text-muted); font-style: italic; }
+
+.aca-tutor-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.aca-date { font-size: 0.75rem; color: var(--color-text-muted); font-weight: 500; }
+
+.aca-tutor-card-note {
+  background: var(--color-background, #f9fafb); padding: 12px 20px;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.875rem; color: var(--color-text-secondary); line-height: 1.5; font-style: italic;
+}
+.note-lbl { font-size: 0.75rem; font-weight: 700; color: var(--color-primary); text-transform: uppercase; margin-right: 6px; font-style: normal; }
+
+/* ─── Toast ────────────────────────────────────────────────────────────────── */
+.aca-toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  padding: 12px 20px; border-radius: 10px; color: #fff;
+  font-size: 0.875rem; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  max-width: 360px; animation: fade-in 0.2s ease;
+}
+.aca-toast-success { background: #10b981; }
+.aca-toast-error   { background: #ef4444; }
+
+/* ─── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .aca-tutor-card-main { flex-direction: column; align-items: stretch; gap: 12px; }
+  .aca-tutor-fee-info { border-left: none; border-top: 1px solid var(--color-border); padding-left: 0; padding-top: 12px; }
+  .aca-tutor-right { align-items: flex-start; flex-direction: row; }
+}
+
+/* ─── Ghost Button ──────────────────────────────────────────────────────────── */
+.aca-btn-ghost {
+  background: transparent; border: 1.5px solid var(--color-border, #e5e7eb);
+  color: var(--color-text-secondary); padding: 7px 16px;
+}
+.aca-btn-ghost:hover { background: var(--color-background); }
+
+/* ─── Approve Modal ─────────────────────────────────────────────────────────── */
+.aca-modal-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  animation: fade-in 0.15s ease;
+}
+.aca-modal {
+  background: var(--color-surface, #fff); border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2); width: 100%; max-width: 440px;
+  overflow: hidden; animation: modal-pop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes modal-pop {
+  from { opacity: 0; transform: scale(0.92) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.aca-modal-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 18px 22px; font-size: 1rem; font-weight: 800;
+  color: var(--color-text); border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(139,92,246,0.04));
+}
+.aca-modal-header > span { flex: 1; }
+.aca-modal-close {
+  background: transparent; border: none; cursor: pointer;
+  color: var(--color-text-muted); padding: 2px;
+  border-radius: 6px; display: flex; transition: background 0.1s;
+}
+.aca-modal-close:hover { background: rgba(0,0,0,0.06); }
+
+.aca-modal-body { padding: 24px 22px 18px; display: flex; flex-direction: column; gap: 10px; }
+.aca-modal-tutor-name { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--color-text); }
+.aca-modal-tutor-meta {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.85rem; color: var(--color-text-muted); font-weight: 500; margin: 0;
+}
+.aca-modal-label { font-size: 0.82rem; font-weight: 700; color: var(--color-text-secondary); margin-top: 6px; }
+.aca-modal-input {
+  padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--color-border, #e5e7eb);
+  font-size: 1rem; font-weight: 700; font-family: inherit; width: 100%; box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+.aca-modal-input:focus { outline: none; border-color: var(--color-primary, #6366f1); }
+.aca-modal-hint { font-size: 0.8rem; color: var(--color-text-muted); margin: 0; }
+
+.aca-modal-footer {
+  display: flex; gap: 10px; justify-content: flex-end;
+  padding: 16px 22px 20px; border-top: 1px solid var(--color-border);
+}

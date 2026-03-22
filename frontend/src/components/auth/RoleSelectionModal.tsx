@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '../ui/Button';
 import { X, Users, BookOpen, GraduationCap, ArrowLeft, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import './RoleSelectionModal.css';
 
 interface RoleSelectionModalProps {
@@ -48,6 +49,7 @@ const roles: {
 export const RoleSelectionModal = ({ onClose, onBack }: RoleSelectionModalProps) => {
   const [selectedRole, setSelectedRole] = useState<SelectableRole | null>(null);
   const navigate = useNavigate();
+  useEscapeKey(onClose);
 
   const handleContinue = () => {
     if (!selectedRole) return;

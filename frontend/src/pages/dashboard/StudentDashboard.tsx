@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import {
@@ -7,6 +7,8 @@ import {
   UserPlus, X, Heart, LogOut
 } from 'lucide-react';
 import { DashboardHeader } from '../../components/layout/DashboardHeader';
+import { studentApi } from '../../services/studentApi';
+import type { ParentLinkResponse } from '../../services/studentApi';
 import './Dashboard.css';
 
 /* ---- mock data ---- */
@@ -23,27 +25,53 @@ const activities = [
   { text: 'Đặt lịch học Tiếng Anh IELTS vào thứ 6',     time: '3 ngày trước', type: 'act-booking' },
 ];
 
-// Mock danh sách phụ huynh đã liên kết — để [] để test trạng thái chưa liên kết
-const initParents: { name: string; meta: string }[] = [];
-
 export const StudentDashboard = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const [parents, setParents] = useState(initParents);
+  const [links, setLinks] = useState<ParentLinkResponse[]>([]);
   const [showAddParent, setShowAddParent] = useState(false);
   const [newParentPhone, setNewParentPhone] = useState('');
-  // TODO: lấy từ API — false = chưa có phụ huynh nào liên kết
-  const hasLinkedParent = parents.length > 0;
 
+  useEffect(() => {
+    fetchLinks();
+  }, []);
 
+  const fetchLinks = async () => {
+    try {
+      const res = await studentApi.getParentLinks();
+      setLinks(res.data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleLogout = () => { logout(); navigate('/'); };
 
+  // TODO: implement student sending request to parent later, currently not needed as per PR requirements
   const handleAddParent = () => {
     if (!newParentPhone.trim()) return;
-    setParents(p => [...p, { name: newParentPhone, meta: 'Phụ huynh mới liên kết' }]);
     setNewParentPhone('');
     setShowAddParent(false);
+  };
+
+  const handleAccept = async (linkId: string) => {
+    try {
+      await studentApi.acceptParentLink(linkId);
+      fetchLinks();
+    } catch (e) {
+      console.error(e);
+      alert('Có lỗi xảy ra khi xác nhận.');
+    }
+  };
+
+  const handleReject = async (linkId: string) => {
+    if (!window.confirm('Từ chối yêu cầu liên kết này?')) return;
+    try {
+      await studentApi.rejectParentLink(linkId);
+      fetchLinks();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const name = user?.fullName ?? 'Học sinh';
@@ -92,8 +120,33 @@ export const StudentDashboard = () => {
             <div className="greeting-emoji">🎒</div>
           </div>
 
-          {/* ===== ONBOARDING CTA BANNER ===== */}
-          {!hasLinkedParent && (
+          {/* ===== PENDING REQUESTS BANNER ===== */}
+          {links.filter(l => l.linkStatus === 'PENDING').map(link => (
+            <div key={link.id} className="onboard-banners" style={{ marginBottom: 15 }}>
+              <div className="onboard-card" style={{ background: '#fffbeb', border: '1px solid #fde68a' }}>
+                <div style={{ marginRight: 15, padding: 12, background: '#fef3c7', borderRadius: '50%', color: '#d97706' }}>
+                  <UserPlus size={24} />
+                </div>
+                <div className="onboard-content" style={{ flex: 1 }}>
+                  <h3 className="onboard-title" style={{ color: '#d97706', marginBottom: 4 }}>Yêu cầu liên kết mới</h3>
+                  <p className="onboard-desc" style={{ color: '#92400e', margin: 0 }}>
+                    Phụ huynh <strong>{link.parentName}</strong> ({link.parentPhone}) muốn liên kết với tài khoản của bạn.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={() => handleReject(link.id)} style={{ padding: '8px 16px', border: '1px solid #fca5a5', background: '#fee2e2', color: '#b91c1c', borderRadius: 6, cursor: 'pointer', fontWeight: 500 }}>
+                    Từ chối
+                  </button>
+                  <button onClick={() => handleAccept(link.id)} style={{ padding: '8px 16px', border: 'none', background: '#d97706', color: '#fff', borderRadius: 6, cursor: 'pointer', fontWeight: 500 }}>
+                    Đồng ý
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* ===== LỜI MỜI LIÊN KẾT BANNER MẶC ĐỊNH ===== */}
+          {links.length === 0 && (
             <div className="onboard-banners">
               <div
                 className="onboard-card onboard-parent"
@@ -183,30 +236,30 @@ export const StudentDashboard = () => {
             </div>
           </div>
 
-          {/* Parents panel */}
-          <div className="dash-panel">
-            <div className="dash-section-head">
-              <span className="dash-section-title">👨‍👩‍👧 Phụ huynh liên kết</span>
-              <button className="dash-see-all" onClick={() => setShowAddParent(true)}>
-                <UserPlus size={14}/> Thêm phụ huynh
-              </button>
-            </div>
-            <div className="people-list">
-              {parents.map((p, i) => (
-                <div key={i} className="person-card">
-                  <div className="person-avatar">{p.name.charAt(0)}</div>
-                  <div className="person-info">
-                    <p className="person-name">{p.name}</p>
-                    <p className="person-meta">{p.meta}</p>
-                  </div>
-                  <span className="person-badge">Đã liên kết</span>
-                </div>
-              ))}
-              <button className="add-person-btn" onClick={() => setShowAddParent(true)}>
-                <UserPlus size={16}/> Thêm phụ huynh bằng số điện thoại
-              </button>
-            </div>
+        {/* Parents panel */}
+        <div className="dash-panel">
+          <div className="dash-section-head">
+             <span className="dash-section-title">👨‍👩‍👧 Phụ huynh liên kết</span>
+             {/* <button className="dash-see-all" onClick={() => setShowAddParent(true)}>
+               <UserPlus size={14}/> Thêm phụ huynh
+             </button> */}
           </div>
+          <div className="people-list">
+             {links.filter(l => l.linkStatus === 'ACCEPTED').map((p) => (
+               <div key={p.id} className="person-card">
+                 <div className="person-avatar">{p.parentName.charAt(0)}</div>
+                 <div className="person-info">
+                   <p className="person-name">{p.parentName}</p>
+                   <p className="person-meta">{p.parentPhone}</p>
+                 </div>
+                 <span className="person-badge">Đã liên kết</span>
+               </div>
+             ))}
+             {links.filter(l => l.linkStatus === 'ACCEPTED').length === 0 && (
+               <p style={{ color: '#6b7280', fontSize: '0.9rem', padding: '10px 0' }}>Chưa có phụ huynh nào liên kết.</p>
+             )}
+          </div>
+        </div>
 
           {/* Quick actions */}
           <section>
