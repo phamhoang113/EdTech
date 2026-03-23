@@ -1,7 +1,7 @@
 package com.edtech.backend.cls.entity;
 
 import com.edtech.backend.core.entity.BaseEntity;
-import com.edtech.backend.user.entity.UserEntity;
+import com.edtech.backend.auth.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
 
-    @Query("SELECT s FROM SessionEntity s WHERE s.cls.parent.id = :parentId " +
+    @Query("SELECT s FROM SessionEntity s WHERE s.cls.parentId = :parentId " +
            "AND s.sessionDate >= :startDate AND s.sessionDate <= :endDate")
     List<SessionEntity> findByParentIdAndDateBetween(
             @Param("parentId") UUID parentId,
@@ -21,8 +21,8 @@ public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
             Sort sort
     );
 
-    @Query("SELECT s FROM SessionEntity s JOIN s.cls.studentClasses sc " +
-           "WHERE sc.student.id = :studentId " +
+    @Query("SELECT s FROM SessionEntity s JOIN SessionAttendanceEntity sa ON sa.session.id = s.id " +
+           "WHERE sa.student.id = :studentId " +
            "AND s.sessionDate >= :startDate AND s.sessionDate <= :endDate")
     List<SessionEntity> findByStudentIdAndDateBetween(
             @Param("studentId") UUID studentId,
@@ -31,7 +31,7 @@ public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
             Sort sort
     );
 
-    @Query("SELECT s FROM SessionEntity s WHERE s.cls.tutor.id = :tutorId " +
+    @Query("SELECT s FROM SessionEntity s WHERE s.cls.tutorId = :tutorId " +
            "AND s.sessionDate >= :startDate AND s.sessionDate <= :endDate")
     List<SessionEntity> findByTutorIdAndDateBetween(
             @Param("tutorId") UUID tutorId,

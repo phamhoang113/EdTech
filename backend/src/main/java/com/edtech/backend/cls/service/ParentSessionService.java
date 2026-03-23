@@ -5,8 +5,8 @@ import com.edtech.backend.cls.dto.SessionDTO;
 import com.edtech.backend.cls.entity.SessionEntity;
 import com.edtech.backend.cls.enums.SessionStatus;
 import com.edtech.backend.cls.repository.SessionRepository;
-import com.edtech.backend.core.exception.BadRequestException;
-import com.edtech.backend.core.exception.ResourceNotFoundException;
+import com.edtech.backend.core.exception.BusinessRuleException;
+import com.edtech.backend.core.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -48,15 +48,15 @@ public class ParentSessionService {
     @Transactional
     public SessionDTO cancelSession(UUID parentId, UUID sessionId, SessionCancelRequest request) {
         SessionEntity session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Buổi học không tồn tại"));
+                .orElseThrow(() -> new EntityNotFoundException("Buổi học không tồn tại"));
 
         // Verify ownership (the session must belong to a class of one of the parent's children)
-        if (!session.getCls().getParent().getId().equals(parentId)) {
-            throw new BadRequestException("Bạn không có quyền thao tác trên buổi học này");
+        if (!session.getCls().getParentId().equals(parentId)) {
+            throw new BusinessRuleException("Bạn không có quyền thao tác trên buổi học này");
         }
 
         if (session.getStatus() != SessionStatus.SCHEDULED) {
-            throw new BadRequestException("Chỉ có thể huỷ những buổi học chưa diễn ra");
+            throw new BusinessRuleException("Chỉ có thể huỷ những buổi học chưa diễn ra");
         }
 
         LocalDateTime sessionDateTime = LocalDateTime.of(session.getSessionDate(), session.getStartTime());
@@ -64,7 +64,7 @@ public class ParentSessionService {
 
         // Ràng buộc thời gian: trước 2 tiếng
         if (now.plusHours(2).isAfter(sessionDateTime)) {
-            throw new BadRequestException("Chỉ được huỷ buổi học trước 2 tiếng so với thời gian bắt đầu. Vui lòng liên hệ trực tiếp Gia sư hoặc Trung tâm.");
+            throw new BusinessRuleException("Chỉ được huỷ buổi học trước 2 tiếng so với thời gian bắt đầu. Vui lòng liên hệ trực tiếp Gia sư hoặc Trung tâm.");
         }
 
         session.setStatus(SessionStatus.CANCELLED);

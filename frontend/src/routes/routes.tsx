@@ -91,6 +91,20 @@ export const router = createBrowserRouter([
               return { Component: ParentSchedulePage };
             },
           },
+          {
+            path: '/tutor/classes',
+            lazy: async () => {
+              const { TutorClassesPage } = await import('../pages/dashboard/TutorClassesPage');
+              return { Component: TutorClassesPage };
+            },
+          },
+          {
+            path: '/tutor/schedule',
+            lazy: async () => {
+              const { TutorSchedulePage } = await import('../pages/dashboard/TutorSchedulePage');
+              return { Component: TutorSchedulePage };
+            },
+          },
           // { path: '/messages',  lazy: ... },
           // { path: '/payment',   lazy: ... },
         ],

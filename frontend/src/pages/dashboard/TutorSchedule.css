@@ -1,0 +1,321 @@
+/* =============================================
+   TutorSchedulePage — Weekly Schedule View
+   ============================================= */
+
+.tsched-container {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Warning Banner ────────────────────────────── */
+.tsched-warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1.5px solid rgba(239, 68, 68, 0.25);
+  border-radius: 14px;
+  color: #dc2626;
+  font-size: 0.88rem;
+  font-weight: 500;
+  animation: tsched-pulse 2s ease-in-out infinite;
+}
+
+.tsched-warning-banner strong {
+  font-weight: 700;
+}
+
+@keyframes tsched-pulse {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.25); }
+  50% { border-color: rgba(239, 68, 68, 0.5); }
+}
+
+/* ── Header Section ────────────────────────────── */
+.tsched-header-section {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tsched-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: 2px;
+}
+
+.tsched-subtitle {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.tsched-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tsched-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition-base);
+}
+
+.tsched-nav-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-surface-hover);
+}
+
+.tsched-nav-btn--active {
+  background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ── Week Grid ─────────────────────────────────── */
+.tsched-body {
+  min-height: 300px;
+}
+
+.tsched-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.tsched-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.tsched-day-col {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow var(--transition-base);
+}
+
+.tsched-day-col:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.tsched-day--today {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px rgba(99,102,241,0.2);
+}
+
+.tsched-day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tsched-day-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tsched-day-date {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.tsched-day-date--today {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+}
+
+.tsched-day-sessions {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.tsched-no-session {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  opacity: 0.5;
+}
+
+/* ── Session Card ──────────────────────────────── */
+.tsched-session-card {
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color var(--transition-base), transform var(--transition-base);
+}
+
+.tsched-session-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.tsched-session--cancelled {
+  opacity: 0.55;
+}
+
+.tsched-session-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.tsched-session-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tsched-session-subject {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.tsched-session-status {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 1px 6px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.tsched-meet-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+  margin-top: 2px;
+}
+
+.tsched-meet-link:hover {
+  text-decoration: underline;
+}
+
+.tsched-session-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.tsched-session-note svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Summary Stats ─────────────────────────────── */
+.tsched-summary {
+  display: flex;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.tsched-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.tsched-summary-val {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.tsched-summary-lbl {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+/* ── Responsive ────────────────────────────────── */
+@media (max-width: 1100px) {
+  .tsched-week-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .tsched-container {
+    padding: 14px;
+  }
+  .tsched-header-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .tsched-week-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .tsched-summary {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .tsched-week-grid {
+    grid-template-columns: 1fr;
+  }
+}

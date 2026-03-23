@@ -42,6 +42,7 @@ public class SessionEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "status", nullable = false)
+    @Builder.Default
     private SessionStatus status = SessionStatus.SCHEDULED;
 
     @Column(name = "tutor_note", columnDefinition = "TEXT")

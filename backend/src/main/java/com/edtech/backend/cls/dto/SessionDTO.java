@@ -41,10 +41,7 @@ public class SessionDTO {
         
         String tutorName = null;
         String tutorPhone = null;
-        if (entity.getCls() != null && entity.getCls().getTutor() != null) {
-            tutorName = entity.getCls().getTutor().getFullName();
-            tutorPhone = entity.getCls().getTutor().getPhone();
-        }
+        // Tutor details have to be enriched by the service layer or fetched later since ClassEntity only contains tutorId.
 
         return SessionDTO.builder()
                 .id(entity.getId())
