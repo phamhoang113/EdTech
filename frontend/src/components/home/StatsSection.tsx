@@ -1,11 +1,16 @@
+
+
 import { Users, BookOpen, Star } from 'lucide-react';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 import './StatsSection.css';
 
 export const StatsSection = () => {
+  const { ref, isRevealed } = useScrollReveal({ threshold: 0.2 });
+
   return (
-    <section className="stats-section">
+    <section className="stats-section" ref={ref}>
       <div className="container stats-container">
-        <div className="stat-item">
+        <div className={`stat-item reveal-base reveal-up ${isRevealed ? 'revealed' : ''}`}>
           <div className="stat-icon-wrapper">
             <Users className="stat-icon" />
           </div>
@@ -15,7 +20,7 @@ export const StatsSection = () => {
           </div>
         </div>
         
-        <div className="stat-item">
+        <div className={`stat-item reveal-base reveal-up delay-100 ${isRevealed ? 'revealed' : ''}`}>
           <div className="stat-icon-wrapper">
             <BookOpen className="stat-icon" />
           </div>
@@ -25,7 +30,7 @@ export const StatsSection = () => {
           </div>
         </div>
         
-        <div className="stat-item">
+        <div className={`stat-item reveal-base reveal-up delay-200 ${isRevealed ? 'revealed' : ''}`}>
           <div className="stat-icon-wrapper">
             <Star className="stat-icon star-icon" />
           </div>

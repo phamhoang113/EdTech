@@ -7,7 +7,15 @@ import com.edtech.backend.admin.dto.AdminUserListItem;
 import com.edtech.backend.admin.service.AdminUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +27,11 @@ import java.util.UUID;
 public class AdminUserController {
 
     private final AdminUserService adminUserService;
+
+    @PostMapping("/quick-create")
+    public ApiResponse<AdminUserDetail> quickCreateUser(@jakarta.validation.Valid @RequestBody com.edtech.backend.admin.dto.CreateUserAdminRequest req) {
+        return ApiResponse.ok(adminUserService.createUserBypass(req), "Tạo người dùng thành công");
+    }
 
     /** Lấy danh sách tất cả user, có thể lọc theo role */
     @GetMapping

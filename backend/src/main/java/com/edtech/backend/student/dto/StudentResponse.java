@@ -23,4 +23,5 @@ public class StudentResponse {
     private String username;
     private String defaultPassword;
     private String linkStatus;
+    private String initiatedBy; // Mới thêm: PARENT | STUDENT
 }

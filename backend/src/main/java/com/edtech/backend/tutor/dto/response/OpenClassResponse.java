@@ -14,6 +14,7 @@ public class OpenClassResponse {
     private String subject;
     private String grade;
     private String location;
+
     private String schedule;
     private String timeFrame;
 

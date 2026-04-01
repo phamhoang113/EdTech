@@ -1,7 +1,8 @@
+import { Eye, EyeOff, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { registerApi } from '../services/authApi';
-import { Eye, EyeOff, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
+
 import './RegisterPage.css';
 
 type Role = 'PARENT' | 'TUTOR' | 'STUDENT';
@@ -68,7 +69,7 @@ export const RegisterPage = () => {
         <div className="register-header">
           <div className="register-logo">
             <div className="register-logo-icon">🎓</div>
-            <span className="register-logo-name">EdTech</span>
+            <span className="register-logo-name">Gia Sư Tinh Hoa</span>
           </div>
           <h1>Tạo tài khoản</h1>
           <p className="register-role-badge">

@@ -1,0 +1,83 @@
+/* =============================================
+   TimePicker24h + DayPicker — Compact Scroll Wheel
+   ============================================= */
+
+.tp-box {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-surface, #fff);
+  border: 1.5px solid var(--color-border, #e5e7eb);
+  border-radius: 10px;
+  padding: 0 4px;
+  position: relative;
+  overflow: hidden;
+  height: 72px; /* 3 × 24px */
+}
+
+.tp-box--day {
+  min-width: 42px;
+}
+
+.tp-highlight {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 24px;
+  background: rgba(99, 102, 241, 0.08);
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.tp-col {
+  height: 72px;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  position: relative;
+  z-index: 1;
+  min-width: 28px;
+}
+
+.tp-col::-webkit-scrollbar {
+  display: none;
+}
+
+.tp-item {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted, #9ca3af);
+  cursor: pointer;
+  scroll-snap-align: center;
+  transition: color 0.1s ease;
+  user-select: none;
+  padding: 0 3px;
+}
+
+.tp-item--on {
+  color: var(--color-text, #1f2937);
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.tp-colon {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--color-text, #1f2937);
+  z-index: 1;
+  padding: 0 1px;
+}
+
+.tp-static {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted, #9ca3af);
+  padding: 4px 8px;
+}

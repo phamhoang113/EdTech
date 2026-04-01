@@ -1,5 +1,6 @@
-import { Button } from '../ui/Button';
 import { MapPin, Calendar, Clock, GraduationCap } from 'lucide-react';
+import { Button } from '../ui/Button';
+
 import { useAuthStore } from '../../store/useAuthStore';
 import './OpenClassCard.css';
 

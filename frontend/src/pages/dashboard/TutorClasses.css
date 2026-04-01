@@ -143,3 +143,82 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Schedule warning & edit button */
+.tclass-schedule-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(234, 179, 8, 0.08);
+  border: 1px solid rgba(234, 179, 8, 0.25);
+  border-radius: 10px;
+  color: #ca8a04;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.tclass-edit-schedule-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.tclass-edit-schedule-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.06);
+}
+
+/* ── Conflict Highlighting ──────────────────── */
+.tclass-card--conflict {
+  border-color: #ef4444;
+  border-width: 2px;
+  background: rgba(239, 68, 68, 0.03);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+}
+
+.tclass-card--conflict:hover {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12), var(--shadow-lg);
+}
+
+.tclass-conflict-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 10px;
+  color: #dc2626;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.tclass-conflict-banner svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.tclass-conflict-detail {
+  font-weight: 500;
+  margin-top: 3px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.tclass-conflict-detail strong {
+  color: #b91c1c;
+}

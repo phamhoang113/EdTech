@@ -120,20 +120,17 @@
   color: var(--color-primary-light);
 }
 
-.highlight-rate {
+.tutor-bio {
   margin-top: auto;
   padding-top: var(--spacing-2);
+  border-top: 1px dashed var(--color-border);
 }
 
-.rate-value {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--color-primary);
-}
-
-.rate-unit {
-  color: var(--color-text-secondary);
+.bio-text {
   font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  font-style: italic;
 }
 
 .tutor-footer {

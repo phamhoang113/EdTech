@@ -47,6 +47,11 @@ export default function TutorProfilePage() {
   const [subjects, setSubjects] = useState<string[]>([]);
   const [teachingLevels, setTeachingLevels] = useState<string[]>([]);
 
+  // Bank Info
+  const [bankName, setBankName] = useState('');
+  const [bankAccountNumber, setBankAccountNumber] = useState('');
+  const [bankOwnerName, setBankOwnerName] = useState('');
+
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
   const [availableGradeLevels, setAvailableGradeLevels] = useState<string[]>([]);
 
@@ -56,6 +61,7 @@ export default function TutorProfilePage() {
     email: '', bio: '', location: '', achievements: '',
     experienceYears: 0, teachingMode: 'BOTH',
     subjects: [] as string[], teachingLevels: [] as string[],
+    bankName: '', bankAccountNumber: '', bankOwnerName: ''
   });
 
   useEffect(() => {
@@ -72,6 +78,9 @@ export default function TutorProfilePage() {
       setTeachingMode(p.teachingMode ?? 'BOTH');
       setSubjects(p.subjects ?? []);
       setTeachingLevels(p.teachingLevels ?? []);
+      setBankName(p.bankName ?? '');
+      setBankAccountNumber(p.bankAccountNumber ?? '');
+      setBankOwnerName(p.bankOwnerName ?? '');
       // Ghi snapshot ban đầu
       initialRef.current = {
         avatarBase64: p.avatarBase64 ?? null,
@@ -83,6 +92,9 @@ export default function TutorProfilePage() {
         teachingMode: p.teachingMode ?? 'BOTH',
         subjects: p.subjects ?? [],
         teachingLevels: p.teachingLevels ?? [],
+        bankName: p.bankName ?? '',
+        bankAccountNumber: p.bankAccountNumber ?? '',
+        bankOwnerName: p.bankOwnerName ?? ''
       };
     }).catch(() => setError('Không tải được hồ sơ. Vui lòng thử lại.')).finally(() => setLoading(false));
 
@@ -128,6 +140,9 @@ export default function TutorProfilePage() {
         teachingMode,
         subjects,
         teachingLevels,
+        bankName: bankName.trim(),
+        bankAccountNumber: bankAccountNumber.trim(),
+        bankOwnerName: bankOwnerName.trim()
       };
       const updated = await tutorApi.updateMyProfile(req);
       // Sync avatar vào store để header cập nhật ngay
@@ -155,7 +170,10 @@ export default function TutorProfilePage() {
     experienceYears !== initialRef.current.experienceYears ||
     teachingMode !== initialRef.current.teachingMode ||
     JSON.stringify([...subjects].sort()) !== JSON.stringify([...initialRef.current.subjects].sort()) ||
-    JSON.stringify([...teachingLevels].sort()) !== JSON.stringify([...initialRef.current.teachingLevels].sort());
+    JSON.stringify([...teachingLevels].sort()) !== JSON.stringify([...initialRef.current.teachingLevels].sort()) ||
+    bankName !== initialRef.current.bankName ||
+    bankAccountNumber !== initialRef.current.bankAccountNumber ||
+    bankOwnerName !== initialRef.current.bankOwnerName;
 
   if (loading) {
     return (
@@ -227,6 +245,46 @@ export default function TutorProfilePage() {
               onChange={e => setEmail(e.target.value)}
               placeholder="example@gmail.com"
             />
+          </div>
+
+          {/* Bank Info */}
+          <div className="tp-section">
+            <div className="tp-section-title">💸 Tài khoản ngân hàng (Nhận thù lao)</div>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 200px' }}>
+                <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '6px' }}>Ngân hàng</div>
+                <input
+                  type="text"
+                  className="tp-input"
+                  value={bankName}
+                  onChange={e => setBankName(e.target.value)}
+                  placeholder="VD: MB Bank, Vietcombank..."
+                />
+              </div>
+              <div style={{ flex: '1 1 200px' }}>
+                <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '6px' }}>Số tài khoản</div>
+                <input
+                  type="text"
+                  className="tp-input"
+                  value={bankAccountNumber}
+                  onChange={e => setBankAccountNumber(e.target.value)}
+                  placeholder="Nhập số tài khoản hợp lệ"
+                />
+              </div>
+              <div style={{ flex: '1 1 200px' }}>
+                <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '6px' }}>Tên người thụ hưởng</div>
+                <input
+                  type="text"
+                  className="tp-input"
+                  value={bankOwnerName}
+                  onChange={e => setBankOwnerName(e.target.value.toUpperCase())}
+                  placeholder="VIẾT HOA KHÔNG DẤU"
+                />
+              </div>
+            </div>
+            <p className="tp-readonly-note" style={{ marginTop: '8px', color: '#888' }}>
+              💡 Vui lòng nhập thông tin chính xác. Kế toán sẽ chuyển khoản tự động vào tài khoản này.
+            </p>
           </div>
 
           {/* Bio */}

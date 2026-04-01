@@ -1,6 +1,7 @@
 package com.edtech.backend.cls.entity;
 
 import com.edtech.backend.cls.enums.SessionStatus;
+import com.edtech.backend.cls.enums.SessionType;
 import com.edtech.backend.core.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,6 +11,7 @@ import org.hibernate.type.SqlTypes;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "sessions")
@@ -45,7 +47,20 @@ public class SessionEntity extends BaseEntity {
     @Builder.Default
     private SessionStatus status = SessionStatus.SCHEDULED;
 
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "session_type", nullable = false)
+    @Builder.Default
+    private SessionType sessionType = SessionType.REGULAR;
+
     @Column(name = "tutor_note", columnDefinition = "TEXT")
     private String tutorNote;
+
+    @Column(name = "requires_makeup", nullable = false)
+    @Builder.Default
+    private Boolean requiresMakeup = false;
+
+    @Column(name = "makeup_for_session_id")
+    private UUID makeupForSessionId;
 
 }

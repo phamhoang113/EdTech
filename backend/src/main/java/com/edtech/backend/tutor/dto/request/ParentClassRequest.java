@@ -26,5 +26,6 @@ public record ParentClassRequest(
         @NotNull BigDecimal parentFee,   // học phí PH muốn trả / tháng
         String genderRequirement,         // Nam / Nữ / Không yêu cầu
         String description,              // Ghi chú thêm cho admin
-        String levelFees                 // JSON array loại GS + học phí [{level, tutor_fee}]
+        String levelFees,                // JSON array loại GS + học phí [{level, tutor_fee}]
+        java.util.List<java.util.UUID> studentIds     // Danh sách con (student user_id)
 ) {}

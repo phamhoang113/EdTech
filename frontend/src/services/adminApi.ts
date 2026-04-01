@@ -140,6 +140,12 @@ export const adminApi = {
     return response.data;
   },
 
+  quickCreateUser: async (payload: { phone: string; password: string; fullName: string; role: UserRole }): Promise<ApiResponse<AdminUserDetail>> => {
+    const response = await apiClient.post('/api/v1/admin/users/quick-create', payload);
+    return response.data;
+  },
+
+
   // ─── System Settings ─────────────────────────────────────────────────────
   getSettings: async (): Promise<ApiResponse<SystemSettings>> => {
     const response = await apiClient.get('/api/v1/admin/settings');
@@ -205,6 +211,11 @@ export const adminApi = {
     return response.data;
   },
 
+  getClassScheduleStats: async (classId: string): Promise<ApiResponse<AdminClassScheduleStatsDTO>> => {
+    const response = await apiClient.get(`/api/v1/admin/classes/${classId}/schedule-stats`);
+    return response.data;
+  },
+
   // ─── Dashboard ───────────────────────────────────────────────────────────
   getDashboardStats: async (): Promise<ApiResponse<DashboardStats>> => {
     const response = await apiClient.get('/api/v1/admin/dashboard/stats');
@@ -227,8 +238,69 @@ export const adminApi = {
     return response.data;
   },
 
+  updateLearningStartDate: async (classId: string, learningStartDate: string): Promise<ApiResponse<void>> => {
+    const response = await apiClient.patch(`/api/v1/admin/classes/${classId}/learning-start-date`, { learningStartDate });
+    return response.data;
+  },
+
   deleteClass: async (classId: string): Promise<ApiResponse<void>> => {
     const response = await apiClient.delete(`/api/v1/admin/classes/${classId}`);
+    return response.data;
+  },
+
+  // ─── Billing ────────────────────────────────────────────────────────────
+
+  getBillings: async (status?: string, month?: number, year?: number): Promise<ApiResponse<AdminBillingItem[]>> => {
+    const params: Record<string, any> = {};
+    if (status) params.status = status;
+    if (month) params.month = month;
+    if (year) params.year = year;
+    const response = await apiClient.get('/api/v1/admins/billings', { params });
+    return response.data;
+  },
+
+  triggerBilling: async (month: number, year: number): Promise<ApiResponse<string>> => {
+    const response = await apiClient.post('/api/v1/admins/billings/trigger', null, { params: { month, year } });
+    return response.data;
+  },
+
+  approveBilling: async (id: string): Promise<ApiResponse<string>> => {
+    const response = await apiClient.post(`/api/v1/admins/billings/${id}/approve`);
+    return response.data;
+  },
+
+  approveAllDraftBillings: async (month: number, year: number): Promise<ApiResponse<string>> => {
+    const response = await apiClient.post('/api/v1/admins/billings/approve-all', null, { params: { month, year } });
+    return response.data;
+  },
+
+  deleteDraftBilling: async (id: string): Promise<ApiResponse<string>> => {
+    const response = await apiClient.delete(`/api/v1/admins/billings/${id}`);
+    return response.data;
+  },
+
+  verifyPayment: async (transactionCode: string): Promise<ApiResponse<string>> => {
+    const response = await apiClient.post(`/api/v1/admins/billings/verify/${transactionCode}`);
+    return response.data;
+  },
+
+  verifyBulk: async (billingIds: string[]): Promise<ApiResponse<string>> => {
+    const response = await apiClient.post('/api/v1/admins/billings/verify-bulk', billingIds);
+    return response.data;
+  },
+
+  getTutorPayouts: async (status?: string, month?: number, year?: number): Promise<ApiResponse<AdminTutorPayoutItem[]>> => {
+    const params: Record<string, any> = {};
+    if (status) params.status = status;
+    if (month) params.month = month;
+    if (year) params.year = year;
+    const response = await apiClient.get('/api/v1/admins/billings/payouts', { params });
+    return response.data;
+  },
+
+  markPayoutPaid: async (id: string, note?: string): Promise<ApiResponse<string>> => {
+    const params = note ? { note } : {};
+    const response = await apiClient.post(`/api/v1/admins/billings/payouts/${id}/mark-paid`, null, { params });
     return response.data;
   },
 };
@@ -313,9 +385,26 @@ export interface AdminClassListItem {
   /** Lý do từ chối (chỉ có khi status = CANCELLED) */
   rejectionReason?: string;
   status: ClassStatus;
+  learningStartDate?: string;
+  
+  // Quota Warnings
+  missingSessionsThisWeek?: number;
+  pendingMakeupCount?: number;
+
   hasPendingProposals: boolean;
   pendingApplicationCount: number;
   createdAt: string;
+}
+
+export interface AdminClassScheduleStatsDTO {
+  totalSessions: number;
+  completedSessions: number;
+  upcomingSessions: number;
+  regularCount: number;
+  makeupCount: number;
+  extraCount: number;
+  cancelledCount: number;
+  pendingMakeupCount: number;
 }
 
 export interface CreateClassBody {
@@ -323,7 +412,7 @@ export interface CreateClassBody {
   title: string;
   subject: string;
   grade: string;
-  mode: 'ONLINE' | 'OFFLINE';
+  mode: 'ONLINE' | 'OFFLINE' | 'IN_PERSON';
   address?: string;
   schedule?: string;
   sessionsPerWeek: number;
@@ -354,4 +443,47 @@ export interface DashboardStats {
   adminCount: number;
   estimatedMonthlyRevenue: number;
   newUsersPerMonth: DashboardMonthCount[];
+}
+
+export type BillingStatusType = 'DRAFT' | 'UNPAID' | 'VERIFYING' | 'PAID';
+export type PayoutStatusType = 'LOCKED' | 'PENDING' | 'PAID_OUT';
+
+export interface AdminBillingItem {
+  id: string;
+  classId: string;
+  classCode: string;
+  classTitle: string;
+  parentId: string;
+  parentName: string;
+  studentNames: string;
+  month: number;
+  year: number;
+  totalSessions: number;
+  parentFeeAmount: number;
+  transactionCode: string;
+  status: BillingStatusType;
+  verifiedByAdminId: string | null;
+  verifiedAt: string | null;
+  createdAt: string;
+}
+
+export interface AdminTutorPayoutItem {
+  id: string;
+  tutorId: string;
+  tutorName: string;
+  tutorPhone: string;
+  tutorBankName: string | null;
+  tutorBankAccount: string | null;
+  tutorBankOwner: string | null;
+  classId: string;
+  classTitle: string;
+  month: number;
+  year: number;
+  amount: number;
+  transactionCode: string;
+  status: PayoutStatusType;
+  adminNote: string | null;
+  paidAt: string | null;
+  confirmedByTutorAt: string | null;
+  createdAt: string;
 }

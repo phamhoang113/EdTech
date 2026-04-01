@@ -1,17 +1,22 @@
-import { Search, Link as LinkIcon, Video } from 'lucide-react';
+
+
+import { Search, LinkIcon, Video } from 'lucide-react';
+import { useScrollReveal } from '../../hooks/useScrollReveal';
 import './HowItWorksSection.css';
 
 export const HowItWorksSection = () => {
+  const { ref, isRevealed } = useScrollReveal({ threshold: 0.1 });
+
   return (
-    <section className="how-it-works">
+    <section className="how-it-works" ref={ref}>
       <div className="container">
-        <div className="section-header center">
+        <div className={`section-header center reveal-base reveal-up ${isRevealed ? 'revealed' : ''}`}>
           <h2 className="section-title">Cách Thức Hoạt Động</h2>
           <p className="section-subtitle">Chỉ với 3 bước đơn giản để bắt đầu học tập cùng gia sư phù hợp nhất.</p>
         </div>
 
         <div className="steps-container">
-          <div className="step-card">
+          <div className={`step-card reveal-base reveal-left delay-100 ${isRevealed ? 'revealed' : ''}`}>
             <div className="step-icon-wrapper">
               <Search className="step-icon" />
               <div className="step-number">1</div>
@@ -24,7 +29,7 @@ export const HowItWorksSection = () => {
 
           <div className="step-connector"></div>
 
-          <div className="step-card">
+          <div className={`step-card reveal-base reveal-up delay-300 ${isRevealed ? 'revealed' : ''}`}>
             <div className="step-icon-wrapper">
               <LinkIcon className="step-icon" />
               <div className="step-number">2</div>
@@ -37,7 +42,7 @@ export const HowItWorksSection = () => {
 
           <div className="step-connector"></div>
 
-          <div className="step-card">
+          <div className={`step-card reveal-base reveal-right delay-500 ${isRevealed ? 'revealed' : ''}`}>
             <div className="step-icon-wrapper">
               <Video className="step-icon" />
               <div className="step-number">3</div>

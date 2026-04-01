@@ -1,19 +1,15 @@
+import { ChevronRight, ChevronLeft, Phone, Briefcase, DollarSign, Calendar, Clock, Users, CheckCircle, AlertCircle, Star, BookOpen, X, GraduationCap, MapPin, Wifi, Home, Award } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
-import {
-  ChevronRight, ChevronLeft, Phone, Briefcase,
-  DollarSign, Calendar, Clock, Users, CheckCircle,
-  AlertCircle, Star, BookOpen, X, GraduationCap,
-  MapPin, Wifi, Home, Award,
-} from 'lucide-react';
+
 import { DashboardHeader } from '../../components/layout/DashboardHeader';
 import { RequestClassModal } from '../../components/parent/RequestClassModal';
+import { ManageStudentsModal } from '../../components/parent/ManageStudentsModal';
 import { ParentSidebar } from '../../components/parent/ParentSidebar';
 import { parentApi } from '../../services/parentApi';
 import type { ParentClass, TutorApplicant } from '../../services/parentApi';
 import './ApplicantsPage.css';
 import '../dashboard/Dashboard.css';
-
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
 function fmtCurrency(n: number | null) {
@@ -163,7 +159,6 @@ function TutorDetailModal({ tutor, onClose, onSelect, classStatus }: {
             </div>
           )}
 
-
           {error && (
             <div className="ap-error"><AlertCircle size={13}/> {error}</div>
           )}
@@ -256,7 +251,10 @@ function ClassCard({ cls, onClick, isActive }: {
         <div className="ap-class-subject">{cls.subject}</div>
         <span className="ap-class-status" style={{ background: st.bg, color: st.text }}>{st.label}</span>
       </div>
-      <div className="ap-class-title">{cls.title}</div>
+      <div className="ap-class-title">
+        {cls.title}
+        {cls.classCode && <span style={{ marginLeft: 6, fontSize: '0.75rem', fontWeight: 700, color: '#6366f1', background: '#eef2ff', padding: '1px 6px', borderRadius: 8 }}>#{cls.classCode}</span>}
+      </div>
       <div className="ap-class-meta">
         <span><BookOpen size={10}/> {cls.grade}</span>
         <span><Clock size={10}/> {cls.sessionsPerWeek} buổi/tuần</span>
@@ -268,7 +266,7 @@ function ClassCard({ cls, onClick, isActive }: {
 }
 
 /* ── Class Detail Section ─────────────────────────────────────────── */
-function ClassDetailSection({ cls }: { cls: ParentClass }) {
+function ClassDetailSection({ cls, onManageStudents }: { cls: ParentClass; onManageStudents: () => void }) {
   const st = classStatusLabel(cls.status);
   const scheduleEntries = (() => {
     try { return JSON.parse(cls.schedule ?? '[]') as { dayOfWeek: string; ca: string; startTime: string; endTime: string }[]; }
@@ -290,10 +288,52 @@ function ClassDetailSection({ cls }: { cls: ParentClass }) {
       <div className="ap-cd-header">
         <div className="ap-cd-left">
           <div className="ap-cd-subject">{cls.subject}</div>
-          <h2 className="ap-cd-title">{cls.title}</h2>
+          <h2 className="ap-cd-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {cls.title}
+            {cls.classCode && <span style={{ fontSize: '1rem', fontWeight: 700, color: '#6366f1', background: '#eef2ff', padding: '2px 8px', borderRadius: 8 }}>#{cls.classCode}</span>}
+          </h2>
         </div>
         <span className="ap-class-status" style={{ background: st.bg, color: st.text }}>{st.label}</span>
       </div>
+
+      {/* Missing Students warning */}
+      {(!cls.studentIds || cls.studentIds.length === 0) && (
+        <div style={{
+          margin: '12px 0', padding: '12px 16px', borderRadius: 12,
+          background: 'rgba(239,68,68,0.08)', border: '1.5px solid rgba(239,68,68,0.25)',
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10
+        }}>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <span style={{ fontSize: '1.2rem', color: '#dc2626', marginTop: 2 }}><AlertCircle size={20}/></span>
+            <div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#dc2626', marginBottom: 4 }}>
+                Lớp này chưa có Học sinh
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#991b1b', lineHeight: 1.4 }}>
+                Vui lòng gán học sinh vào để bắt đầu quá trình học.
+              </div>
+            </div>
+          </div>
+          <button onClick={onManageStudents} style={{
+            padding: '8px 14px', background: '#dc2626', color: '#fff', flexShrink: 0,
+            border: 'none', borderRadius: 8, fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer'
+          }}>
+            Gán ngay
+          </button>
+        </div>
+      )}
+
+      {/* Show Assigned Students summary if they exist */}
+      {(cls.studentIds && cls.studentIds.length > 0) && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+          <Users size={14} style={{ color: '#8b5cf6' }}/>
+          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#4b5563' }}>Đã gán học sinh ({cls.studentIds.length})</span>
+          <button onClick={onManageStudents} style={{
+            marginLeft: 'auto', background: 'none', border: 'none',
+            color: '#6366f1', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer'
+          }}>Sửa Học Sinh</button>
+        </div>
+      )}
 
       {/* Banner lý do hủy — chỉ hiện khi CANCELLED */}
       {cls.status === 'CANCELLED' && (
@@ -396,6 +436,7 @@ export function ApplicantsPage() {
   const [loadingApplicants, setLoadingApplicants] = useState(false);
   const [selectedTutor, setSelectedTutor] = useState<TutorApplicant | null>(null);
   const [showRequestClass, setShowRequestClass] = useState(false);
+  const [showManageStudents, setShowManageStudents] = useState(false);
 
   /* Load danh sách lớp */
   useEffect(() => {
@@ -483,7 +524,7 @@ export function ApplicantsPage() {
               ) : (
                 <>
                   {/* Thông tin lớp */}
-                  <ClassDetailSection cls={selectedClass}/>
+                  <ClassDetailSection cls={selectedClass} onManageStudents={() => setShowManageStudents(true)} />
 
                   {/* Danh sách GS ứng tuyển */}
                   <div className="ap-panel-label" style={{ marginTop: 24 }}>
@@ -529,6 +570,22 @@ export function ApplicantsPage() {
           onSuccess={() => {
             setShowRequestClass(false);
             parentApi.getMyClasses().then(res => setClasses(res.data ?? []));
+          }}
+        />
+      )}
+
+      {/* Manage Students Modal */}
+      {showManageStudents && selectedClass && (
+        <ManageStudentsModal
+          cls={selectedClass}
+          onClose={() => setShowManageStudents(false)}
+          onSuccess={() => {
+            setShowManageStudents(false);
+            parentApi.getMyClasses().then(res => {
+              setClasses(res.data ?? []);
+              const updated = res.data?.find(c => c.id === selectedClass.id);
+              if (updated) setSelectedClass(updated);
+            });
           }}
         />
       )}

@@ -1,19 +1,11 @@
 package com.edtech.backend.cls.entity;
 
+import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.cls.enums.ClassMode;
 import com.edtech.backend.cls.enums.ClassStatus;
 import com.edtech.backend.core.entity.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -87,13 +79,17 @@ public class ClassEntity extends BaseEntity {
     private String timeFrame;
 
     @Column(name = "start_date")
-    private LocalDate startDate;
+    private LocalDate startDate; // Usually the date the class was assigned/opened
+
+    @Column(name = "learning_start_date")
+    private LocalDate learningStartDate; // The agreed upon starting day of actual teaching
 
     @Column(name = "end_date")
     private LocalDate endDate;
 
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
+
 
     // V20 NEW FIELDS
     @Column(name = "class_code", length = 6)
@@ -121,4 +117,13 @@ public class ClassEntity extends BaseEntity {
     /** Lý do từ chối yêu cầu mở lớp (admin điền khi reject PENDING_APPROVAL) */
     @Column(name = "rejection_reason", columnDefinition = "TEXT")
     private String rejectionReason;
+
+    @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE, CascadeType.PERSIST })
+    @JoinTable(
+        name = "class_students",
+        joinColumns = @JoinColumn(name = "class_id"),
+        inverseJoinColumns = @JoinColumn(name = "student_id")
+    )
+    @Builder.Default
+    private java.util.Set<UserEntity> students = new java.util.HashSet<>();
 }

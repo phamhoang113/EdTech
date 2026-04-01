@@ -194,7 +194,7 @@
   border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 2000;
 }
 
 .topbar-search-wrap {
@@ -548,7 +548,6 @@
 .upcoming-subj  { font-size: 0.87rem; font-weight: 700; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .upcoming-who   { font-size: 0.77rem; color: var(--color-text-muted); }
 .upcoming-time  { display: flex; align-items: center; gap: 4px; font-size: 0.73rem; font-weight: 600; color: var(--color-primary); white-space: nowrap; }
-
 /* =============================================
    ACTIVITY LIST
    ============================================= */
@@ -688,7 +687,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.45);
-  z-index: 200;
+  z-index: 3000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -918,4 +917,51 @@
   .onboard-title { font-size: 0.95rem; }
   .onboard-desc  { display: none; }
   .onboard-card  { padding: 16px 18px; }
+}
+
+/* =============================================
+   ONBOARD ACTION BUTTONS (inside banner)
+   ============================================= */
+.onboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  position: relative;
+  z-index: 2;
+}
+.onboard-action-primary {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  color: #059669;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.onboard-action-primary:hover {
+  background: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.onboard-action-secondary {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+.onboard-action-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
 }

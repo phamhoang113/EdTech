@@ -1,8 +1,6 @@
+import { Save, Globe, Shield, Bell, Database, Palette, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import {
-  Save, Globe, Shield, Bell, Database, Palette,
-  CheckCircle, AlertTriangle, Loader2,
-} from 'lucide-react';
+
 import { adminApi } from '../../services/adminApi';
 import type { SystemSettings } from '../../services/adminApi';
 import './AdminSettings.css';
@@ -17,8 +15,8 @@ const SECTIONS = [
 ];
 
 const DEFAULT: SystemSettings = {
-  siteName: 'EdTech',
-  contactEmail: 'support@edtech.vn',
+  siteName: 'Gia Sư Tinh Hoa',
+  contactEmail: 'support@giasutinhhoa.vn',
   contactPhone: '1800 1234',
   maintenanceMode: false,
   platformFeePercent: 20,

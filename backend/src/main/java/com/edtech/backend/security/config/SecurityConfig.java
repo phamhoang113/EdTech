@@ -4,6 +4,7 @@ import com.edtech.backend.security.jwt.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +34,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
 
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -40,10 +45,13 @@ public class SecurityConfig {
             .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()))
             .authorizeHttpRequests(req -> req
                 .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/public/**").permitAll()
                 .requestMatchers("/api/v1/classes/open").permitAll()
                 .requestMatchers("/api/v1/classes/filters").permitAll()
+                .requestMatchers("/api/v1/locations/**").permitAll()
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -73,12 +81,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of(
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:3000"
-        ));
+        config.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

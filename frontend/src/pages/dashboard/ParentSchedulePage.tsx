@@ -1,23 +1,26 @@
+import { CalendarIcon, Clock, Video, AlertCircle, XCircle, Info } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import {
-  Calendar as CalendarIcon, Clock, Video,
-  AlertCircle, XCircle, Info
-} from 'lucide-react';
+import { getDisplayStatus } from '../../utils/sessionStatus';
+
 import { sessionApi } from '../../services/sessionApi';
 import type { SessionDTO } from '../../services/sessionApi';
 import { DashboardHeader } from '../../components/layout/DashboardHeader';
 import { ParentSidebar } from '../../components/parent/ParentSidebar';
+import { RequestClassModal } from '../../components/parent/RequestClassModal';
 import '../dashboard/Dashboard.css';
 import './ParentSchedule.css';
 
-function getStatusBadge(status: SessionDTO['status']) {
+function getStatusBadge(status: SessionDTO['status'], sessionDate?: string, endTime?: string) {
+  const displayStatus = (sessionDate && endTime) ? getDisplayStatus(status, sessionDate, endTime) : status;
   const cfg = {
     SCHEDULED: { label: 'Sắp tới', color: '#6366f1', bg: '#eef2ff' },
     LIVE: { label: 'Đang diễn ra', color: '#10b981', bg: '#d1fae5' },
     COMPLETED: { label: 'Đã hoàn thành', color: '#6b7280', bg: '#f3f4f6' },
     CANCELLED: { label: 'Đã huỷ', color: '#ef4444', bg: '#fee2e2' },
+    CANCELLED_BY_TUTOR: { label: 'Đã huỷ', color: '#ef4444', bg: '#fee2e2' },
+    CANCELLED_BY_STUDENT: { label: 'Đã huỷ', color: '#ef4444', bg: '#fee2e2' },
   };
-  const badge = cfg[status];
+  const badge = cfg[displayStatus as keyof typeof cfg] || { label: 'Chờ xác nhận', color: '#d97706', bg: '#fffbeb' };
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', padding: '2px 8px',
@@ -37,6 +40,7 @@ export function ParentSchedulePage() {
   const [sessions, setSessions] = useState<SessionDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showRequestModal, setShowRequestModal] = useState(false);
 
   const [toast, setToast] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
   const [cancelTarget, setCancelTarget] = useState<SessionDTO | null>(null);
@@ -67,8 +71,6 @@ export function ParentSchedulePage() {
     fetchSessions();
   }, []);
 
-
-
   const filteredSessions = useMemo(() => {
     const currentWeekDay = currentDate.getDay() === 0 ? 7 : currentDate.getDay();
     const start = new Date(currentDate);
@@ -85,7 +87,6 @@ export function ParentSchedulePage() {
     });
   }, [sessions, currentDate]);
 
-
   const handleCancelClick = (s: SessionDTO) => {
     // Client-side validation for < 2h
     setCancelTarget(s);
@@ -99,7 +100,7 @@ export function ParentSchedulePage() {
         reason: cancelReason,
         makeUpRequired,
       });
-      showToast('success', 'Đã huỷ lịch và báo cho Gia sư!');
+      showToast('success', 'Đã gửi yêu cầu huỷ lịch. Vui lòng chờ Admin duyệt!');
       setCancelTarget(null);
       setCancelReason('');
       fetchSessions();
@@ -112,7 +113,7 @@ export function ParentSchedulePage() {
 
   return (
     <div className="dash-page">
-      <ParentSidebar active="schedule" />
+      <ParentSidebar active="schedule" onRequestClass={() => setShowRequestModal(true)} />
       <div className="dash-main">
         <DashboardHeader />
         <div className="dash-body" style={{ padding: 0 }}>
@@ -157,7 +158,7 @@ export function ParentSchedulePage() {
               ) : filteredSessions.length === 0 ? (
                 <div className="psched-empty">
                   <CalendarIcon size={40} style={{ opacity: 0.3, marginBottom: 16 }} />
-                  <p>Không có buổi học nào trong tuần này.</p>
+                  <p>Không có buổi học nào {currentDate.toDateString() === new Date().toDateString() ? 'trong tuần này' : 'trong tuần sau'}.</p>
                 </div>
               ) : (
                 <div className="psched-list">
@@ -178,9 +179,23 @@ export function ParentSchedulePage() {
                         <div className="psched-card-main">
                           <div className="psched-card-top">
                             <div className="psched-card-badge">{s.subject}</div>
-                            {getStatusBadge(s.status)}
+                            {getStatusBadge(s.status, s.sessionDate, s.endTime)}
+                            {s.hasPendingAbsence && (
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center', padding: '2px 8px',
+                                borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600,
+                                color: '#d97706', background: '#fffbeb', border: '1px solid #d9770630'
+                              }}>
+                                ⏳ Chờ duyệt huỷ
+                              </span>
+                            )}
                           </div>
                           
+                          {s.classCode && (
+                            <span style={{ fontSize: '0.72rem', color: '#6366f1', fontWeight: 700, background: '#eef2ff', padding: '1px 7px', borderRadius: '10px', marginBottom: '4px', display: 'inline-block', alignSelf: 'flex-start' }}>
+                              #{s.classCode}
+                            </span>
+                          )}
                           <h3 className="psched-card-title">{s.classTitle}</h3>
                           
                           <div className="psched-card-info-grid">
@@ -211,7 +226,16 @@ export function ParentSchedulePage() {
                         </div>
 
                         <div className="psched-card-right">
-                          {s.status === 'SCHEDULED' && !isPast && (
+                          {s.hasPendingAbsence ? (
+                            <button 
+                              className="psched-btn-cancel psched-btn-cancel--disabled"
+                              disabled
+                              title="Đã gửi đơn xin huỷ, chờ Admin duyệt"
+                              style={{ opacity: 0.5, cursor: 'not-allowed' }}
+                            >
+                              ⏳ Đơn xin nghỉ đã gửi
+                            </button>
+                          ) : s.status === 'SCHEDULED' && !isPast && (
                             <button 
                               className={`psched-btn-cancel ${!canCancel ? 'psched-btn-cancel--disabled' : ''}`}
                               onClick={() => canCancel ? handleCancelClick(s) : alert('Chỉ được huỷ trước giờ học 2 tiếng. Vui lòng liên hệ trực tiếp!')}
@@ -284,6 +308,12 @@ export function ParentSchedulePage() {
           </div>
         </div>
       </div>
+      {showRequestModal && (
+        <RequestClassModal 
+          onClose={() => setShowRequestModal(false)} 
+          onSuccess={() => setShowRequestModal(false)}
+        />
+      )}
     </div>
   );
 }

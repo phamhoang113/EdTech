@@ -28,6 +28,74 @@
   font-weight: 700;
 }
 
+.tsched-confirm-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: none;
+  background: var(--color-surface);
+  color: var(--color-danger);
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-base);
+  margin-left: auto;
+}
+
+.tsched-confirm-btn:hover:not(:disabled) {
+  background: #dc2626;
+  color: #fff;
+}
+
+.tsched-confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tsched-draft-count {
+  color: #d97706;
+  font-weight: 700;
+}
+
+/* Draft session card styling */
+.tsched-session--draft {
+  border-color: var(--color-warning);
+  border-style: dashed;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.tsched-draft-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.tsched-draft-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.tsched-draft-cancel {
+  color: #ef4444;
+}
+
+.tsched-draft-cancel:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
 @keyframes tsched-pulse {
   0%, 100% { border-color: rgba(239, 68, 68, 0.25); }
   50% { border-color: rgba(239, 68, 68, 0.5); }
@@ -87,7 +155,7 @@
   color: var(--color-primary);
 }
 
-/* ── Week Grid ─────────────────────────────────── */
+/* ── Content Body ─────────────────────────────── */
 .tsched-body {
   min-height: 300px;
 }
@@ -101,82 +169,377 @@
   font-size: 0.9rem;
 }
 
-.tsched-week-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-}
-
-.tsched-day-col {
-  background: var(--color-surface);
+/* ── Calendar Time Grid ───────────────────────── */
+.tsched-cal {
   border: 1px solid var(--color-border);
-  border-radius: 14px;
-  min-height: 200px;
+  border-radius: 16px;
+  background: var(--color-surface);
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── Header row ───────────────────────────────── */
+.tsched-cal-header {
   display: flex;
-  flex-direction: column;
-  transition: box-shadow var(--transition-base);
+  border-bottom: 2px solid var(--color-border);
+  background: var(--color-background);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.tsched-day-col:hover {
-  box-shadow: var(--shadow-sm);
+.tsched-cal-header .tsched-cal-time-gutter {
+  width: 56px;
+  min-width: 56px;
+  border-right: 2px solid var(--color-border);
 }
 
-.tsched-day--today {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 1px rgba(99,102,241,0.2);
-}
-
-.tsched-day-header {
+.tsched-cal-dayhead {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 12px 8px 10px;
-  border-bottom: 1px solid var(--color-border);
+  gap: 2px;
+  padding: 10px 4px;
+  border-right: 1px solid var(--color-border);
 }
 
-.tsched-day-name {
-  font-size: 0.72rem;
+.tsched-cal-dayhead:last-child {
+  border-right: none;
+}
+
+.tsched-cal-dayhead--today {
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.tsched-cal-dayname {
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.tsched-day-date {
-  width: 32px;
-  height: 32px;
+.tsched-cal-daynum {
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 50%;
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--color-text);
 }
 
-.tsched-day-date--today {
+.tsched-cal-daynum--today {
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
-.tsched-day-sessions {
-  padding: 8px;
+/* ── Grid body ───────────────────────────────── */
+.tsched-cal-body {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
+  position: relative;
 }
 
-.tsched-no-session {
+/* Time gutter (left labels) */
+.tsched-cal-body .tsched-cal-time-gutter {
+  width: 56px;
+  min-width: 56px;
+  position: sticky;
+  left: 0;
+  z-index: 6;
+  border-right: 2px solid var(--color-border);
+  background: var(--color-background);
+}
+
+.tsched-cal-hour-label {
+  position: absolute;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--color-text);
+  white-space: nowrap;
+  z-index: 3;
+}
+
+/* Day columns */
+.tsched-cal-daycol {
+  flex: 1;
+  position: relative;
+  height: 640px;           /* must match body */
+  border-right: 1px solid var(--color-border);
+  transition: background 0.15s ease;
+}
+
+.tsched-cal-daycol:last-child {
+  border-right: none;
+}
+
+.tsched-cal-daycol--today {
+  background: rgba(99, 102, 241, 0.025);
+}
+
+.tsched-cal-daycol--drag-over {
+  background: rgba(99, 102, 241, 0.06) !important;
+}
+
+/* Hour gridlines */
+.tsched-cal-gridline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px solid var(--color-border);
+  opacity: 0.45;
+}
+
+/* ── Session blocks ───────────────────────────── */
+.tsched-cal-block {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  border-radius: 6px;
+  border-left: 3.5px solid #6366f1;
+  padding: 4px 6px;
+  cursor: pointer;
+  overflow: hidden;
+  z-index: 2;
+  transition: box-shadow 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+
+.tsched-cal-block:hover {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+  transform: scale(1.02);
+  z-index: 5;
+}
+
+.tsched-cal-block--draft {
+  border-left-style: dashed;
+  cursor: grab;
+}
+
+.tsched-cal-block--draft:active {
+  cursor: grabbing;
+}
+
+.tsched-cal-block--dragging {
+  opacity: 0.3;
+  transform: scale(0.95);
+}
+
+.tsched-cal-block--cancelled {
+  opacity: 0.35;
+  text-decoration: line-through;
+}
+
+/* Block content */
+.tsched-cal-block-time {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: inherit;
+  opacity: 0.85;
+}
+
+.tsched-cal-block-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tsched-cal-block-addr {
+  font-size: 0.55rem;
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+/* ── Drop indicator (drag preview) ────────────── */
+.tsched-cal-drop-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px dashed #ef4444;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.tsched-cal-drop-label {
+  position: absolute;
+  left: 2px;
+  top: -10px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #fff;
+  background: #ef4444;
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* ── Session Detail Popup ─────────────────────── */
+.tsched-detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
+  z-index: 3000;
+  animation: tsched-fade-in 0.15s ease;
+}
+
+@keyframes tsched-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tsched-detail-popup {
+  background: var(--color-surface);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  width: 380px;
+  max-width: 90vw;
+  padding: 24px;
+  position: relative;
+  animation: tsched-popup-in 0.2s ease;
+}
+
+@keyframes tsched-popup-in {
+  from { transform: scale(0.95) translateY(8px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.tsched-detail-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: none;
   color: var(--color-text-muted);
-  font-size: 0.8rem;
-  opacity: 0.5;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px;
+  transition: background 0.1s;
+}
+
+.tsched-detail-close:hover {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.tsched-detail-header {
+  margin-bottom: 18px;
+}
+
+.tsched-detail-status {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.tsched-detail-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0 0 2px;
+}
+
+.tsched-detail-subject {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.tsched-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tsched-detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tsched-detail-row > svg {
+  flex-shrink: 0;
+  color: var(--color-primary);
+  margin-top: 2px;
+}
+
+.tsched-detail-label {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  margin-bottom: 1px;
+}
+
+.tsched-detail-value {
+  font-size: 0.85rem;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.tsched-detail-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.tsched-detail-edit-btn,
+.tsched-detail-delete-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1.5px solid;
+  transition: all 0.15s ease;
+}
+
+.tsched-detail-edit-btn {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  border-color: transparent;
+  flex: 1;
+}
+
+.tsched-detail-edit-btn:hover {
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.tsched-detail-delete-btn {
+  background: var(--color-surface);
+  color: var(--color-danger);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.tsched-detail-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: var(--color-danger);
 }
 
 /* ── Session Card ──────────────────────────────── */
@@ -262,6 +625,76 @@
   margin-top: 1px;
 }
 
+/* ── Session Address ──────────────────────────── */
+.tsched-session-address {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tsched-session-address svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+/* ── Drag & Drop States ───────────────────────── */
+.tsched-session--draft {
+  cursor: grab;
+}
+
+.tsched-session--draft:active {
+  cursor: grabbing;
+}
+
+.tsched-session-card--dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+}
+
+.tsched-day-col--drag-over {
+  background: rgba(99, 102, 241, 0.06);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+/* ── Editable Time ────────────────────────────── */
+.tsched-session-time--editable {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: background 0.15s ease;
+}
+
+.tsched-session-time--editable:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.tsched-edit-icon {
+  font-size: 0.6rem;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.tsched-session-time--editable:hover .tsched-edit-icon {
+  opacity: 1;
+}
+
+/* ── Drag Hint ────────────────────────────────── */
+.tsched-drag-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  padding: 8px 14px;
+  background: rgba(99, 102, 241, 0.04);
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  border-radius: 10px;
+}
+
 /* ── Summary Stats ─────────────────────────────── */
 .tsched-summary {
   display: flex;
@@ -289,6 +722,328 @@
   font-size: 0.78rem;
   color: var(--color-text-muted);
   font-weight: 500;
+}
+
+/* ── Empty Future State ───────────────────────── */
+.tsched-empty-future {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.tsched-empty-future-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.tsched-empty-future-sub {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-bottom: 20px;
+}
+
+.tsched-generate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+}
+
+.tsched-generate-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.tsched-generate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Drag & Drop ──────────────────────────────── */
+.tsched-day-col--drag-over {
+  border-color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.06);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  transform: scale(1.01);
+  transition: all 0.15s ease;
+}
+
+.tsched-session-card--dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+  border-style: dashed;
+}
+
+.tsched-session-card[draggable="true"] {
+  cursor: grab;
+}
+
+.tsched-session-card[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.tsched-drag-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 12px;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.tsched-drag-hint strong {
+  color: #d97706;
+}
+
+/* ── Time Edit ────────────────────────────────── */
+.tsched-session-time--editable {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: background 0.15s ease;
+}
+
+.tsched-session-time--editable:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.tsched-edit-icon {
+  font-size: 0.65rem;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  margin-left: 2px;
+}
+
+.tsched-session-time--editable:hover .tsched-edit-icon {
+  opacity: 1;
+}
+
+/* ── Time Edit Modal ──────────────────────────── */
+.tsched-time-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  animation: tsched-fadein 0.15s ease;
+}
+
+.tsched-time-modal {
+  background: var(--color-surface, #fff);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  width: 380px;
+  max-width: 90vw;
+  overflow: hidden;
+  animation: tsched-slidein 0.2s ease;
+}
+
+.tsched-time-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.tsched-time-modal-header h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text, #1f2937);
+  margin: 0;
+}
+
+.tsched-time-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted, #9ca3af);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tsched-time-modal-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text, #1f2937);
+}
+
+.tsched-time-modal-body {
+  padding: 18px 22px;
+}
+
+.tsched-time-modal-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #4b5563);
+  margin-bottom: 16px;
+}
+
+.tsched-time-inputs {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.tsched-time-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tsched-time-field label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted, #9ca3af);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tsched-time-field input[type="time"] {
+  padding: 10px 12px;
+  border: 1.5px solid var(--color-border, #e5e7eb);
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--color-text, #1f2937);
+  background: var(--color-background, #f9fafb);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tsched-time-field input[type="time"]:focus {
+  outline: none;
+  border-color: var(--color-primary, #6366f1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.tsched-time-separator {
+  font-size: 1.2rem;
+  color: var(--color-text-muted, #9ca3af);
+  padding-bottom: 10px;
+}
+
+.tsched-time-modal-duration {
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #9ca3af);
+  margin-bottom: 14px;
+  padding: 5px 10px;
+  background: rgba(99, 102, 241, 0.06);
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.tsched-time-modal-duration strong {
+  color: var(--color-primary, #6366f1);
+}
+
+.tsched-time-computed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  border: 1.5px solid var(--color-border, #e5e7eb);
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-muted, #9ca3af);
+  background: var(--color-background, #f9fafb);
+  min-width: 80px;
+}
+
+.tsched-time-error {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.tsched-time-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px 18px;
+  border-top: 1px solid var(--color-border, #e5e7eb);
+}
+
+.tsched-time-cancel-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface, #fff);
+  color: var(--color-text-secondary, #4b5563);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tsched-time-cancel-btn:hover {
+  background: var(--color-background, #f9fafb);
+}
+
+.tsched-time-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.tsched-time-save-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+}
+
+@keyframes tsched-fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes tsched-slidein {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ── Responsive ────────────────────────────────── */
@@ -319,3 +1074,65 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Confirm Dialog ───────────────────────────── */
+.tsched-confirm-dialog {
+  background: var(--color-surface);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  width: 380px;
+  max-width: 90vw;
+  padding: 32px 28px 24px;
+  text-align: center;
+  animation: tsched-popup-in 0.2s ease;
+}
+
+.tsched-confirm-dialog h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 14px 0 8px;
+}
+
+.tsched-confirm-dialog p {
+  font-size: 0.88rem;
+  color: var(--color-text-secondary);
+  margin: 0 0 4px;
+  line-height: 1.5;
+}
+
+.tsched-confirm-dialog-sub {
+  font-size: 0.78rem !important;
+  color: var(--color-text-muted) !important;
+}
+
+.tsched-confirm-dialog-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.tsched-confirm-dialog-actions .tsched-confirm-btn {
+  margin-left: 0;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+}
+
+.tsched-confirm-dialog-actions .tsched-confirm-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.tsched-confirm-dialog-actions .tsched-detail-delete-btn {
+  background: #ef4444;
+  color: #fff;
+  border-color: transparent;
+}
+
+.tsched-confirm-dialog-actions .tsched-detail-delete-btn:hover {
+  background: #dc2626;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+

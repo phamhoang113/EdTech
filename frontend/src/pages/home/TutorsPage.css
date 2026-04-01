@@ -1,0 +1,127 @@
+.tutors-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+}
+
+.tutors-main {
+  flex: 1;
+  padding: 40px 0 80px;
+}
+
+.tutors-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.tutors-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 15px;
+}
+
+.tutors-header p {
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+}
+
+.tutors-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  gap: 15px;
+}
+
+.search-box {
+  flex: 1;
+  max-width: 500px;
+  display: flex;
+  align-items: center;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 15px;
+}
+
+.search-box input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  margin-left: 10px;
+  font-size: 1rem;
+  color: var(--color-text-primary);
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 10px 20px;
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  background-color: var(--color-hover);
+}
+
+.tutors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 40px;
+}
+
+.pagination button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--color-primary);
+  background-color: white;
+  color: var(--color-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: var(--color-primary-light);
+}
+
+.pagination button:disabled {
+  border-color: var(--color-border);
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 768px) {
+  .tutors-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-box {
+    max-width: 100%;
+  }
+}

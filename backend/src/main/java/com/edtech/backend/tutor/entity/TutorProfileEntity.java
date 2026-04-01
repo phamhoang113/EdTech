@@ -3,17 +3,8 @@ package com.edtech.backend.tutor.entity;
 import com.edtech.backend.core.entity.BaseEntity;
 import com.edtech.backend.tutor.enums.TutorType;
 import com.edtech.backend.tutor.enums.VerificationStatus;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -54,11 +45,11 @@ public class TutorProfileEntity extends BaseEntity {
 
     @Column(name = "rating", nullable = false)
     @Builder.Default
-    private BigDecimal rating = BigDecimal.ZERO;
+    private BigDecimal rating = BigDecimal.valueOf(5.0);
 
     @Column(name = "rating_count", nullable = false)
     @Builder.Default
-    private Integer ratingCount = 0;
+    private Integer ratingCount = 1;
 
     @Column(name = "id_card_number", length = 20)
     private String idCardNumber;
@@ -98,4 +89,14 @@ public class TutorProfileEntity extends BaseEntity {
     @Column(name = "experience_years")
     @Builder.Default
     private Integer experienceYears = 0;
+
+    // --- Thông tin ngân hàng nhận thù lao ---
+    @Column(name = "bank_name", length = 100)
+    private String bankName;
+
+    @Column(name = "bank_account_number", length = 50)
+    private String bankAccountNumber;
+
+    @Column(name = "bank_owner_name", length = 150)
+    private String bankOwnerName;
 }

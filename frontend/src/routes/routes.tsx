@@ -23,6 +23,13 @@ export const router = createBrowserRouter([
         },
       },
       {
+        path: '/tutors',
+        lazy: async () => {
+          const { TutorsPage } = await import('../pages/home/TutorsPage');
+          return { Component: TutorsPage };
+        },
+      },
+      {
         path: '/register',
         lazy: async () => {
           const { RegisterPage } = await import('../pages/RegisterPage');
@@ -50,6 +57,41 @@ export const router = createBrowserRouter([
           return { Component: ClassesPage };
         },
       },
+      {
+        path: '/terms',
+        lazy: async () => {
+          const { TermsPage } = await import('../pages/TermsPage');
+          return { Component: TermsPage };
+        },
+      },
+      {
+        path: '/privacy',
+        lazy: async () => {
+          const { PrivacyPage } = await import('../pages/PrivacyPage');
+          return { Component: PrivacyPage };
+        },
+      },
+      {
+        path: '/faq',
+        lazy: async () => {
+          const { FaqPage } = await import('../pages/FaqPage');
+          return { Component: FaqPage };
+        },
+      },
+      {
+        path: '/contact',
+        lazy: async () => {
+          const { ContactPage } = await import('../pages/ContactPage');
+          return { Component: ContactPage };
+        },
+      },
+      {
+        path: '/careers',
+        lazy: async () => {
+          const { CareersPage } = await import('../pages/CareersPage');
+          return { Component: CareersPage };
+        },
+      },
 
       /* ── Protected routes (requires auth) ── */
       {
@@ -65,7 +107,7 @@ export const router = createBrowserRouter([
           {
             path: '/profile',
             lazy: async () => {
-              const mod = await import('../pages/profile/TutorProfilePage');
+              const mod = await import('../pages/profile/UserProfilePage');
               return { Component: mod.default };
             },
           },
@@ -92,6 +134,27 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: '/student/schedule',
+            lazy: async () => {
+              const { StudentSchedulePage } = await import('../pages/dashboard/StudentSchedulePage');
+              return { Component: StudentSchedulePage };
+            },
+          },
+          {
+            path: '/student/requests',
+            lazy: async () => {
+              const { StudentRequestsPage } = await import('../pages/dashboard/StudentRequestsPage');
+              return { Component: StudentRequestsPage };
+            },
+          },
+          {
+            path: '/student/payment',
+            lazy: async () => {
+              const { StudentPaymentPage } = await import('../pages/dashboard/StudentPaymentPage');
+              return { Component: StudentPaymentPage };
+            },
+          },
+          {
             path: '/tutor/classes',
             lazy: async () => {
               const { TutorClassesPage } = await import('../pages/dashboard/TutorClassesPage');
@@ -105,8 +168,34 @@ export const router = createBrowserRouter([
               return { Component: TutorSchedulePage };
             },
           },
-          // { path: '/messages',  lazy: ... },
-          // { path: '/payment',   lazy: ... },
+          {
+            path: '/tutor/revenue',
+            lazy: async () => {
+              const { default: TutorRevenuePage } = await import('../pages/dashboard/TutorRevenuePage');
+              return { Component: TutorRevenuePage };
+            },
+          },
+          {
+            path: '/messages',
+            lazy: async () => {
+              const { MessagesPage } = await import('../pages/messages/MessagesPage');
+              return { Component: MessagesPage };
+            },
+          },
+          {
+            path: '/payment',
+            lazy: async () => {
+              const { ParentPaymentPage } = await import('../pages/dashboard/ParentPaymentPage');
+              return { Component: ParentPaymentPage };
+            },
+          },
+          {
+            path: '/learning-report',
+            lazy: async () => {
+              const { ParentReportPage } = await import('../pages/dashboard/ParentReportPage');
+              return { Component: ParentReportPage };
+            },
+          },
         ],
       },
     ],
@@ -188,8 +277,15 @@ export const router = createBrowserRouter([
       {
         path: 'payments',
         lazy: async () => {
-          const { AdminReports } = await import('../pages/admin/AdminReports');
-          return { Component: AdminReports };
+          const { AdminBillings } = await import('../pages/admin/AdminBillings');
+          return { Component: AdminBillings };
+        },
+      },
+      {
+        path: 'schedules',
+        lazy: async () => {
+          const { default: AdminSchedules } = await import('../pages/admin/AdminSchedules');
+          return { Component: AdminSchedules };
         },
       },
       {
@@ -197,6 +293,20 @@ export const router = createBrowserRouter([
         lazy: async () => {
           const { AdminClassRequests } = await import('../pages/admin/AdminClassRequests');
           return { Component: AdminClassRequests };
+        },
+      },
+      {
+        path: 'absences',
+        lazy: async () => {
+          const { AdminAbsences } = await import('../pages/admin/AdminAbsences');
+          return { Component: AdminAbsences };
+        },
+      },
+      {
+        path: 'messages',
+        lazy: async () => {
+          const { AdminMessages } = await import('../pages/admin/AdminMessages');
+          return { Component: AdminMessages };
         },
       },
       // Catch-all 404 trong admin

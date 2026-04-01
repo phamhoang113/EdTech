@@ -25,8 +25,8 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfileEn
     @Query("SELECT s FROM StudentProfileEntity s WHERE s.user.id = :userId AND s.parentId = :parentId")
     Optional<StudentProfileEntity> findByUserIdAndParentId(@Param("userId") UUID userId, @Param("parentId") UUID parentId);
 
-    /** Kiểm tra xem học sinh đã có phụ huynh chưa */
-    Optional<StudentProfileEntity> findByUserId(UUID userId);
+    /** Tìm tất cả profile (liên kết) của học sinh */
+    List<StudentProfileEntity> findByUserId(UUID userId);
 
     /** Đếm số PH khác đang liên kết với học sinh (để quyết định có soft-delete user không) */
     @Query("SELECT COUNT(s) FROM StudentProfileEntity s WHERE s.user.id = :userId AND s.parentId != :excludeParentId")

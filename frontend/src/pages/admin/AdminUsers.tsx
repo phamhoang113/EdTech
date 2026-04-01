@@ -1,9 +1,7 @@
+import { Search, Lock, Unlock, Trash2, ShieldAlert, X, User, Phone, Mail, Calendar, MapPin, BookOpen, Star, Award, Clock, CheckCircle, XCircle, AlertCircle, MessageSquare } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import {
-  Search, Lock, Unlock, Trash2, ShieldAlert, X,
-  User, Phone, Mail, Calendar, MapPin, BookOpen,
-  Star, Award, Clock, CheckCircle, XCircle, AlertCircle,
-} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
 import { adminApi } from '../../services/adminApi';
 import type { AdminUserListItem, AdminUserDetail, UserRole } from '../../services/adminApi';
 import './AdminUsers.css';
@@ -372,6 +370,7 @@ function UserDetailDrawer({ userId, onClose, onRefresh }: UserDetailDrawerProps)
 
 /* ── Main component ── */
 export function AdminUsers() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<AdminUserListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -501,6 +500,15 @@ export function AdminUsers() {
                   <td>{fmtDate(u.createdAt)}</td>
                   <td onClick={e => e.stopPropagation()}>
                     <div className="admin-table__actions">
+                      {u.role !== 'ADMIN' && (
+                        <button
+                          className="admin-users__action-btn admin-users__action-btn--message"
+                          title="Gửi tin nhắn"
+                          onClick={() => navigate(`/admin/messages?userId=${u.id}`)}
+                        >
+                          <MessageSquare size={16}/>
+                        </button>
+                      )}
                       <button
                         className="admin-users__action-btn"
                         title={u.isActive ? 'Khóa tài khoản' : 'Mở khóa'}

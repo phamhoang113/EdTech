@@ -10,6 +10,10 @@ import com.edtech.backend.student.dto.StudentResponse;
 import com.edtech.backend.student.dto.ParentLinkResponse;
 import com.edtech.backend.student.entity.StudentProfileEntity;
 import com.edtech.backend.student.repository.StudentProfileRepository;
+import com.edtech.backend.cls.repository.ClassRepository;
+import com.edtech.backend.billing.repository.BillingRepository;
+import com.edtech.backend.cls.enums.ClassStatus;
+import com.edtech.backend.billing.enums.BillingStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +37,8 @@ public class StudentServiceImpl implements StudentService {
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ClassRepository classRepository;
+    private final BillingRepository billingRepository;
 
     @Override
     public StudentResponse lookupByPhone(String phone) {
@@ -75,14 +81,9 @@ public class StudentServiceImpl implements StudentService {
             return toResponseEx(studentProfileRepository.save(profile), null, null);
         } else {
             UserEntity studentUser = existingStudent.get();
-            boolean isAlreadyLinked = studentProfileRepository.findByUserId(studentUser.getId()).isPresent();
-            if (isAlreadyLinked) {
-                boolean linkedToMe = studentProfileRepository.findByUserIdAndParentId(studentUser.getId(), parentId).isPresent();
-                if (linkedToMe) {
-                    throw new BusinessRuleException(ERROR_ALREADY_LINKED);
-                } else {
-                    throw new BusinessRuleException("Học sinh này đã được quản lý bởi phụ huynh khác.");
-                }
+            boolean linkedToMe = studentProfileRepository.findByUserIdAndParentId(studentUser.getId(), parentId).isPresent();
+            if (linkedToMe) {
+                throw new BusinessRuleException(ERROR_ALREADY_LINKED);
             }
             StudentProfileEntity profile = buildStudentProfile(studentUser, parentId, request, "PENDING");
             return toResponseEx(studentProfileRepository.save(profile), null, null);
@@ -117,6 +118,9 @@ public class StudentServiceImpl implements StudentService {
         StudentProfileEntity profile = findProfileOrThrow(studentProfileId, parentId);
         UserEntity studentUser = profile.getUser();
 
+        // Chặn hủy liên kết nếu có lớp học đang active hoặc có hóa đơn chưa thanh toán
+        assertNoActiveClassesOrUnpaidBills(studentUser.getId());
+
         studentProfileRepository.delete(profile);
         
         // Chỉ soft-delete user nếu học sinh này không có SĐT (tài khoản do PH tạo 100%)
@@ -140,6 +144,7 @@ public class StudentServiceImpl implements StudentService {
                             .parentName(parent.getFullName())
                             .parentPhone(parent.getPhone())
                             .linkStatus(profile.getLinkStatus())
+                            .initiatedBy(profile.getInitiatedBy())
                             .createdAt(profile.getCreatedAt())
                             .build();
                 })
@@ -156,6 +161,8 @@ public class StudentServiceImpl implements StudentService {
         }
         profile.setLinkStatus("ACCEPTED");
         studentProfileRepository.save(profile);
+        
+        migrateStudentAssetsToParent(studentId, profile.getParentId());
     }
 
     @Override
@@ -166,7 +173,40 @@ public class StudentServiceImpl implements StudentService {
         if (!profile.getUser().getId().equals(studentId)) {
             throw new BusinessRuleException("Bạn không có quyền thao tác trên liên kết này.");
         }
+        
+        // Nếu đây là hủy liên kết đã ACCEPTED, cũng cần check điều kiện
+        if ("ACCEPTED".equals(profile.getLinkStatus())) {
+            assertNoActiveClassesOrUnpaidBills(studentId);
+        }
+        
         studentProfileRepository.delete(profile);
+    }
+
+    @Override
+    @Transactional
+    public void requestParentLink(UUID studentId, String parentPhone) {
+        UserEntity parent = userRepository.findByPhoneAndRoleAndIsDeletedFalse(parentPhone, UserRole.PARENT)
+                .orElseThrow(() -> new BusinessRuleException("Không tìm thấy phụ huynh với số điện thoại này."));
+
+        UserEntity student = userRepository.findById(studentId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy học sinh."));
+
+        boolean isAlreadyLinked = studentProfileRepository.findByUserIdAndParentId(studentId, parent.getId()).isPresent();
+        if (isAlreadyLinked) {
+            throw new BusinessRuleException("Bạn đã gửi yêu cầu hoặc đã liên kết với phụ huynh này.");
+        }
+
+        StudentProfileEntity profile = StudentProfileEntity.builder()
+                .user(student)
+                .parentId(parent.getId())
+                .grade(null)
+                .school(null)
+                .linkStatus("ACCEPTED") // Tự động duyệt theo yêu cầu
+                .initiatedBy("STUDENT")
+                .build();
+        studentProfileRepository.save(profile);
+        
+        migrateStudentAssetsToParent(studentId, parent.getId());
     }
 
     // ─── Private helpers ─────────────────────────────────────────────────────
@@ -250,5 +290,29 @@ public class StudentServiceImpl implements StudentService {
                 .defaultPassword(defaultPassword)
                 .linkStatus(profile.getLinkStatus())
                 .build();
+    }
+
+    private void assertNoActiveClassesOrUnpaidBills(UUID studentId) {
+        long activeClasses = classRepository.countByStudents_IdAndStatusInAndIsDeletedFalse(
+                studentId,
+                List.of(ClassStatus.PENDING_APPROVAL, ClassStatus.OPEN, ClassStatus.ASSIGNED, ClassStatus.MATCHED, ClassStatus.ACTIVE)
+        );
+        if (activeClasses > 0) {
+            throw new BusinessRuleException("Không thể huỷ liên kết vì học sinh đang tham gia lớp học đang hoạt động.");
+        }
+
+        long unpaidBills = billingRepository.countUnpaidByStudentId(
+                studentId,
+                List.of(BillingStatus.UNPAID, BillingStatus.VERIFYING)
+        );
+        if (unpaidBills > 0) {
+            throw new BusinessRuleException("Không thể huỷ liên kết vì học sinh đang có hoá đơn chưa thanh toán.");
+        }
+    }
+
+    private void migrateStudentAssetsToParent(UUID studentId, UUID parentId) {
+        classRepository.migrateParentId(studentId, parentId);
+        UserEntity parent = userRepository.getReferenceById(parentId);
+        billingRepository.migrateParent(studentId, parent);
     }
 }

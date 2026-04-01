@@ -1,9 +1,6 @@
+import { CheckCircle, XCircle, Clock, BookOpen, User, Phone, FileText, MapPin, Calendar, GraduationCap, X, Users, Briefcase, ListTodo, ArrowLeft, DollarSign } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import {
-  CheckCircle, XCircle, Clock, BookOpen, User, Phone,
-  FileText, MapPin, Calendar, GraduationCap, X,
-  Users, Briefcase, ListTodo, ArrowLeft, DollarSign,
-} from 'lucide-react';
+
 import { adminApi } from '../../services/adminApi';
 import type { ClassApplicationItem } from '../../services/adminApi';
 import './AdminClassApplications.css';

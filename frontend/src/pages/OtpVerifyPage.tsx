@@ -1,8 +1,9 @@
+import { AlertCircle, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { verifyOtpApi } from '../services/authApi';
 import { useAuthStore } from '../store/useAuthStore';
-import { AlertCircle, ArrowLeft, ShieldCheck } from 'lucide-react';
+
 import './OtpVerifyPage.css';
 
 export const OtpVerifyPage = () => {

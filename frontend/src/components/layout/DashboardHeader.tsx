@@ -1,8 +1,9 @@
+import { Search, Sun, Moon, UserIcon, LogOut } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
-import { useBadgeCounts } from '../../hooks/useBadgeCounts';
-import { Search, Sun, Moon, Bell, User as UserIcon, LogOut } from 'lucide-react';
+
+import { NotificationDropdown } from '../common/NotificationDropdown';
 import '../../pages/dashboard/Dashboard.css';
 
 export const DashboardHeader = () => {
@@ -11,8 +12,6 @@ export const DashboardHeader = () => {
   const [isDark, setIsDark] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const badgeCounts = useBadgeCounts();
-  const totalBadges = Object.values(badgeCounts).reduce((s, v) => s + v, 0);
 
   useEffect(() => {
     setIsDark(localStorage.getItem('theme') === 'dark');
@@ -52,12 +51,7 @@ export const DashboardHeader = () => {
         <button className="topbar-icon-btn" onClick={toggleTheme} aria-label="theme">
           {isDark ? <Sun size={17} /> : <Moon size={17} />}
         </button>
-        <button className="topbar-icon-btn" aria-label="notifications">
-          <Bell size={18} />
-          {totalBadges > 0 && (
-            <span className="notif-dot">{totalBadges > 99 ? '99+' : totalBadges}</span>
-          )}
-        </button>
+        <NotificationDropdown />
 
         <div className="topbar-profile-wrap" ref={dropdownRef}>
           <button 

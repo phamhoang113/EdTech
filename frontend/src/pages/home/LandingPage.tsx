@@ -27,7 +27,7 @@ export const LandingPage: React.FC = () => {
 
 
       <main>
-        <HeroSection onRegisterClick={openRegister} />
+        <HeroSection />
         <StatsSection />
         <OpenClassesSection onAuthRequired={openLogin} />
         <TutorSection onAuthRequired={openLogin} />

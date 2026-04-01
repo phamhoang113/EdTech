@@ -54,6 +54,10 @@ dependencies {
 
 
 
+    // Google API Client for Calendar (Meet Generation)
+    implementation 'com.google.api-client:google-api-client:2.3.0'
+    implementation 'com.google.apis:google-api-services-calendar:v3-rev411-1.25.0'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

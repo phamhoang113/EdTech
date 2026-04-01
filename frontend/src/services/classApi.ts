@@ -13,6 +13,7 @@ export interface OpenClassResponse {
   subject: string;
   grade: string;
   location: string;
+
   schedule: string;
   timeFrame: string;
   classCode: string;

@@ -1,9 +1,7 @@
+import { Users, GraduationCap, BookOpen, DollarSign, Clock, AlertTriangle } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Users, GraduationCap, BookOpen, DollarSign,
-  Clock, AlertTriangle,
-} from 'lucide-react';
+
 import { adminApi } from '../../services/adminApi';
 import type { AdminTutorVerificationResponse, DashboardStats } from '../../services/adminApi';
 import './AdminDashboard.css';

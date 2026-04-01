@@ -2,6 +2,7 @@ package com.edtech.backend.core.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -9,6 +10,7 @@ import java.util.Base64;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 public class StorageService {
 
     /**
@@ -40,7 +42,7 @@ public class StorageService {
 
         } catch (IOException e) {
             log.error("Lỗi khi đọc file để chuyển đổi sang Base64", e);
-            throw new RuntimeException("Không thể xử lý file ảnh: " + e.getMessage(), e);
+            throw new IllegalStateException("Không thể xử lý file ảnh: " + e.getMessage(), e);
         }
     }
 

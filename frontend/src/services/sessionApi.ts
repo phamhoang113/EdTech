@@ -3,6 +3,7 @@ import apiClient from './apiClient';
 export interface SessionDTO {
   id: string;
   classId: string;
+  classCode?: string;
   classTitle: string;
   subject: string;
   tutorName: string;
@@ -12,8 +13,14 @@ export interface SessionDTO {
   endTime: string;
   meetLink?: string;
   meetLinkSetAt?: string;
-  status: 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'CANCELLED';
+  status: 'DRAFT' | 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'COMPLETED_PENDING' | 'CANCELLED' | 'CANCELLED_BY_TUTOR' | 'CANCELLED_BY_STUDENT' | 'DISPUTED';
+  sessionType?: 'REGULAR' | 'MAKEUP' | 'EXTRA';
   tutorNote?: string;
+  hasPendingAbsence?: boolean;
+  requiresMakeup?: boolean;
+  parentFee?: number;
+  tutorFee?: number;
+  makeupForSessionId?: string;
 }
 
 export interface SessionCancelRequest {

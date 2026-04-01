@@ -1,0 +1,2 @@
+ALTER TABLE classes DROP COLUMN IF EXISTS province_code, DROP COLUMN IF EXISTS ward_code, DROP COLUMN IF EXISTS latitude, DROP COLUMN IF EXISTS longitude;
+ALTER TABLE class_requests DROP COLUMN IF EXISTS province_code, DROP COLUMN IF EXISTS ward_code;

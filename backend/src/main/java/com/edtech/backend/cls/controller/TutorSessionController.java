@@ -15,7 +15,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -53,16 +56,6 @@ public class TutorSessionController {
         UUID tutorId = resolveUserId(userDetails);
         List<ClassDTO> classes = tutorSessionService.getMyClasses(tutorId);
         return ResponseEntity.ok(classes);
-    }
-
-    @GetMapping("/schedule/status")
-    @Operation(summary = "Kiểm tra tuần sau đã có lịch dạy chưa", description = "Dùng cho cảnh báo đỏ cuối tuần")
-    public ResponseEntity<Map<String, Boolean>> getScheduleStatus(
-            @AuthenticationPrincipal UserDetails userDetails) {
-
-        UUID tutorId = resolveUserId(userDetails);
-        boolean hasNextWeek = tutorSessionService.hasNextWeekSessions(tutorId);
-        return ResponseEntity.ok(Map.of("hasNextWeekSessions", hasNextWeek));
     }
 
     private UUID resolveUserId(UserDetails userDetails) {

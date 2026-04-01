@@ -1,0 +1,230 @@
+/* =============================================
+   ScheduleEditor — Component Styles
+   ============================================= */
+
+.sched-editor {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-primary);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.sched-editor-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.sched-editor-duration-info {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-bottom: 14px;
+  padding: 6px 12px;
+  background: rgba(99, 102, 241, 0.06);
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.sched-editor-duration-info strong {
+  color: var(--color-primary);
+}
+
+.sched-editor-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.sched-editor-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.sched-select {
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: var(--color-surface);
+  color: var(--color-text);
+  min-width: 110px;
+  cursor: pointer;
+}
+
+.sched-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.sched-time-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.sched-time-input {
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: var(--color-surface);
+  color: var(--color-text);
+  width: 100px;
+}
+
+.sched-time-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.12);
+}
+
+.sched-time-display {
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: var(--color-background);
+  color: var(--color-text-muted);
+  min-width: 60px;
+  text-align: center;
+}
+
+.sched-separator {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.sched-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--transition-base);
+}
+
+.sched-remove-btn:hover:not(:disabled) {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.sched-remove-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.sched-editor-error {
+  padding: 8px 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+
+.sched-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sched-editor-right {
+  display: flex;
+  gap: 8px;
+}
+
+.sched-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1.5px dashed var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.sched-add-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.sched-cancel-btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sched-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.sched-save-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.sched-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .sched-editor-slot {
+    flex-wrap: wrap;
+  }
+  .sched-editor-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

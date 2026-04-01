@@ -1,8 +1,9 @@
 package com.edtech.backend.cls.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
 public class SessionCancelRequest {
     private String reason;
     private boolean makeUpRequired;

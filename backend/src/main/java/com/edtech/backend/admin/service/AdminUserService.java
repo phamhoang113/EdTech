@@ -22,6 +22,7 @@ public class AdminUserService {
 
     private final UserRepository userRepository;
     private final TutorProfileRepository tutorProfileRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     /** Lấy danh sách tất cả user (chưa xóa), có thể lọc theo role */
     public List<AdminUserListItem> getAllUsers(UserRole role) {
@@ -87,6 +88,36 @@ public class AdminUserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
         user.setIsDeleted(true);
         userRepository.save(user);
+    }
+
+    /** Mở lớp hộ: Amin tự do tạo User cho phép login ngay không cần OTP */
+    @Transactional
+    public AdminUserDetail createUserBypass(com.edtech.backend.admin.dto.CreateUserAdminRequest req) {
+        if (userRepository.findByPhoneAndIsDeletedFalse(req.getPhone()).isPresent()) {
+            throw new com.edtech.backend.core.exception.BusinessRuleException("Số điện thoại " + req.getPhone() + " đã tồn tại trong hệ thống.");
+        }
+
+        UserEntity user = UserEntity.builder()
+                .phone(req.getPhone())
+                .passwordHash(passwordEncoder.encode(req.getPassword()))
+                .fullName(req.getFullName())
+                .role(req.getRole())
+                .isActive(true)
+                .isDeleted(false)
+                .build();
+
+        UserEntity saved = userRepository.save(user);
+
+        // Nếu role là TUTOR thì tao profile rỗng
+        if (req.getRole() == UserRole.TUTOR) {
+            TutorProfileEntity tp = TutorProfileEntity.builder()
+                    .userId(saved.getId())
+                    .verificationStatus(com.edtech.backend.tutor.enums.VerificationStatus.UNVERIFIED)
+                    .build();
+            tutorProfileRepository.save(tp);
+        }
+
+        return getUserDetail(saved.getId());
     }
 
     private AdminUserListItem toListItem(UserEntity u) {

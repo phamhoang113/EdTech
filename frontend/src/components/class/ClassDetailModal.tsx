@@ -1,7 +1,6 @@
+import { X, MapPin, BookOpen, Clock, Users, Hash, GraduationCap, User, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { X, MapPin, BookOpen, Clock, Users, Hash,
-  GraduationCap, User, CheckCircle, AlertCircle, Calendar,
-} from 'lucide-react';
+
 import type { OpenClassResponse } from '../../services/classApi';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import './ClassDetailModal.css';
@@ -229,8 +228,6 @@ export function ClassDetailModal({
                 ℹ️ Phí nhận lớp = {cls.feePercentage}% × lương, đóng 1 lần khi được duyệt
               </div>
             )}
-
-
 
             {/* Requirement tags */}
             <div className="cdm-req-tags">

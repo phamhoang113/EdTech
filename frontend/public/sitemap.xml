@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Trang chủ -->
+  <url>
+    <loc>https://giasutinhhoa.edu.vn/</loc>
+    <lastmod>2026-04-01T00:00:00+00:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Các trang danh sách dữ liệu chính -->
+  <url>
+    <loc>https://giasutinhhoa.edu.vn/tutors</loc>
+    <lastmod>2026-04-01T00:00:00+00:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://giasutinhhoa.edu.vn/classes</loc>
+    <lastmod>2026-04-01T00:00:00+00:00</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Các trang giới thiệu, thông tin chung -->
+  <url>
+    <loc>https://giasutinhhoa.edu.vn/about</loc>
+    <lastmod>2026-04-01T00:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://giasutinhhoa.edu.vn/contact</loc>
+    <lastmod>2026-04-01T00:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://giasutinhhoa.edu.vn/faq</loc>
+    <lastmod>2026-04-01T00:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://giasutinhhoa.edu.vn/careers</loc>
+    <lastmod>2026-04-01T00:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Các chính sách & tài khoản -->
+  <url>
+    <loc>https://giasutinhhoa.edu.vn/register</loc>
+    <lastmod>2026-04-01T00:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://giasutinhhoa.edu.vn/terms</loc>
+    <lastmod>2026-04-01T00:00:00+00:00</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://giasutinhhoa.edu.vn/privacy</loc>
+    <lastmod>2026-04-01T00:00:00+00:00</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>

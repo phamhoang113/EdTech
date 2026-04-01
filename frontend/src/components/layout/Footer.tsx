@@ -6,11 +6,12 @@ export const Footer = () => {
     <footer className="footer">
       <div className="container footer-container">
         <div className="footer-brand">
-          <Link to="/" className="logo">
-            <span className="logo-icon">🎓</span>
-            <span className="logo-text">EdTech</span>
-          </Link>
-          <p className="footer-description">
+          <div className="footer-logo">
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
+              <img src="/logo.png" alt="Gia Sư Tinh Hoa" style={{ height: '56px', width: 'auto', filter: 'var(--logo-filter, none)', objectFit: 'contain' }} />
+            </Link>
+          </div>
+          <p className="footer-description" style={{ marginTop: '16px' }}>
             Nền tảng kết nối Gia sư và Học sinh hàng đầu Việt Nam. Học mọi lúc, mọi nơi.
           </p>
         </div>
@@ -36,7 +37,7 @@ export const Footer = () => {
       
       <div className="footer-bottom">
         <div className="container">
-          <p>&copy; {new Date().getFullYear()} EdTech Platform. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Gia Sư Tinh Hoa Platform. All rights reserved.</p>
         </div>
       </div>
     </footer>

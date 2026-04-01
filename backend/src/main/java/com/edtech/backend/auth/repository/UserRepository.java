@@ -35,4 +35,12 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     /** Tìm học sinh theo SĐT (dùng khi PH liên kết con qua SĐT) */
     Optional<UserEntity> findByPhoneAndRoleAndIsDeletedFalse(String phone, UserRole role);
+
+    /** Tìm user theo keyword (tên hoặc SĐT chứa keyword) */
+    @Query("SELECT u FROM UserEntity u WHERE u.isDeleted = false AND u.role = :role " +
+           "AND (LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR u.phone LIKE CONCAT('%', :keyword, '%'))")
+    List<UserEntity> searchByKeywordAndRole(
+            @Param("keyword") String keyword,
+            @Param("role") UserRole role);
 }

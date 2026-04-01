@@ -25,6 +25,7 @@ export interface ParentClass {
   genderRequirement: string | null;
   status: ClassStatus;
   hasPendingProposals: boolean;
+  studentIds?: string[];
   pendingApplicationCount: number;
   createdAt: string;
   tutorName?: string | null;
@@ -40,6 +41,7 @@ export interface ParentClassRequest {
   grade: string;
   mode: 'ONLINE' | 'OFFLINE';
   address?: string;
+
   schedule?: string;
   sessionsPerWeek: number;
   sessionDurationMin: number;
@@ -48,6 +50,7 @@ export interface ParentClassRequest {
   genderRequirement?: string;
   description?: string;
   levelFees?: string;  // JSON array [{level, tutor_fee}]
+  studentIds?: string[]; // IDs của hoc sinh
 }
 
 export interface TutorApplicant {
@@ -125,6 +128,32 @@ export const parentApi = {
   /** Tra cứu học sinh theo SĐT — trả về null nếu chưa có tài khoản */
   lookupChildByPhone: async (phone: string): Promise<ApiResponse<Student | null>> => {
     const res = await apiClient.get(`/api/v1/parent/students/lookup?phone=${encodeURIComponent(phone)}`);
+    return res.data;
+  },
+
+  /** Cập nhật học sinh cho một lớp */
+  updateClassStudents: async (classId: string, studentIds: string[]): Promise<ApiResponse<ParentClass>> => {
+    const res = await apiClient.put(`/api/v1/parent/classes/${classId}/students`, studentIds);
+    return res.data;
+  },
+
+  /** Xem danh sách hoá đơn thanh toán */
+  getBillings: async (): Promise<ApiResponse<any[]>> => {
+    const res = await apiClient.get('/api/v1/parents/billings');
+    return res.data;
+  },
+
+  /** Xác nhận đã chuyển khoản */
+  confirmTransfer: async (billingId: string): Promise<ApiResponse<string>> => {
+    const res = await apiClient.post(`/api/v1/parents/billings/${billingId}/confirm`);
+    return res.data;
+  },
+
+  /** Xem báo cáo học tập */
+  getLearningReport: async (yearMonth: string, studentId?: string | null): Promise<ApiResponse<any[]>> => {
+    let url = `/api/v1/parents/learning-report?yearMonth=${yearMonth}`;
+    if (studentId) url += `&studentId=${studentId}`;
+    const res = await apiClient.get(url);
     return res.data;
   },
 };

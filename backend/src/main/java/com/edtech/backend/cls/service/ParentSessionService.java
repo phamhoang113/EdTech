@@ -2,11 +2,17 @@ package com.edtech.backend.cls.service;
 
 import com.edtech.backend.cls.dto.SessionCancelRequest;
 import com.edtech.backend.cls.dto.SessionDTO;
+import com.edtech.backend.cls.entity.AbsenceRequestEntity;
 import com.edtech.backend.cls.entity.SessionEntity;
+import com.edtech.backend.cls.enums.AbsenceRequestStatus;
+import com.edtech.backend.cls.enums.AbsenceRequestType;
 import com.edtech.backend.cls.enums.SessionStatus;
+import com.edtech.backend.cls.repository.AbsenceRequestRepository;
 import com.edtech.backend.cls.repository.SessionRepository;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -15,17 +21,28 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class ParentSessionService {
 
+    private static final String ERR_SESSION_NOT_FOUND = "Buổi học không tồn tại";
+    private static final String ERR_NO_PERMISSION = "Bạn không có quyền thao tác trên buổi học này";
+    private static final String ERR_ONLY_SCHEDULED = "Chỉ có thể huỷ những buổi học chưa diễn ra";
+    private static final String ERR_CANCEL_TOO_LATE = "Chỉ được huỷ buổi học trước 2 tiếng so với thời gian bắt đầu. Vui lòng liên hệ trực tiếp Gia sư hoặc Trung tâm.";
+    private static final int MIN_CANCEL_HOURS_BEFORE = 2;
+
     private final SessionRepository sessionRepository;
+    private final AbsenceRequestRepository absenceRequestRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public List<SessionDTO> getSessionsByParent(UUID parentId, LocalDate startDate, LocalDate endDate) {
@@ -40,45 +57,75 @@ public class ParentSessionService {
                 parentId, startDate, endDate, Sort.by(Sort.Direction.ASC, "sessionDate", "startTime")
         );
 
+        Set<UUID> tutorIds = sessions.stream()
+                .map(s -> s.getCls() != null ? s.getCls().getTutorId() : null)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Map<UUID, UserEntity> tutorMap = tutorIds.isEmpty() ? Map.of() :
+            userRepository.findAllById(tutorIds).stream()
+            .collect(Collectors.toMap(UserEntity::getId, t -> t));
+
+        List<UUID> sessionIds = sessions.stream()
+                .map(SessionEntity::getId)
+                .collect(Collectors.toList());
+
+        Set<UUID> pendingSessionIds = sessionIds.isEmpty() ? Set.of() :
+            absenceRequestRepository.findSessionIdsWithStatus(sessionIds, AbsenceRequestStatus.PENDING);
+
         return sessions.stream()
-                .map(SessionDTO::fromEntity)
+                .map(s -> {
+                    SessionDTO dto = SessionDTO.fromEntity(s);
+                    if (s.getCls() != null && s.getCls().getTutorId() != null) {
+                        UserEntity tutor = tutorMap.get(s.getCls().getTutorId());
+                        if (tutor != null) {
+                            dto.setTutorName(tutor.getFullName());
+                            dto.setTutorPhone(tutor.getPhone());
+                        }
+                    }
+                    dto.setHasPendingAbsence(pendingSessionIds.contains(s.getId()));
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
     @Transactional
     public SessionDTO cancelSession(UUID parentId, UUID sessionId, SessionCancelRequest request) {
+        log.info("[PARENT_ABSENCE] parentId={}, sessionId={}", parentId, sessionId);
         SessionEntity session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new EntityNotFoundException("Buổi học không tồn tại"));
+                .orElseThrow(() -> new EntityNotFoundException(ERR_SESSION_NOT_FOUND));
 
-        // Verify ownership (the session must belong to a class of one of the parent's children)
         if (!session.getCls().getParentId().equals(parentId)) {
-            throw new BusinessRuleException("Bạn không có quyền thao tác trên buổi học này");
+            throw new BusinessRuleException(ERR_NO_PERMISSION);
         }
 
         if (session.getStatus() != SessionStatus.SCHEDULED) {
-            throw new BusinessRuleException("Chỉ có thể huỷ những buổi học chưa diễn ra");
+            throw new BusinessRuleException(ERR_ONLY_SCHEDULED);
         }
 
         LocalDateTime sessionDateTime = LocalDateTime.of(session.getSessionDate(), session.getStartTime());
         LocalDateTime now = LocalDateTime.now();
 
-        // Ràng buộc thời gian: trước 2 tiếng
-        if (now.plusHours(2).isAfter(sessionDateTime)) {
-            throw new BusinessRuleException("Chỉ được huỷ buổi học trước 2 tiếng so với thời gian bắt đầu. Vui lòng liên hệ trực tiếp Gia sư hoặc Trung tâm.");
+        if (now.plusHours(MIN_CANCEL_HOURS_BEFORE).isAfter(sessionDateTime)) {
+            throw new BusinessRuleException(ERR_CANCEL_TOO_LATE);
         }
 
-        session.setStatus(SessionStatus.CANCELLED);
-        
-        // Log lý do huỷ vào tutorNote tạm thời (hoặc tạo bảng SessionCancellation sau)
-        String cancelNote = String.format("[PHỤ HUYNH HUỶ LỊCH]\nLý do: %s\nYêu cầu bù: %s",
-                request.getReason() != null ? request.getReason() : "Không có",
-                request.isMakeUpRequired() ? "CÓ" : "KHÔNG");
-                
-        session.setTutorNote(session.getTutorNote() != null 
-            ? session.getTutorNote() + "\n\n" + cancelNote 
-            : cancelNote);
+        UserEntity parent = userRepository.findById(parentId).orElse(null);
 
-        session = sessionRepository.save(session);
+        AbsenceRequestEntity absenceRequest = AbsenceRequestEntity.builder()
+                .session(session)
+                .requester(parent)
+                .requestType(AbsenceRequestType.STUDENT_LEAVE)
+                .reason(request.getReason() != null ? request.getReason() : "Không có lý do")
+                .makeUpRequired(request.isMakeUpRequired())
+                .status(AbsenceRequestStatus.PENDING)
+                .build();
+
+        absenceRequestRepository.save(absenceRequest);
+
+        log.info("[PARENT_ABSENCE] parentId={}, sessionId={}, makeUp={}, absenceId={}",
+                parentId, sessionId, request.isMakeUpRequired(), absenceRequest.getId());
+
         return SessionDTO.fromEntity(session);
     }
 }

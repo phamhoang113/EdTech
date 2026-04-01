@@ -3,13 +3,23 @@ package com.edtech.backend.cls.repository;
 import com.edtech.backend.cls.entity.ClassEntity;
 import com.edtech.backend.cls.enums.ClassStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.Modifying;
+
 @Repository
 public interface ClassRepository extends JpaRepository<ClassEntity, UUID> {
+
+    @Modifying
+    @Query("UPDATE ClassEntity c SET c.parentId = :newParentId WHERE c.parentId = :studentId")
+    void migrateParentId(@Param("studentId") UUID studentId, @Param("newParentId") UUID newParentId);
+
+    long countByStudents_IdAndStatusInAndIsDeletedFalse(UUID studentId, List<ClassStatus> statuses);
 
     // ─── Tutor open classes ──────────────────────────────────────────────────
     List<ClassEntity> findByStatusAndIsDeletedFalseOrderByCreatedAtDesc(ClassStatus status);
@@ -39,4 +49,11 @@ public interface ClassRepository extends JpaRepository<ClassEntity, UUID> {
 
     /** Tìm tất cả lớp của GS theo danh sách trạng thái (chưa xóa) */
     List<ClassEntity> findByTutorIdAndStatusInAndIsDeletedFalse(UUID tutorId, List<ClassStatus> statuses);
+
+    /** Tìm lớp theo keyword (mã lớp, tiêu đề, hoặc môn chứa keyword) */
+    @Query("SELECT c FROM ClassEntity c WHERE c.isDeleted = false " +
+           "AND (LOWER(c.classCode) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(c.subject) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    List<ClassEntity> searchByKeyword(@Param("keyword") String keyword);
 }

@@ -1,13 +1,13 @@
+import { BookOpen, Search, Trash2, ChevronRight, Phone, MapPin, GraduationCap, User, X, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Activity, Calendar, RefreshCw } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
+import { AdminCreateClassModal } from './AdminCreateClassModal';
+
+// Add state `const [showCreateModal, setShowCreateModal] = useState(false);` around line 286. 
+// Just find a safe spot for state. I'll need to do it precisely.
 import type { ReactElement } from 'react';
-import {
-  BookOpen, Search, Trash2, ChevronRight,
-  Phone, MapPin, GraduationCap, User, X, DollarSign,
-  Clock, CheckCircle, XCircle, AlertCircle, Activity,
-  Calendar, RefreshCw,
-} from 'lucide-react';
+
 import { adminApi } from '../../services/adminApi';
-import type { AdminClassListItem, ClassStatus } from '../../services/adminApi';
+import type { AdminClassListItem, ClassStatus, AdminClassScheduleStatsDTO } from '../../services/adminApi';
 import './AdminClasses.css';
 
 /* ─── Helpers ───────────────────────────────────────────────────────────── */
@@ -63,6 +63,21 @@ function ClassCard({
         {cls.pendingApplicationCount > 0 && (
           <span className="acl-pending-badge">
             <AlertCircle size={10}/> {cls.pendingApplicationCount} đơn chờ
+          </span>
+        )}
+        {cls.missingSessionsThisWeek != null && cls.missingSessionsThisWeek > 0 && (
+          <span className="acl-pending-badge" style={{background:'rgba(239, 68, 68, 0.12)',color:'#ef4444', border: '1px solid currentColor'}}>
+             ⚠️ Thiếu {cls.missingSessionsThisWeek} lịch tuần này
+          </span>
+        )}
+        {cls.status === 'ACTIVE' && !cls.learningStartDate && (
+          <span className="acl-pending-badge" style={{background:'rgba(99,102,241,0.1)',color:'#6366f1', border: '1px solid currentColor'}}>
+            📅 Chưa set ngày bắt đầu học
+          </span>
+        )}
+        {cls.pendingMakeupCount != null && cls.pendingMakeupCount > 0 && (
+          <span className="acl-pending-badge" style={{background:'rgba(245, 158, 11, 0.12)',color:'#f59e0b', border: '1px solid currentColor'}}>
+            ⏳ Nợ {cls.pendingMakeupCount} buổi bù
           </span>
         )}
       </div>
@@ -125,12 +140,50 @@ function ClassDetailDrawer({
   onClose,
   onDelete,
   onStatusChange,
+  onRefresh,
 }: {
   cls: AdminClassListItem;
   onClose: () => void;
   onDelete: (c: AdminClassListItem) => void;
   onStatusChange: (c: AdminClassListItem, s: ClassStatus) => void;
+  onRefresh: () => void;
 }) {
+  const [stats, setStats] = useState<AdminClassScheduleStatsDTO | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [editingDate, setEditingDate] = useState(false);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [dateDraft, setDateDraft] = useState(cls.learningStartDate ?? todayStr);
+  const [savingDate, setSavingDate] = useState(false);
+  const { toast, show } = useToast();
+
+  const handleSaveDate = async () => {
+    if (!dateDraft) {
+      show('error', 'Vui lòng chọn ngày hợp lệ');
+      return;
+    }
+    setSavingDate(true);
+    try {
+      await adminApi.updateLearningStartDate(cls.id, dateDraft);
+      show('success', 'Đã lưu ngày bắt đầu học!');
+      setEditingDate(false);
+      onRefresh();
+    } catch {
+      show('error', 'Lỗi lưu ngày bắt đầu học');
+    } finally {
+      setSavingDate(false);
+    }
+  };
+
+  useEffect(() => {
+    if (cls.status === 'ACTIVE' || cls.status === 'COMPLETED') {
+      setLoadingStats(true);
+      adminApi.getClassScheduleStats(cls.id)
+        .then(res => setStats(res.data))
+        .catch(err => console.error('Failed to load schedule stats', err))
+        .finally(() => setLoadingStats(false));
+    }
+  }, [cls.id, cls.status]);
+
   const nextOptions = NEXT_STATUS[cls.status] ?? [];
   let schedule: any[] = [];
   try { schedule = JSON.parse(cls.schedule ?? '[]'); } catch {}
@@ -142,6 +195,7 @@ function ClassDetailDrawer({
 
   return (
     <div className="acl-drawer-overlay" onClick={onClose}>
+      {toast && <div className={`acl-toast acl-toast-${toast.type}`} style={{ zIndex: 99999 }}>{toast.msg}</div>}
       <aside className="acl-drawer" onClick={e => e.stopPropagation()} style={{ width: 620 }}>
         {/* Header */}
         <div className="acl-drawer-header">
@@ -158,6 +212,54 @@ function ClassDetailDrawer({
               {cls.pendingApplicationCount > 0 && (
                 <span className="acl-pending-badge"><AlertCircle size={10}/> {cls.pendingApplicationCount} đơn chờ</span>
               )}
+              {cls.status === 'OPEN' && (
+                <button
+                  onClick={() => {
+                    let feeStr = 'Thỏa thuận';
+                    if ((cls.tutorFee ?? 0) > 0) {
+                      feeStr = (cls.tutorFee ?? 0).toLocaleString('vi-VN') + 'đ/tháng';
+                    } else {
+                      let levels: any[] = [];
+                      let proposals: any[] = [];
+                      try { if (cls.levelFees) levels = JSON.parse(cls.levelFees); } catch {}
+                      try { if (cls.tutorProposals) proposals = JSON.parse(cls.tutorProposals); } catch {}
+                      
+                      const combinedFees = levels.length > 0 ? levels.map(lv => {
+                        const p = proposals.find(pr => pr.level === lv.level);
+                        return { fee: p ? (p.fee || 0) : 0 };
+                      }) : proposals.map(p => ({ fee: p.fee || 0 }));
+                      
+                      const validFees = combinedFees.filter(f => f.fee > 0).map(f => f.fee);
+                      if (validFees.length > 0) {
+                        const minFee = Math.min(...validFees);
+                        const maxFee = Math.max(...validFees);
+                        if (minFee === maxFee) {
+                          feeStr = `${minFee.toLocaleString('vi-VN')}đ/tháng`;
+                        } else {
+                          feeStr = `${minFee.toLocaleString('vi-VN')}đ - ${maxFee.toLocaleString('vi-VN')}đ/tháng`;
+                        }
+                      }
+                    }
+
+                    const modeLabel = cls.mode === 'ONLINE' ? 'Online' : 'Tại nhà';
+                    const timeFramePart = cls.timeFrame ? ` (${cls.timeFrame})` : '';
+                    const text = `Mã lớp: ${cls.classCode}
+🔯Dạy: ${cls.subject.toUpperCase()} LỚP ${cls.grade}
+- Hình thức: ${modeLabel}
+- Số học viên: 1hs
+- Số buổi/ tuần: ${cls.sessionsPerWeek ?? '—'}b${timeFramePart}
+- Tgian: ${cls.sessionDurationMin ?? '—'} phút
+- Học phí: ${feeStr}
+- Địa chỉ: ${cls.address || 'Học Online'}
+👉Yêu cầu: ${cls.genderRequirement || 'Không yêu cầu'}`;
+                    navigator.clipboard.writeText(text);
+                    show('success', 'Đã copy tin đăng!');
+                  }}
+                  style={{ marginLeft: 'auto', padding: '4px 10px', fontSize: '0.8rem', borderRadius: 6, background: 'rgba(99,102,241,0.1)', color: '#6366f1', border: '1px solid currentColor', cursor: 'pointer', fontWeight: 600 }}
+                >
+                 📋 Copy đăng bài
+                </button>
+              )}
             </div>
           </div>
           <button className="acl-close-btn" onClick={onClose}><X size={18}/></button>
@@ -168,6 +270,30 @@ function ClassDetailDrawer({
           <section className="acl-drawer-section">
             <h3><BookOpen size={13}/> Thông tin lớp</h3>
             <div className="acl-dgrid">
+              <div className="acl-dfield" style={{ gridColumn: '1 / -1', background: 'linear-gradient(135deg, rgba(99,102,241,0.06), rgba(139,92,246,0.06))', padding: '12px 14px', borderRadius: 8, border: '1px solid rgba(99,102,241,0.15)' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: '0.82rem', color: '#6366f1' }}>
+                  <Calendar size={13}/> Ngày bắt đầu học
+                </span>
+                {editingDate ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                    <input type="date" value={dateDraft} onChange={e => setDateDraft(e.target.value)}
+                      style={{ padding: '6px 10px', border: '1.5px solid #6366f1', borderRadius: 6, fontSize: '0.85rem', outline: 'none', color: '#1e1b4b', fontWeight: 500 }} />
+                    <button style={{ padding: '6px 14px', fontSize: '0.8rem', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }} onClick={handleSaveDate} disabled={savingDate}>
+                      {savingDate ? '...' : '✓ Lưu'}
+                    </button>
+                    <button style={{ padding: '6px 12px', fontSize: '0.8rem', background: 'transparent', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }} onClick={() => setEditingDate(false)}>Huỷ</button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                    <strong style={{ fontSize: '0.95rem', color: cls.learningStartDate ? '#1e1b4b' : '#9ca3af' }}>
+                      {cls.learningStartDate ? new Date(cls.learningStartDate).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Chưa thiết lập'}
+                    </strong>
+                    <button style={{ padding: '3px 10px', fontSize: '0.75rem', background: 'rgba(99,102,241,0.1)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 5, cursor: 'pointer', fontWeight: 600 }} onClick={() => setEditingDate(true)}>
+                      ✏️ Sửa
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="acl-dfield"><span>Môn</span><strong>{cls.subject}</strong></div>
               <div className="acl-dfield"><span>Khối</span><strong>{cls.grade}</strong></div>
               <div className="acl-dfield"><span>Hình thức</span><strong>{cls.mode === 'ONLINE' ? '🌐 Online' : '📍 Offline'}</strong></div>
@@ -205,6 +331,31 @@ function ClassDetailDrawer({
               {cls.tutorType && <div className="acl-dfield"><span>Loại GS</span><strong>{cls.tutorType}</strong></div>}
             </div>
           </section>
+
+          {/* Schedule Stats */}
+          {(cls.status === 'ACTIVE' || cls.status === 'COMPLETED') && (
+            <section className="acl-drawer-section">
+              <h3><Activity size={13}/> Thống kê Lịch Dạy</h3>
+              {loadingStats ? (
+                <div style={{ padding: 12, fontSize: '0.85rem', color: '#6b7280' }}>Đang tải dữ liệu...</div>
+              ) : stats ? (
+                <div className="acl-dgrid">
+                  <div className="acl-dfield"><span>Tổng số buổi</span><strong>{stats.totalSessions}</strong></div>
+                  <div className="acl-dfield"><span>Đã hoàn thành</span><strong className="acl-green">{stats.completedSessions}</strong></div>
+                  <div className="acl-dfield"><span>Sắp học (Scheduled)</span><strong>{stats.upcomingSessions}</strong></div>
+                  
+                  <div className="acl-dfield"><span>Học chính</span><strong>{stats.regularCount}</strong></div>
+                  <div className="acl-dfield"><span>Dạy bù</span><strong style={{color: '#f59e0b'}}>{stats.makeupCount}</strong></div>
+                  <div className="acl-dfield"><span>Tăng cường</span><strong style={{color: '#8b5cf6'}}>{stats.extraCount}</strong></div>
+                  
+                  <div className="acl-dfield"><span>Đã huỷ</span><strong style={{color: '#ef4444'}}>{stats.cancelledCount}</strong></div>
+                  <div className="acl-dfield"><span>Nợ buổi bù</span><strong style={{color: '#dc2626'}}>{stats.pendingMakeupCount}</strong></div>
+                </div>
+              ) : (
+                <div style={{ padding: 12, fontSize: '0.85rem', color: '#6b7280' }}>Không thể tải dữ liệu thống kê.</div>
+              )}
+            </section>
+          )}
 
           {/* Fees */}
           <section className="acl-drawer-section">
@@ -362,6 +513,7 @@ export function AdminClasses() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<AdminClassListItem | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AdminClassListItem | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const { toast, show: showToast } = useToast();
 
   const fetchAll = async () => {
@@ -412,7 +564,7 @@ export function AdminClasses() {
     if (filter === 'ALL') {
       list = classes;
     } else if (filter === 'PENDING_PROPOSAL') {
-      list = classes.filter(c => c.hasPendingProposals);
+      list = classes.filter(c => c.hasPendingProposals && c.status === 'OPEN');
     } else {
       list = classes.filter(c => c.status === filter);
     }
@@ -436,7 +588,15 @@ export function AdminClasses() {
       {selected && (
         <ClassDetailDrawer cls={selected} onClose={() => setSelected(null)}
           onDelete={c => { setSelected(null); setPendingDelete(c); }}
+          onRefresh={fetchAll}
           onStatusChange={handleStatusChange}/>
+      )}
+      {showCreateModal && (
+        <AdminCreateClassModal 
+          onClose={() => setShowCreateModal(false)} 
+          onSuccess={() => { setShowCreateModal(false); fetchAll(); }}
+          showToast={showToast} 
+        />
       )}
 
       {/* Header */}
@@ -445,11 +605,16 @@ export function AdminClasses() {
           <h1 className="acl-title">Quản lý Lớp học</h1>
           <p className="acl-subtitle">Theo dõi và quản lý tất cả lớp học trong hệ thống</p>
         </div>
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          style={{ whiteSpace: 'nowrap', padding: '10px 16px', borderRadius: '8px', background: '#6366f1', color: '#fff', border: 'none', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', boxShadow: '0 4px 6px rgba(99,102,241,0.2)' }}>
+          <BookOpen size={16}/> Mở lớp hộ PH
+        </button>
       </div>
 
       {/* Stats */}
       {(() => {
-        const pendingProposalCount = classes.filter(c => c.hasPendingProposals).length;
+        const pendingProposalCount = classes.filter(c => c.hasPendingProposals && c.status === 'OPEN').length;
         const statItems: Array<{ key: string; label: string; cls: string; filterKey: FilterKey }> = [
           { key: 'open',      label: 'Đang mở',       cls: 'acl-stat--blue',   filterKey: 'OPEN' },
           { key: 'pending',   label: 'Chờ PH chọn',   cls: 'acl-stat--violet', filterKey: 'PENDING_PROPOSAL' },

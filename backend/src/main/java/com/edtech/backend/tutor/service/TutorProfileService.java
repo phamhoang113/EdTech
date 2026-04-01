@@ -63,6 +63,9 @@ public class TutorProfileService {
         if (req.getTeachingMode() != null && !req.getTeachingMode().isBlank()) {
             profile.setTeachingMode(req.getTeachingMode());
         }
+        if (req.getBankName() != null) profile.setBankName(req.getBankName());
+        if (req.getBankAccountNumber() != null) profile.setBankAccountNumber(req.getBankAccountNumber());
+        if (req.getBankOwnerName() != null) profile.setBankOwnerName(req.getBankOwnerName());
 
         TutorProfileEntity saved = tutorProfileRepository.save(profile);
         log.info("User {} updated their tutor profile", user.getId());
@@ -143,6 +146,9 @@ public class TutorProfileService {
                 .dateOfBirth(profile.getDateOfBirth())
                 .achievements(profile.getAchievements())
                 .experienceYears(profile.getExperienceYears())
+                .bankName(profile.getBankName())
+                .bankAccountNumber(profile.getBankAccountNumber())
+                .bankOwnerName(profile.getBankOwnerName())
                 .build();
     }
 }

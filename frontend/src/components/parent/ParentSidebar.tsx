@@ -1,25 +1,24 @@
+import { LayoutDashboard, Users, PlusCircle, Calendar, MessageSquare, BarChart3, LogOut, CreditCard, UserCheck, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useBadgeCounts } from '../../hooks/useBadgeCounts';
-import { 
-  LayoutDashboard, Users, PlusCircle, Calendar, 
-  MessageSquare, BarChart3, LogOut, CreditCard, UserCheck
-} from 'lucide-react';
+import { useNotificationStore } from '../../store/useNotificationStore';
 
 export function ParentSidebar({ active, onRequestClass }: {
-  active: 'overview' | 'children' | 'applicants' | 'schedule';
+  active: 'overview' | 'children' | 'applicants' | 'schedule' | 'messages' | 'profile' | 'report' | 'payment';
   onRequestClass?: () => void;
 }) {
   const navigate = useNavigate();
   const { logout } = useAuthStore();
   const badgeCounts = useBadgeCounts();
+  const { unreadMessages } = useNotificationStore();
   const proposedCount = badgeCounts['proposedApplicants'] ?? 0;
+  const unpaidCount = badgeCounts['unpaidBillings'] ?? 0;
 
   return (
     <aside className="dash-sidebar">
-      <Link to="/" className="dash-sidebar-logo">
-        <span className="dash-sidebar-logo-icon">🎓</span>
-        <span className="dash-sidebar-logo-name">EdTech</span>
+      <Link to="/" className="dash-sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src="/logo.png" alt="Gia Sư Tinh Hoa" style={{ width: '100%', height: 'auto', maxHeight: '50px', objectFit: 'contain', filter: 'var(--logo-filter, none)' }} />
       </Link>
 
       <div className="dash-sidebar-section">
@@ -60,11 +59,42 @@ export function ParentSidebar({ active, onRequestClass }: {
         >
           <Calendar size={18}/> Lịch học
         </button>
-        <button className="dash-sidebar-item"><MessageSquare size={18}/> Tin nhắn</button>
+        <button 
+          className={`dash-sidebar-item ${active === 'messages' ? 'active' : ''}`}
+          onClick={() => navigate('/messages')}
+        >
+          <MessageSquare size={18} /> Tin nhắn
+          {unreadMessages > 0 && (
+            <span className="item-badge badge-pulse" title="Tin nhắn mới">
+              {unreadMessages}
+            </span>
+          )}
+        </button>
 
         <span className="dash-sidebar-section-label">Tiện ích & Tài chính</span>
-        <button className="dash-sidebar-item"><CreditCard size={18}/> Thanh toán</button>
-        <button className="dash-sidebar-item"><BarChart3 size={18}/> Báo cáo học tập</button>
+        <button 
+          className={`dash-sidebar-item ${active === 'profile' ? 'active' : ''}`}
+          onClick={() => navigate('/profile')}
+        >
+          <User size={18}/> Hồ sơ cá nhân
+        </button>
+        <button 
+          className={`dash-sidebar-item ${active === 'payment' ? 'active' : ''}`}
+          onClick={() => navigate('/payment')}
+        >
+          <CreditCard size={18}/> Thanh toán
+          {unpaidCount > 0 && (
+            <span className="item-badge badge-pulse" style={{ backgroundColor: '#EF4444' }} title="Học phí chưa thanh toán">
+              {unpaidCount > 99 ? '99+' : unpaidCount}
+            </span>
+          )}
+        </button>
+        <button 
+          className={`dash-sidebar-item ${active === 'report' ? 'active' : ''}`}
+          onClick={() => navigate('/learning-report')}
+        >
+          <BarChart3 size={18}/> Báo cáo học tập
+        </button>
       </div>
 
       <button className="dash-logout" onClick={() => { logout(); navigate('/'); }}>

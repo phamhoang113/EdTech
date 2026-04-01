@@ -169,13 +169,13 @@
   }
 }
 
-.form-group {
+.register-form .form-group {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
 
-.form-group label {
+.register-form .form-group label {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--auth-label-color);

@@ -3,9 +3,10 @@ package com.edtech.backend.tutor.controller;
 import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.cls.enums.ApplicationStatus;
-import com.edtech.backend.core.dto.ApiResponse;
 import com.edtech.backend.cls.enums.ClassMode;
 import com.edtech.backend.cls.enums.ClassStatus;
+import com.edtech.backend.core.dto.ApiResponse;
+import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
 import com.edtech.backend.tutor.dto.request.ParentClassRequest;
 import com.edtech.backend.admin.dto.AdminClassListItem;
@@ -21,7 +22,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -31,10 +38,13 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 
+import org.springframework.transaction.annotation.Transactional;
+
 @RestController
 @RequestMapping("/api/v1/parent")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('PARENT')")
+@Transactional
 public class ParentClassController {
 
     private final ClassRepository classRepository;
@@ -49,6 +59,10 @@ public class ParentClassController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         UUID parentId = resolveUserId(userDetails.getUsername());
+
+        List<UserEntity> studentUsers = (request.studentIds() != null && !request.studentIds().isEmpty())
+                ? userRepository.findAllById(request.studentIds())
+                : List.of();
 
         ClassEntity cls = ClassEntity.builder()
                 .classCode(generateClassCode())
@@ -73,6 +87,7 @@ public class ParentClassController {
                 .tutorProposals("[]")       // NOT NULL trong DB — khởi tạo rỗng
                 .status(ClassStatus.PENDING_APPROVAL)
                 .isDeleted(false)
+                .students(new java.util.HashSet<>(studentUsers))
                 .build();
 
 
@@ -109,6 +124,34 @@ public class ParentClassController {
         return ResponseEntity.ok(ApiResponse.ok(tutors));
     }
 
+    /** Cập nhật danh sách học sinh cho lớp đã tạo */
+    @org.springframework.transaction.annotation.Transactional
+    @PutMapping("/classes/{classId}/students")
+    public ResponseEntity<ApiResponse<AdminClassListItem>> updateClassStudents(
+            @PathVariable java.util.UUID classId,
+            @RequestBody java.util.List<java.util.UUID> studentIds,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        UUID parentId = resolveUserId(userDetails.getUsername());
+        ClassEntity cls = classRepository.findById(classId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lớp học"));
+
+        if (!cls.getParentId().equals(parentId)) {
+            throw new BusinessRuleException("Bạn không quyền truy cập lớp này.");
+        }
+
+        List<UserEntity> studentUsers = (studentIds != null && !studentIds.isEmpty())
+                ? userRepository.findAllById(studentIds)
+                : List.of();
+
+        cls.getStudents().clear();
+        cls.getStudents().addAll(studentUsers);
+        ClassEntity saved = classRepository.save(cls);
+
+        return ResponseEntity.ok(ApiResponse.ok(toItem(saved, null), "Đã cập nhật học sinh cho lớp."));
+    }
+
+
     // ─── Private helpers ─────────────────────────────────────────────────────
 
     private UUID resolveUserId(String phone) {
@@ -139,11 +182,13 @@ public class ParentClassController {
                 .levelFees(cls.getLevelFees())
                 .rejectionReason(cls.getRejectionReason())
                 .status(cls.getStatus())
-                .hasPendingProposals(classApplicationRepository.existsByClassIdAndStatus(
-                        cls.getId(), ApplicationStatus.APPROVED))
+                .hasPendingProposals(
+                        cls.getTutorId() == null
+                        && classApplicationRepository.existsByClassIdAndStatus(cls.getId(), ApplicationStatus.APPROVED))
                 .pendingApplicationCount((int) classApplicationRepository.countByClassIdAndStatus(
                         cls.getId(), ApplicationStatus.APPROVED))
                 .createdAt(cls.getCreatedAt())
+                .studentIds(cls.getStudents() != null ? cls.getStudents().stream().map(UserEntity::getId).toList() : List.of())
                 .build();
     }
 

@@ -31,4 +31,9 @@ public class TutorProfileResponse {
     private LocalDate dateOfBirth;
     private String achievements;
     private Integer experienceYears;
+    
+    // Bank Details
+    private String bankName;
+    private String bankAccountNumber;
+    private String bankOwnerName;
 }

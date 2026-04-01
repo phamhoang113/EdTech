@@ -81,6 +81,7 @@ public class OpenClassService {
                             .location(location)
                             .schedule(entity.getSchedule())
                             .timeFrame(entity.getTimeFrame())
+
                             .classCode(entity.getClassCode() != null ? entity.getClassCode() : entity.getId().toString().substring(0, 6).toUpperCase())
                             .feePercentage(entity.getFeePercentage() != null ? entity.getFeePercentage() : 30)
                             .parentFee(entity.getParentFee())

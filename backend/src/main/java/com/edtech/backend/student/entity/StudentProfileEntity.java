@@ -17,8 +17,8 @@ import java.util.UUID;
 public class StudentProfileEntity extends BaseEntity {
 
     /** User account của học sinh (role = STUDENT) */
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
     /** UUID của phụ huynh sở hữu */
@@ -37,4 +37,9 @@ public class StudentProfileEntity extends BaseEntity {
     @Column(name = "link_status", length = 20, nullable = false)
     @Builder.Default
     private String linkStatus = "ACCEPTED";
+
+    /** Ai là người gửi yêu cầu liên kết (PARENT hoặc STUDENT) */
+    @Column(name = "initiated_by", length = 20, nullable = false)
+    @Builder.Default
+    private String initiatedBy = "PARENT";
 }

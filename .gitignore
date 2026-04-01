@@ -80,3 +80,4 @@ docker-compose.override.yml
 .agents
 .rules
 .workflows
+react-best-practices

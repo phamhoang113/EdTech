@@ -1,6 +1,7 @@
+import { X, Users, BookOpen, GraduationCap, ArrowLeft, Check } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../ui/Button';
-import { X, Users, BookOpen, GraduationCap, ArrowLeft, Check } from 'lucide-react';
+
 import { useNavigate } from 'react-router-dom';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import './RoleSelectionModal.css';
@@ -59,7 +60,7 @@ export const RoleSelectionModal = ({ onClose, onBack }: RoleSelectionModalProps)
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content glass-effect role-modal" onClick={e => e.stopPropagation()}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
         <button className="modal-back" onClick={onBack} aria-label="Back">
           <ArrowLeft size={20} />
         </button>

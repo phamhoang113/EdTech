@@ -23,6 +23,7 @@ public record CreateClassRequest(
         @NotBlank String mode,          // "ONLINE" | "OFFLINE"
         String address,                  // bắt buộc nếu OFFLINE
 
+
         String schedule,                 // JSON JSONB
         @NotNull @Positive Integer sessionsPerWeek,
         @NotNull @Positive Integer sessionDurationMin,

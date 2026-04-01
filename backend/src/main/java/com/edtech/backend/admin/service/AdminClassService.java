@@ -1,26 +1,35 @@
 package com.edtech.backend.admin.service;
 
+import com.edtech.backend.admin.dto.AdminClassListItem;
+import com.edtech.backend.admin.dto.AdminClassScheduleStatsDTO;
+import com.edtech.backend.admin.dto.CreateClassRequest;
 import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.cls.entity.ClassEntity;
+import com.edtech.backend.cls.entity.SessionEntity;
+import com.edtech.backend.cls.enums.ApplicationStatus;
 import com.edtech.backend.cls.enums.ClassMode;
 import com.edtech.backend.cls.enums.ClassStatus;
-import com.edtech.backend.core.exception.BusinessRuleException;
-import com.edtech.backend.core.exception.EntityNotFoundException;
-import com.edtech.backend.admin.dto.CreateClassRequest;
-import com.edtech.backend.admin.dto.AdminClassListItem;
-import com.edtech.backend.cls.entity.ClassEntity;
-import com.edtech.backend.tutor.entity.TutorProfileEntity;
-import com.edtech.backend.cls.enums.ApplicationStatus;
+import com.edtech.backend.cls.enums.SessionStatus;
+import com.edtech.backend.cls.enums.SessionType;
 import com.edtech.backend.cls.repository.ClassApplicationRepository;
 import com.edtech.backend.cls.repository.ClassRepository;
+import com.edtech.backend.cls.repository.SessionRepository;
+import com.edtech.backend.core.exception.BusinessRuleException;
+import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.tutor.entity.TutorProfileEntity;
 import com.edtech.backend.tutor.repository.TutorProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,10 +42,20 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class AdminClassService {
 
+    private static final String ERR_CLASS_NOT_FOUND = "Không tìm thấy lớp học.";
+    private static final String ERR_PARENT_NOT_FOUND = "Không tìm thấy phụ huynh.";
+    private static final String ERR_INVALID_TRANSITION = "Không thể chuyển từ %s sang %s.";
+    private static final String ERR_NOT_PENDING = "Lớp không ở trạng thái chờ duyệt.";
+    private static final String DEFAULT_GENDER_REQ = "Không yêu cầu";
+    private static final String DEFAULT_SCHEDULE = "[]";
+    private static final int DEFAULT_FEE_PERCENT = 30;
+    private static final int SEARCH_DEADLINE_MONTHS = 1;
+
     private final ClassRepository classRepository;
     private final UserRepository userRepository;
     private final TutorProfileRepository tutorProfileRepository;
     private final ClassApplicationRepository applicationRepository;
+    private final SessionRepository sessionRepository;
 
     // ─── Statistics ───────────────────────────────────────────────────────────
 
@@ -78,6 +97,20 @@ public class AdminClassService {
                         .filter(p -> tutorIds.contains(p.getUserId()))
                         .collect(Collectors.toMap(TutorProfileEntity::getUserId, p -> p));
 
+        // Group sessions by classId for ACTIVE classes to compute quotas
+        List<UUID> activeClassIds = entities.stream()
+                .filter(c -> c.getStatus() == ClassStatus.ACTIVE)
+                .map(ClassEntity::getId)
+                .collect(Collectors.toList());
+        
+        Map<UUID, List<SessionEntity>> sessionsByClass = activeClassIds.isEmpty() ? Map.of() : 
+                sessionRepository.findByClsIdIn(activeClassIds).stream()
+                .collect(Collectors.groupingBy(s -> s.getCls().getId()));
+
+        LocalDate today = LocalDate.now();
+        LocalDate targetMonday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate targetSunday = targetMonday.plusDays(6);
+
         List<AdminClassListItem> result = new ArrayList<>();
         for (ClassEntity cls : entities) {
             UserEntity parent = userMap.get(cls.getParentId());
@@ -86,9 +119,35 @@ public class AdminClassService {
 
             long pendingCount = applicationRepository.countByClassIdAndStatus(cls.getId(), ApplicationStatus.PENDING);
 
-            boolean hasPendingProposals = cls.getTutorProposals() != null
-                    && !cls.getTutorProposals().isBlank()
-                    && !cls.getTutorProposals().equals("{}");
+            long approvedCount = applicationRepository.countByClassIdAndStatus(cls.getId(), ApplicationStatus.APPROVED);
+            boolean hasPendingProposals = approvedCount > 0
+                    && cls.getTutorId() == null
+                    && (cls.getStatus() == ClassStatus.OPEN || cls.getStatus() == ClassStatus.ASSIGNED);
+
+            Integer missingSessionsThisWeek = 0;
+            Integer pendingMakeupCount = 0;
+            if (cls.getStatus() == ClassStatus.ACTIVE) {
+                List<SessionEntity> classSessions = sessionsByClass.getOrDefault(cls.getId(), List.of());
+                
+                long _pending = classSessions.stream()
+                        .filter(s -> s.getStatus().name().startsWith("CANCELLED") && Boolean.TRUE.equals(s.getRequiresMakeup()))
+                        .filter(s -> classSessions.stream().noneMatch(o -> s.getId().equals(o.getMakeupForSessionId())))
+                        .count();
+                pendingMakeupCount = (int) _pending;
+                
+                long activeSessionsThisWeek = classSessions.stream()
+                        .filter(s -> !s.getStatus().name().startsWith("CANCELLED"))
+                        .filter(s -> !s.getSessionDate().isBefore(targetMonday) && !s.getSessionDate().isAfter(targetSunday))
+                        .count();
+                
+                int sessionsPerWeek = cls.getSessionsPerWeek() != null ? cls.getSessionsPerWeek() : 0;
+                
+                if (cls.getLearningStartDate() == null || targetSunday.isBefore(cls.getLearningStartDate())) {
+                    sessionsPerWeek = 0; // Chưa kết nối hoặc chưa đến tuần khai giảng -> không báo thiếu
+                }
+
+                missingSessionsThisWeek = Math.max(0, sessionsPerWeek - (int) activeSessionsThisWeek);
+            }
 
             result.add(AdminClassListItem.builder()
                     .id(cls.getId())
@@ -98,6 +157,7 @@ public class AdminClassService {
                     .grade(cls.getGrade())
                     .mode(cls.getMode() != null ? cls.getMode().name() : null)
                     .address(cls.getAddress())
+
                     .parentName(parent != null ? parent.getFullName() : null)
                     .parentPhone(parent != null ? parent.getPhone() : null)
                     .tutorName(tutor != null ? tutor.getFullName() : null)
@@ -112,13 +172,17 @@ public class AdminClassService {
                     .timeFrame(cls.getTimeFrame())
                     .schedule(cls.getSchedule())
                     .genderRequirement(cls.getGenderRequirement())
+                    .learningStartDate(cls.getLearningStartDate())
                     .levelFees(cls.getLevelFees())
                     .tutorProposals(cls.getTutorProposals())
                     .rejectionReason(cls.getRejectionReason())
+                    .missingSessionsThisWeek(missingSessionsThisWeek)
+                    .pendingMakeupCount(pendingMakeupCount)
                     .status(cls.getStatus())
                     .hasPendingProposals(hasPendingProposals)
                     .pendingApplicationCount(pendingCount)
                     .createdAt(cls.getCreatedAt())
+                    .studentIds(cls.getStudents() != null ? cls.getStudents().stream().map(UserEntity::getId).toList() : List.of())
                     .build());
         }
         return result;
@@ -130,13 +194,13 @@ public class AdminClassService {
     public AdminClassListItem createClass(CreateClassRequest request) {
         // Validate parent exists
         UserEntity parent = userRepository.findById(request.parentId())
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy phụ huynh."));
+                .orElseThrow(() -> new EntityNotFoundException(ERR_PARENT_NOT_FOUND));
 
         // Get admin id from security context
         UUID adminId = resolveAdminId();
 
         // Tính platform fee và tutor fee mặc định
-        int feePercent = request.feePercentage() != null ? request.feePercentage() : 30;
+        int feePercent = request.feePercentage() != null ? request.feePercentage() : DEFAULT_FEE_PERCENT;
         BigDecimal tutorFee = request.parentFee()
                 .multiply(BigDecimal.valueOf(100 - feePercent))
                 .divide(BigDecimal.valueOf(100));
@@ -150,7 +214,8 @@ public class AdminClassService {
                 .grade(request.grade())
                 .mode(ClassMode.valueOf(request.mode().toUpperCase()))
                 .address(request.address())
-                .schedule(request.schedule() != null ? request.schedule() : "[]")
+
+                .schedule(request.schedule() != null ? request.schedule() : DEFAULT_SCHEDULE)
                 .sessionsPerWeek(request.sessionsPerWeek())
                 .sessionDurationMin(request.sessionDurationMin())
                 .timeFrame(request.timeFrame())
@@ -159,16 +224,16 @@ public class AdminClassService {
                 .platformFee(platformFee)
                 .feePercentage(feePercent)
                 .levelFees(request.levelFees())
-                .genderRequirement(request.genderRequirement() != null ? request.genderRequirement() : "Không yêu cầu")
+                .genderRequirement(request.genderRequirement() != null ? request.genderRequirement() : DEFAULT_GENDER_REQ)
                 .startDate(request.startDate())
                 .endDate(request.endDate())
-                .status(ClassStatus.OPEN)
+                .status(ClassStatus.PENDING_APPROVAL)
                 .isDeleted(false)
                 .build();
 
         cls.setClassCode(generateClassCode());
         ClassEntity saved = classRepository.save(cls);
-        log.info("Admin created class {} ({})", saved.getId(), saved.getClassCode());
+        log.info("[CREATE_CLASS_ON_BEHALF] adminId={}, classId={}, classCode={}", adminId, saved.getId(), saved.getClassCode());
 
         return buildSingleItem(saved, parent, null, null, 0L);
     }
@@ -182,12 +247,22 @@ public class AdminClassService {
 
         if (!isValidTransition(current, newStatus)) {
             throw new BusinessRuleException(
-                    String.format("Không thể chuyển từ %s sang %s.", current, newStatus));
+                    String.format(ERR_INVALID_TRANSITION, current, newStatus));
         }
 
         cls.setStatus(newStatus);
         classRepository.save(cls);
-        log.info("Admin updated class {} status: {} → {}", classId, current, newStatus);
+        log.info("[UPDATE_STATUS] classId={}, from={}, to={}", classId, current, newStatus);
+    }
+
+    // ─── Update Learning Start Date ──────────────────────────────────────────
+
+    @Transactional
+    public void updateLearningStartDate(UUID classId, LocalDate newStartDate) {
+        ClassEntity cls = findActiveClassOrThrow(classId);
+        cls.setLearningStartDate(newStartDate);
+        classRepository.save(cls);
+        log.info("[UPDATE_LEARNING_START_DATE] classId={}, newDate={}", classId, newStartDate);
     }
 
     // ─── Soft Delete ──────────────────────────────────────────────────────────
@@ -203,7 +278,7 @@ public class AdminClassService {
             cls.setTutorProposals(null);
         }
         classRepository.save(cls);
-        log.info("Admin soft-deleted class {}", classId);
+        log.info("[DELETE_CLASS] classId={}", classId);
     }
 
     // ─── Private helpers ──────────────────────────────────────────────────────
@@ -211,7 +286,7 @@ public class AdminClassService {
     private ClassEntity findActiveClassOrThrow(UUID classId) {
         return classRepository.findById(classId)
                 .filter(c -> !c.getIsDeleted())
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lớp học."));
+                .orElseThrow(() -> new EntityNotFoundException(ERR_CLASS_NOT_FOUND));
     }
 
     private boolean isValidTransition(ClassStatus from, ClassStatus to) {
@@ -235,10 +310,12 @@ public class AdminClassService {
     private UUID resolveAdminId() {
         try {
             Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (principal instanceof com.edtech.backend.auth.entity.UserEntity user) {
+            if (principal instanceof UserEntity user) {
                 return user.getId();
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.warn("Cannot resolve admin ID from security context: {}", e.getMessage());
+        }
         return UUID.fromString("00000000-0000-0000-0000-000000000001"); // fallback
     }
 
@@ -252,6 +329,7 @@ public class AdminClassService {
                 .grade(cls.getGrade())
                 .mode(cls.getMode() != null ? cls.getMode().name() : null)
                 .address(cls.getAddress())
+
                 .parentName(parent != null ? parent.getFullName() : null)
                 .parentPhone(parent != null ? parent.getPhone() : null)
                 .tutorName(tutor != null ? tutor.getFullName() : null)
@@ -270,6 +348,7 @@ public class AdminClassService {
                 .status(cls.getStatus())
                 .pendingApplicationCount(pendingCount)
                 .createdAt(cls.getCreatedAt())
+                .studentIds(cls.getStudents() != null ? cls.getStudents().stream().map(UserEntity::getId).toList() : List.of())
                 .build();
     }
 
@@ -282,17 +361,16 @@ public class AdminClassService {
     @Transactional
     public void approveClassRequest(UUID classId, BigDecimal tutorFee, String levelFees, String tutorProposals, Integer feePercentage) {
         ClassEntity cls = classRepository.findById(classId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lớp học."));
+                .orElseThrow(() -> new EntityNotFoundException(ERR_CLASS_NOT_FOUND));
 
         if (cls.getStatus() != ClassStatus.PENDING_APPROVAL) {
-            throw new BusinessRuleException("Lớp không ở trạng thái chờ duyệt.");
+            throw new BusinessRuleException(ERR_NOT_PENDING);
         }
 
         cls.setStatus(ClassStatus.OPEN);
 
-        // Đặt hạn tìm gia sư: 1 tháng kể từ ngày duyệt
-        cls.setStartDate(java.time.LocalDate.now());
-        cls.setEndDate(java.time.LocalDate.now().plusMonths(1));
+        cls.setStartDate(LocalDate.now());
+        cls.setEndDate(LocalDate.now().plusMonths(SEARCH_DEADLINE_MONTHS));
 
         // Lưu feePercentage (% phí nhận lớp 1 lần) nếu admin điền
         if (feePercentage != null && feePercentage > 0) {
@@ -317,17 +395,17 @@ public class AdminClassService {
          */
 
         classRepository.save(cls);
-        log.info("Admin approved class request: {}", classId);
+        log.info("[APPROVE_CLASS] classId={}", classId);
     }
 
     /** Admin từ chối yêu cầu mở lớp từ PH: PENDING_APPROVAL → CANCELLED */
     @Transactional
     public void rejectClassRequest(UUID classId, String reason) {
         ClassEntity cls = classRepository.findById(classId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy lớp học."));
+                .orElseThrow(() -> new EntityNotFoundException(ERR_CLASS_NOT_FOUND));
 
         if (cls.getStatus() != ClassStatus.PENDING_APPROVAL) {
-            throw new BusinessRuleException("Lớp không ở trạng thái chờ duyệt.");
+            throw new BusinessRuleException(ERR_NOT_PENDING);
         }
 
         cls.setStatus(ClassStatus.CANCELLED);
@@ -336,6 +414,50 @@ public class AdminClassService {
             cls.setRejectionReason(reason);
         }
         classRepository.save(cls);
-        log.info("Admin rejected class request: {} — reason: {}", classId, reason);
+        log.info("[REJECT_CLASS] classId={}, reason={}", classId, reason);
+    }
+
+    // ─── Schedule Stats ───────────────────────────────────────────────────────
+
+    public AdminClassScheduleStatsDTO getScheduleStats(UUID classId) {
+        findActiveClassOrThrow(classId);
+        List<SessionEntity> sessions = sessionRepository.findByClsId(classId, Sort.unsorted());
+        
+        int total = 0, completed = 0, upcoming = 0;
+        int regular = 0, makeup = 0, extra = 0;
+        int cancelled = 0, pendingMakeup = 0;
+        
+        for (var s : sessions) {
+            total++;
+            var status = s.getStatus();
+            var type = s.getSessionType();
+            
+            if (status == SessionStatus.COMPLETED) completed++;
+            else if (status == SessionStatus.SCHEDULED || status == SessionStatus.LIVE) upcoming++;
+            else if (status.name().startsWith("CANCELLED")) {
+                cancelled++;
+                if (Boolean.TRUE.equals(s.getRequiresMakeup())) {
+                    boolean hasMakeup = sessions.stream().anyMatch(other -> s.getId().equals(other.getMakeupForSessionId()));
+                    if (!hasMakeup) {
+                        pendingMakeup++;
+                    }
+                }
+            }
+            
+            if (type == SessionType.REGULAR) regular++;
+            else if (type == SessionType.MAKEUP) makeup++;
+            else if (type == SessionType.EXTRA) extra++;;
+        }
+        
+        return AdminClassScheduleStatsDTO.builder()
+                .totalSessions(total)
+                .completedSessions(completed)
+                .upcomingSessions(upcoming)
+                .regularCount(regular)
+                .makeupCount(makeup)
+                .extraCount(extra)
+                .cancelledCount(cancelled)
+                .pendingMakeupCount(pendingMakeup)
+                .build();
     }
 }

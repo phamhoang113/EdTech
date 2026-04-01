@@ -5,19 +5,20 @@ import com.edtech.backend.cls.enums.ClassMode;
 import com.edtech.backend.cls.enums.ClassStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-@Data
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClassDTO {
     private UUID id;
+    private String classCode;
     private String title;
     private String subject;
     private String grade;
@@ -27,10 +28,12 @@ public class ClassDTO {
     private Integer sessionDurationMin;
     private BigDecimal tutorFee;
     private LocalDate startDate;
+    private LocalDate learningStartDate;
     private LocalDate endDate;
     private String schedule;
     private String address;
     private String description;
+
 
     public static ClassDTO fromEntity(ClassEntity entity) {
         if (entity == null) {
@@ -38,6 +41,7 @@ public class ClassDTO {
         }
         return ClassDTO.builder()
                 .id(entity.getId())
+                .classCode(entity.getClassCode())
                 .title(entity.getTitle())
                 .subject(entity.getSubject())
                 .grade(entity.getGrade())
@@ -47,10 +51,12 @@ public class ClassDTO {
                 .sessionDurationMin(entity.getSessionDurationMin())
                 .tutorFee(entity.getTutorFee())
                 .startDate(entity.getStartDate())
+                .learningStartDate(entity.getLearningStartDate())
                 .endDate(entity.getEndDate())
                 .schedule(entity.getSchedule())
                 .address(entity.getAddress())
                 .description(entity.getDescription())
+
                 .build();
     }
 }

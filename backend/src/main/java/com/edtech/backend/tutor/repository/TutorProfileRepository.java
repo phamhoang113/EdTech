@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface TutorProfileRepository extends JpaRepository<TutorProfileEntity, UUID> {
     Optional<TutorProfileEntity> findByUserId(UUID userId);
     long countByVerificationStatus(VerificationStatus status);
+    org.springframework.data.domain.Page<TutorProfileEntity> findByVerificationStatus(VerificationStatus status, org.springframework.data.domain.Pageable pageable);
 }

@@ -1,0 +1,138 @@
+.faq-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  overflow-x: hidden;
+}
+
+.faq-main {
+  flex: 1;
+  padding-top: calc(var(--header-height) + 40px);
+  padding-bottom: 80px;
+}
+
+.faq-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.faq-title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: 16px;
+}
+
+.faq-subtitle {
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.faq-content-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.faq-glass-card {
+  background: var(--color-surface);
+  border-radius: 20px;
+  padding: 40px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.faq-category {
+  margin-bottom: 40px;
+}
+
+.faq-category:last-child {
+  margin-bottom: 0;
+}
+
+.faq-category-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 24px;
+}
+
+.accordion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.accordion-item {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.accordion-item.active {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.1);
+}
+
+.accordion-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: var(--color-surface);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.accordion-header:hover {
+  background: var(--color-surface-hover);
+}
+
+.accordion-question {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--color-heading);
+}
+
+.accordion-icon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.accordion-item.active .accordion-icon {
+  color: var(--color-primary);
+}
+
+.accordion-collapse {
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.accordion-body {
+  padding: 0 20px 20px 20px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+  .faq-title {
+    font-size: 2.2rem;
+  }
+  .faq-glass-card {
+    padding: 24px;
+  }
+  .faq-category-title {
+    font-size: 1.3rem;
+  }
+}

@@ -1,6 +1,6 @@
-import { Button } from '../ui/Button';
+
+
 import { Star, BookOpen } from 'lucide-react';
-import { useAuthStore } from '../../store/useAuthStore';
 import './TutorCard.css';
 
 interface Tutor {
@@ -9,34 +9,18 @@ interface Tutor {
   subjects: string[];
   rating: number;
   reviews: number;
-  hourlyRate: number;
+  hourlyRate?: number;
   isOnline: boolean;
   avatarBase64?: string;
+  bio?: string;
 }
 
 interface TutorCardProps {
   tutor: Tutor;
-  onAuthRequired: () => void;
+  onAuthRequired?: () => void;
 }
 
-export const TutorCard = ({ tutor, onAuthRequired }: TutorCardProps) => {
-  const { isAuthenticated, setRedirectUrl } = useAuthStore();
-
-  const handleBookClick = () => {
-    if (!isAuthenticated) {
-      setRedirectUrl(`/booking/${tutor.id}`);
-      onAuthRequired();
-      return;
-    }
-    // Proceed to booking
-    console.log(`Navigate to /booking/${tutor.id}`);
-  };
-
-  const formattedRate = new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND'
-  }).format(tutor.hourlyRate);
-
+export const TutorCard = ({ tutor }: TutorCardProps) => {
   return (
     <div className="tutor-card">
       <div className="tutor-header">
@@ -65,16 +49,11 @@ export const TutorCard = ({ tutor, onAuthRequired }: TutorCardProps) => {
           <BookOpen size={16} className="info-icon" />
           <span>{tutor.subjects.join(', ')}</span>
         </div>
-        <div className="info-row highlight-rate">
-          <span className="rate-value">{formattedRate}</span>
-          <span className="rate-unit">/ h</span>
-        </div>
-      </div>
-
-      <div className="tutor-footer">
-        <Button fullWidth onClick={handleBookClick}>
-          Đặt lịch học
-        </Button>
+        {tutor.bio && (
+          <div className="info-row tutor-bio">
+            <span className="bio-text">{tutor.bio.length > 80 ? tutor.bio.substring(0, 80) + '...' : tutor.bio}</span>
+          </div>
+        )}
       </div>
     </div>
   );

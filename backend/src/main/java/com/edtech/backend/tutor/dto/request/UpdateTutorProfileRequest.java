@@ -17,4 +17,8 @@ public class UpdateTutorProfileRequest {
     private Integer experienceYears;
     /** ONLINE | OFFLINE | BOTH */
     private String teachingMode;
+
+    private String bankName;
+    private String bankAccountNumber;
+    private String bankOwnerName;
 }

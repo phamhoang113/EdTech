@@ -2,6 +2,7 @@ package com.edtech.backend.tutor.service;
 
 import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.cls.enums.ClassMode;
 import com.edtech.backend.cls.enums.ClassStatus;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
@@ -12,12 +13,19 @@ import com.edtech.backend.cls.entity.ClassEntity;
 import com.edtech.backend.cls.enums.ApplicationStatus;
 import com.edtech.backend.cls.repository.ClassApplicationRepository;
 import com.edtech.backend.cls.repository.ClassRepository;
+import com.edtech.backend.tutor.entity.TutorProfileEntity;
 import com.edtech.backend.tutor.repository.TutorProfileRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -104,7 +112,7 @@ public class ClassApplicationService {
      * @param actualSalary Lương thực tế admin đặt (nếu null → tự tính từ levelFees)
      */
     @Transactional
-    public ClassApplicationResponse approveApplication(UUID applicationId, java.math.BigDecimal actualSalary) {
+    public ClassApplicationResponse approveApplication(UUID applicationId, BigDecimal actualSalary) {
         ClassApplicationEntity application = findApplicationOrThrow(applicationId);
 
         if (application.getStatus() != ApplicationStatus.PENDING) {
@@ -116,7 +124,7 @@ public class ClassApplicationService {
         // Ghi lương admin đề xuất vào đơn (lưu tạm vào classEntity.tutorFee chỉ khi PH chọn)
         // Tính lương theo levelFees hoặc dùng actualSalary để lưu vào note/response —
         // lớp CHƯA được giao, lương sẽ được set chính thức khi PH confirm.
-        java.math.BigDecimal proposedSalary = actualSalary;
+        BigDecimal proposedSalary = actualSalary;
         if (proposedSalary == null) {
             proposedSalary = resolveSalaryFromLevelFees(classEntity, application.getTutorId());
         }
@@ -187,15 +195,18 @@ public class ClassApplicationService {
         // PH chọn GS: lớp đang dạy luôn (OPEN → ACTIVE)
         classEntity.setTutorId(application.getTutorId());
         classEntity.setStatus(ClassStatus.ACTIVE);
+        classEntity.setStartDate(LocalDate.now());
+        classEntity.setLearningStartDate(LocalDate.now()); // Auto-set: PH chọn GS = ngày bắt đầu học
+        classEntity.setEndDate(null); // Ongoing until manually completed
 
         // TutorFee: lấy từ proposedSalary admin đặt (lưu trong tutor_proposals JSON)
-        java.math.BigDecimal tutorFee = resolveProposedSalary(classEntity, application.getTutorId());
+        BigDecimal tutorFee = resolveProposedSalary(classEntity, application.getTutorId());
         // Nếu chưa có proposal thì fallback về levelFees.tutor_fee
         if (tutorFee == null) tutorFee = resolveSalaryFromLevelFees(classEntity, application.getTutorId());
         if (tutorFee != null) classEntity.setTutorFee(tutorFee);
 
         // ParentFee: cập nhật theo levelFees[tutorLevel].parent_fee (giá đúng theo trình độ GS)
-        java.math.BigDecimal parentFee = resolveParentFeeFromLevelFees(classEntity, application.getTutorId());
+        BigDecimal parentFee = resolveParentFeeFromLevelFees(classEntity, application.getTutorId());
         if (parentFee != null) classEntity.setParentFee(parentFee);
         else parentFee = classEntity.getParentFee(); // giữ nguyên nếu levelFees không có parent_fee
 
@@ -260,12 +271,12 @@ public class ClassApplicationService {
      * Cập nhật (hoặc thêm mới) entry trong JSON tutor_proposals trên lớp.
      * Format: {"<tutorId>": <proposedSalary>, ...}
      */
-    private void updateTutorProposals(ClassEntity cls, UUID tutorId, java.math.BigDecimal proposedSalary) {
-        com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
+    private void updateTutorProposals(ClassEntity cls, UUID tutorId, BigDecimal proposedSalary) {
+        ObjectMapper om = new ObjectMapper();
         try {
             String current = cls.getTutorProposals();
-            com.fasterxml.jackson.databind.node.ObjectNode node = (current != null && !current.isBlank())
-                    ? (com.fasterxml.jackson.databind.node.ObjectNode) om.readTree(current)
+            ObjectNode node = (current != null && !current.isBlank())
+                    ? (ObjectNode) om.readTree(current)
                     : om.createObjectNode();
             if (proposedSalary != null) {
                 node.put(tutorId.toString(), proposedSalary.longValue());
@@ -278,34 +289,34 @@ public class ClassApplicationService {
         }
     }
 
-    /** Tự động resolve lương theo loại GS từ levelFees JSON - CẤU TRÚC GỐC LÀ fee */
-    private java.math.BigDecimal resolveSalaryFromLevelFees(ClassEntity cls, UUID tutorId) {
+    private BigDecimal resolveSalaryFromLevelFees(ClassEntity cls, UUID tutorId) {
         return resolveLevelFeesField(cls, tutorId, "fee");
     }
 
-    /** Lấy giá phụ huynh trả theo level GS từ levelFees JSON - CẤU TRÚC GỐC LÀ fee */
-    private java.math.BigDecimal resolveParentFeeFromLevelFees(ClassEntity cls, UUID tutorId) {
+    private BigDecimal resolveParentFeeFromLevelFees(ClassEntity cls, UUID tutorId) {
         return resolveLevelFeesField(cls, tutorId, "fee");
     }
 
     /** Generic: đọc 1 field từ entry match́ trong levelFees JSON theo tutorType */
-    private java.math.BigDecimal resolveLevelFeesField(ClassEntity cls, UUID tutorId, String field) {
+    private BigDecimal resolveLevelFeesField(ClassEntity cls, UUID tutorId, String field) {
         if (cls == null || cls.getLevelFees() == null) return null;
-        com.edtech.backend.tutor.entity.TutorProfileEntity profile =
+        TutorProfileEntity profile =
                 tutorProfileRepository.findByUserId(tutorId).orElse(null);
         if (profile == null || profile.getTutorType() == null) return null;
         String displayName = profile.getTutorType().getDisplayName();
         try {
-            com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
-            List<com.fasterxml.jackson.databind.JsonNode> nodes =
-                    om.readValue(cls.getLevelFees(), new com.fasterxml.jackson.core.type.TypeReference<>() {});
-            for (com.fasterxml.jackson.databind.JsonNode node : nodes) {
+            ObjectMapper om = new ObjectMapper();
+            List<JsonNode> nodes =
+                    om.readValue(cls.getLevelFees(), new TypeReference<>() {});
+            for (JsonNode node : nodes) {
                 String level = node.has("level") ? node.get("level").asText() : "";
                 if (level.equalsIgnoreCase(displayName) && node.has(field)) {
-                    return java.math.BigDecimal.valueOf(node.get(field).asLong());
+                    return BigDecimal.valueOf(node.get(field).asLong());
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.warn("Cannot parse levelFees JSON for class {}: {}", cls.getId(), e.getMessage());
+        }
         return null;
     }
 
@@ -317,13 +328,15 @@ public class ClassApplicationService {
         List<String> levelReqs = List.of();
         if (cls != null && cls.getLevelFees() != null) {
             try {
-                com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
-                List<com.fasterxml.jackson.databind.JsonNode> nodes =
-                        om.readValue(cls.getLevelFees(), new com.fasterxml.jackson.core.type.TypeReference<>() {});
+                ObjectMapper om = new ObjectMapper();
+                List<JsonNode> nodes =
+                        om.readValue(cls.getLevelFees(), new TypeReference<>() {});
                 levelReqs = nodes.stream()
                         .map(n -> n.get("level").asText())
                         .collect(Collectors.toList());
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("Cannot parse levelFees for class {}: {}", cls.getId(), e.getMessage());
+            }
         }
 
         // Tutor stats
@@ -331,12 +344,12 @@ public class ClassApplicationService {
         long pendingApps = 0;
         if (app.getTutorId() != null) {
             activeClasses = classRepository.countByTutorIdAndStatusAndIsDeletedFalse(
-                    app.getTutorId(), com.edtech.backend.cls.enums.ClassStatus.ASSIGNED);
+                    app.getTutorId(), ClassStatus.ACTIVE);
             pendingApps = applicationRepository.countByTutorIdAndStatus(
                     app.getTutorId(), ApplicationStatus.PENDING);
         }
 
-        com.edtech.backend.tutor.entity.TutorProfileEntity tutorProfile = null;
+        TutorProfileEntity tutorProfile = null;
         if (app.getTutorId() != null) {
             tutorProfile = tutorProfileRepository.findByUserId(app.getTutorId()).orElse(null);
         }
@@ -356,7 +369,7 @@ public class ClassApplicationService {
                 .description(cls != null ? cls.getDescription() : null)
                 .subject(cls != null ? cls.getSubject() : null)
                 .grade(cls != null ? cls.getGrade() : null)
-                .location(cls != null ? (cls.getMode() == com.edtech.backend.cls.enums.ClassMode.ONLINE ? "Online" : cls.getAddress()) : null)
+                .location(cls != null ? (cls.getMode() == ClassMode.ONLINE ? "Online" : cls.getAddress()) : null)
                 .timeFrame(cls != null ? cls.getTimeFrame() : null)
                 .schedule(cls != null ? cls.getSchedule() : null)
                 .sessionsPerWeek(cls != null ? cls.getSessionsPerWeek() : null)
@@ -388,33 +401,37 @@ public class ClassApplicationService {
 
     /** Lấy mức lương admin đề xuất cho 1 gia sư từ JSON tutorProposals trên lớp */
     /** Lấy mức lương admin đề xuất cho 1 gia sư từ JSON tutorProposals trên lớp */
-    private java.math.BigDecimal resolveProposedSalary(ClassEntity cls, UUID tutorId) {
+    private BigDecimal resolveProposedSalary(ClassEntity cls, UUID tutorId) {
         if (cls == null || cls.getTutorProposals() == null || tutorId == null) return null;
         try {
-            com.edtech.backend.tutor.entity.TutorProfileEntity profile =
+            TutorProfileEntity profile =
                     tutorProfileRepository.findByUserId(tutorId).orElse(null);
             if (profile == null || profile.getTutorType() == null) return null;
             String levelReq = profile.getTutorType().getDisplayName();
 
-            com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
-            List<com.fasterxml.jackson.databind.JsonNode> nodes =
-                    om.readValue(cls.getTutorProposals(), new com.fasterxml.jackson.core.type.TypeReference<>() {});
-            for (com.fasterxml.jackson.databind.JsonNode node : nodes) {
+            ObjectMapper om = new ObjectMapper();
+            List<JsonNode> nodes =
+                    om.readValue(cls.getTutorProposals(), new TypeReference<>() {});
+            for (JsonNode node : nodes) {
                 if (node.has("level") && node.get("level").asText().equalsIgnoreCase(levelReq) && node.has("fee")) {
-                    return java.math.BigDecimal.valueOf(node.get("fee").asLong());
+                    return BigDecimal.valueOf(node.get("fee").asLong());
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.warn("Cannot parse tutorProposals for class {}: {}", cls.getId(), e.getMessage());
+        }
 
         // Fallback: Thử đọc the map `<tutorId>: <salary>` dành cho dữ liệu cũ (Legacy)
         try {
-            com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
-            com.fasterxml.jackson.databind.JsonNode node = om.readTree(cls.getTutorProposals());
-            com.fasterxml.jackson.databind.JsonNode entry = node.get(tutorId.toString());
+            ObjectMapper om = new ObjectMapper();
+            JsonNode node = om.readTree(cls.getTutorProposals());
+            JsonNode entry = node.get(tutorId.toString());
             if (entry != null && !entry.isNull()) {
-                return java.math.BigDecimal.valueOf(entry.asLong());
+                return BigDecimal.valueOf(entry.asLong());
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.warn("Cannot parse legacy tutorProposals for class {}: {}", cls.getId(), e.getMessage());
+        }
         return null;
     }
 }

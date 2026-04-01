@@ -1,6 +1,7 @@
+import { Sun, Moon, User, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Sun, Moon, User, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+
 import { loginApi } from '../../services/authApi';
 import { useAuthStore } from '../../store/useAuthStore';
 import './AdminLoginPage.css';
@@ -67,7 +68,7 @@ export function AdminLoginPage() {
       <div className="admin-login__hero">
         <div className="admin-login__hero-content">
           <Link to="/" className="admin-login__hero-logo" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>🎓</span> EdTech Admin
+            <span>🎓</span> Gia Sư Tinh Hoa Admin
           </Link>
           <p className="admin-login__hero-tagline">
             Quản lý nền tảng giáo dục thông minh.<br />

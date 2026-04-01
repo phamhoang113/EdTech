@@ -4,7 +4,9 @@ import com.edtech.backend.cls.dto.ClassDTO;
 import com.edtech.backend.cls.dto.SessionDTO;
 import com.edtech.backend.cls.entity.ClassEntity;
 import com.edtech.backend.cls.entity.SessionEntity;
+import com.edtech.backend.cls.enums.AbsenceRequestStatus;
 import com.edtech.backend.cls.enums.ClassStatus;
+import com.edtech.backend.cls.repository.AbsenceRequestRepository;
 import com.edtech.backend.cls.repository.ClassRepository;
 import com.edtech.backend.cls.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +19,14 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class TutorSessionService {
 
     private static final int DEFAULT_RANGE_DAYS = 30;
@@ -32,6 +36,7 @@ public class TutorSessionService {
 
     private final SessionRepository sessionRepository;
     private final ClassRepository classRepository;
+    private final AbsenceRequestRepository absenceRequestRepository;
 
     @Transactional(readOnly = true)
     public List<SessionDTO> getSessionsByTutor(UUID tutorId, LocalDate startDate, LocalDate endDate) {
@@ -47,8 +52,19 @@ public class TutorSessionService {
                 Sort.by(Sort.Direction.ASC, "sessionDate", "startTime")
         );
 
+        List<UUID> sessionIds = sessions.stream()
+                .map(SessionEntity::getId)
+                .collect(Collectors.toList());
+
+        Set<UUID> pendingSessionIds = sessionIds.isEmpty() ? Set.of() :
+            absenceRequestRepository.findSessionIdsWithStatus(sessionIds, AbsenceRequestStatus.PENDING);
+
         return sessions.stream()
-                .map(SessionDTO::fromEntity)
+                .map(s -> {
+                    SessionDTO dto = SessionDTO.fromEntity(s);
+                    dto.setHasPendingAbsence(pendingSessionIds.contains(s.getId()));
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 

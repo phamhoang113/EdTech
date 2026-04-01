@@ -22,9 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -33,6 +37,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AdminTutorService {
+
+    private static final String ERR_TUTOR_NOT_FOUND = "Không tìm thấy gia sư.";
+    private static final String ERR_PROFILE_NOT_FOUND = "Không tìm thấy hồ sơ Gia sư cho user ID: %s";
+    private static final String ERR_NOT_PENDING_STATUS = "Hồ sơ không ở trạng thái chờ duyệt.";
+    private static final String DEFAULT_VALUE = "Chưa cập nhật";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final TutorProfileRepository tutorProfileRepository;
     private final UserRepository userRepository;
@@ -81,7 +91,7 @@ public class AdminTutorService {
                     .verificationStatus(p.getVerificationStatus())
                     .isDeleted(Boolean.TRUE.equals(u.getIsDeleted()))
                     .isActive(Boolean.TRUE.equals(u.getIsActive()))
-                    .subjects(p.getSubjects() != null ? java.util.Arrays.asList(p.getSubjects()) : null)
+                    .subjects(p.getSubjects() != null ? Arrays.asList(p.getSubjects()) : null)
                     .location(p.getLocation())
                     .hourlyRate(p.getHourlyRate())
                     .activeClassCount(activeCnt)
@@ -97,7 +107,7 @@ public class AdminTutorService {
     @Transactional
     public void deleteTutor(UUID userId) {
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy gia sư."));
+                .orElseThrow(() -> new EntityNotFoundException(ERR_TUTOR_NOT_FOUND));
 
         // 1. Soft delete user
         user.setIsDeleted(true);
@@ -124,7 +134,7 @@ public class AdminTutorService {
         pendingApps.forEach(a -> a.setStatus(ApplicationStatus.REJECTED));
         applicationRepository.saveAll(pendingApps);
 
-        log.info("Admin soft-deleted tutor userId={}, reverted {} classes, rejected {} applications",
+        log.info("[DELETE_TUTOR] userId={}, revertedClasses={}, rejectedApps={}",
                 userId, assignedClasses.size(), pendingApps.size());
     }
 
@@ -151,36 +161,36 @@ public class AdminTutorService {
                 return null;
             }
             return mapToAdminResponse(profile, user);
-        }).filter(java.util.Objects::nonNull).collect(Collectors.toList());
+        }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     @Transactional
-    public void approveTutor(UUID userId, java.math.BigDecimal rate) {
+    public void approveTutor(UUID userId, BigDecimal rate) {
         TutorProfileEntity profile = tutorProfileRepository.findByUserId(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy hồ sơ Gia sư cho user ID: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException(String.format(ERR_PROFILE_NOT_FOUND, userId)));
 
         if (profile.getVerificationStatus() != VerificationStatus.PENDING) {
-            throw new IllegalArgumentException("Hồ sơ không ở trạng thái chờ duyệt.");
+            throw new IllegalArgumentException(ERR_NOT_PENDING_STATUS);
         }
 
         profile.setHourlyRate(rate);
         profile.setVerificationStatus(VerificationStatus.APPROVED);
         tutorProfileRepository.save(profile);
-        log.info("Admin approved tutor profile for user {} with hourlyRate={}", userId, rate);
+        log.info("[APPROVE_TUTOR] userId={}, hourlyRate={}", userId, rate);
     }
 
     @Transactional
     public void rejectTutor(UUID userId) {
         TutorProfileEntity profile = tutorProfileRepository.findByUserId(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy hồ sơ Gia sư cho user ID: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException(String.format(ERR_PROFILE_NOT_FOUND, userId)));
 
         if (profile.getVerificationStatus() != VerificationStatus.PENDING) {
-            throw new IllegalArgumentException("Hồ sơ không ở trạng thái chờ duyệt.");
+            throw new IllegalArgumentException(ERR_NOT_PENDING_STATUS);
         }
 
         profile.setVerificationStatus(VerificationStatus.REJECTED);
         tutorProfileRepository.save(profile);
-        log.info("Admin rejected tutor profile for user {}", userId);
+        log.info("[REJECT_TUTOR] userId={}", userId);
     }
 
     private AdminTutorVerificationResponse mapToAdminResponse(TutorProfileEntity profile, UserEntity user) {
@@ -191,17 +201,16 @@ public class AdminTutorService {
             docs.add(AdminTutorVerificationResponse.DocItem.builder().name("Bằng cấp/Chứng chỉ").icon("🎓").url(profile.getCertBase64s()[0]).build());
         }
 
-        String levelsStr = profile.getTeachingLevels() != null ? String.join(", ", profile.getTeachingLevels()) : "Chưa cập nhật";
+        String levelsStr = profile.getTeachingLevels() != null ? String.join(", ", profile.getTeachingLevels()) : DEFAULT_VALUE;
         String universityStr = profile.getAchievements() != null && !profile.getAchievements().trim().isEmpty() 
-                                ? profile.getAchievements() : "Chưa cập nhật";
-        String degreeStr = profile.getTutorType() != null ? profile.getTutorType().getDisplayName() : "Chưa cập nhật";
-        String experienceStr = profile.getExperienceYears() != null ? profile.getExperienceYears() + " năm" : "Chưa cập nhật";
+                                ? profile.getAchievements() : DEFAULT_VALUE;
+        String degreeStr = profile.getTutorType() != null ? profile.getTutorType().getDisplayName() : DEFAULT_VALUE;
+        String experienceStr = profile.getExperienceYears() != null ? profile.getExperienceYears() + " năm" : DEFAULT_VALUE;
 
-        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String dateStr = profile.getCreatedAt() != null 
-                ? profile.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toLocalDate().format(formatter) 
-                : LocalDate.now().format(formatter);
-        String dobStr = profile.getDateOfBirth() != null ? profile.getDateOfBirth().format(formatter) : "Chưa cập nhật";
+                ? profile.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDate().format(DATE_FORMATTER) 
+                : LocalDate.now().format(DATE_FORMATTER);
+        String dobStr = profile.getDateOfBirth() != null ? profile.getDateOfBirth().format(DATE_FORMATTER) : DEFAULT_VALUE;
 
         return AdminTutorVerificationResponse.builder()
                 .id(profile.getUserId())
@@ -218,7 +227,7 @@ public class AdminTutorService {
                 .experience(experienceStr)
                 .levels(levelsStr)
                 .docs(docs)
-                .location(profile.getLocation() != null ? profile.getLocation() : "Chưa cập nhật")
+                .location(profile.getLocation() != null ? profile.getLocation() : DEFAULT_VALUE)
                 .build();
     }
 }

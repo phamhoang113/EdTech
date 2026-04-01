@@ -4,13 +4,15 @@ import com.edtech.backend.tutor.enums.TutorType;
 import com.edtech.backend.tutor.enums.VerificationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
-@Data
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,9 +33,9 @@ public class AdminTutorVerificationResponse {
     private String location; // Khu vực dạy
     
     @Builder.Default
-    private java.util.List<DocItem> docs = new java.util.ArrayList<>();
+    private List<DocItem> docs = new ArrayList<>();
 
-    @Data
+    @Getter
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor

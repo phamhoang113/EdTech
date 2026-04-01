@@ -1,6 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '../ui/Button';
 import { Sun, Moon, LayoutDashboard, LogOut, ChevronDown, Menu, X } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Button } from '../ui/Button';
+
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
 import './Header.css';
@@ -31,6 +32,12 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
 
   // Đóng mobile menu khi chuyển hướng
   useEffect(() => {
@@ -73,16 +80,15 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
     <header className="header">
       <div className="container header-container">
         <Link to="/" className="logo">
-          <span className="logo-icon">🎓</span>
-          <span className="logo-text">EdTech</span>
+          <img src="/logo.png" alt="Gia Sư Tinh Hoa Logo" style={{ height: '44px', width: 'auto', objectFit: 'contain', filter: 'var(--logo-filter, none)' }} />
         </Link>
 
         <div className={`nav-actions-container ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
           <nav className="nav-links">
-            <Link to="/" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Trang Chủ</Link>
-            <Link to="/search" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Tìm Gia Sư</Link>
-            <Link to="/classes" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Lớp Học Hiện Có</Link>
-            <Link to="/about" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Về Chúng Tôi</Link>
+            <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Trang Chủ</Link>
+            <Link to="/tutors" className={`nav-link ${isActive('/tutors') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Tìm Gia Sư</Link>
+            <Link to="/classes" className={`nav-link ${isActive('/classes') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Lớp Học Hiện Có</Link>
+            <Link to="/about" className={`nav-link ${isActive('/about') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Về Chúng Tôi</Link>
           </nav>
 
           <div className="header-actions">

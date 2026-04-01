@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
 import { Plus, Pencil, Trash2, X, GraduationCap, School, UserCircle, AlertCircle, Phone, CheckCircle, Search } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+
 import { parentApi } from '../../services/parentApi';
 import type { Student, StudentRequest } from '../../services/parentApi';
 import apiClient from '../../services/apiClient';
@@ -238,7 +239,6 @@ function ChildFormModal({ child, levels, onClose, onSaved }: {
                   />
                 </div>
               )}
-
 
               {/* Lookup status badge */}
               {lookupStatus === 'searching' && (

@@ -1,28 +1,21 @@
+import { BookOpen, Award, TrendingUp, Calendar, ChevronRight, Clock, Users, X, Sparkles, Link2, Plus, GraduationCap, Phone, UserCheck, CheckCircle, XCircle, Activity } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { getDisplayStatus } from '../../utils/sessionStatus';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
-import {
-  BookOpen, Award, TrendingUp, Calendar,
-  ChevronRight, Clock,
-  Users, X, Sparkles, Link2,
-  Plus,
-  GraduationCap, Phone, Star, UserCheck,
-  CheckCircle, XCircle, Activity,
-} from 'lucide-react';
+
 import { DashboardHeader } from '../../components/layout/DashboardHeader';
 import { RequestClassModal } from '../../components/parent/RequestClassModal';
+import { ManageStudentsModal } from '../../components/parent/ManageStudentsModal';
 import { ParentSidebar } from '../../components/parent/ParentSidebar';
+import { SharedTutorDetailModal } from '../../components/shared/TutorDetailModal';
 
 import { parentApi } from '../../services/parentApi';
 import type { ParentClass, TutorApplicant } from '../../services/parentApi';
+import { sessionApi } from '../../services/sessionApi';
+import type { SessionDTO } from '../../services/sessionApi';
 import './Dashboard.css';
-
-/* ─── Static mock data (giữ nguyên từ bản gốc) ─────────────────────────── */
-const upcomingClasses = [
-  { subject: 'Toán lớp 10',      who: 'GS Nguyễn Minh Anh', time: 'Hôm nay, 19:00', avatar: '🧑‍🏫' },
-  { subject: 'Tiếng Anh IELTS',  who: 'GS Trần Lan Phương',  time: 'Thứ 6, 08:00',   avatar: '👩‍🏫' },
-];
 
 // const activities = [
 //   { text: 'Con Bảo Nguyên vừa hoàn thành bài kiểm tra Toán',   time: '1 giờ trước',  type: 'act-lesson'  },
@@ -30,7 +23,6 @@ const upcomingClasses = [
 //   { text: 'Đặt lịch học Anh văn cho con vào thứ 6',             time: '2 ngày trước', type: 'act-booking' },
 //   { text: 'Con Bảo Nguyên đánh giá gia sư Lan Phương ★★★★★',    time: '3 ngày trước', type: 'act-review'  },
 // ];
-
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 function fmtCurrency(n: number | null | undefined) {
@@ -82,7 +74,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-
 /* ─── Tutors Modal (xem GS đăng ký nhận lớp) ────────────────────────────── */
 function TutorsModal({ cls, onClose, onSelect }: {
   cls: ParentClass;
@@ -91,6 +82,7 @@ function TutorsModal({ cls, onClose, onSelect }: {
 }) {
   const [tutors, setTutors] = useState<TutorApplicant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTutor, setSelectedTutor] = useState<TutorApplicant | null>(null);
 
   useEffect(() => {
     parentApi.getTutorApplicants(cls.id)
@@ -101,71 +93,68 @@ function TutorsModal({ cls, onClose, onSelect }: {
   useEscapeKey(onClose);
 
   return (
-    <div className="ap-overlay" onClick={onClose}>
-      <div className="ap-modal" style={{ maxWidth: 520, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <h3>👨‍🏫 Gia sư đề xuất</h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
-            <X size={20}/>
-          </button>
-        </div>
-        <p style={{ marginBottom: 16, color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
-          {cls.title} • {cls.subject} • {cls.grade}
-        </p>
+    <>
+      <div className="ap-overlay" onClick={onClose}>
+        <div className="ap-modal" style={{ maxWidth: 520, maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+            <h3>👨‍🏫 Gia sư đề xuất</h3>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
+              <X size={20}/>
+            </button>
+          </div>
+          <p style={{ marginBottom: 16, color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+            {cls.title} • {cls.subject} • {cls.grade}
+          </p>
 
-        {loading ? (
-          <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: 24 }}>Đang tải...</p>
-        ) : tutors.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 32, color: 'var(--color-text-muted)' }}>
-            <GraduationCap size={36} style={{ opacity: 0.3, marginBottom: 8 }}/>
-            <p>Chưa có gia sư nào được đề xuất</p>
-          </div>
-        ) : tutors.map(t => (
-          <div key={t.applicationId} style={{
-            display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
-            borderBottom: '1px solid var(--color-border)',
-          }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-              background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-              color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1rem', fontWeight: 800,
-            }}>
-              {(t.tutorName ?? '?').charAt(0).toUpperCase()}
+          {loading ? (
+            <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: 24 }}>Đang tải...</p>
+          ) : tutors.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 32, color: 'var(--color-text-muted)' }}>
+              <GraduationCap size={36} style={{ opacity: 0.3, marginBottom: 8 }}/>
+              <p>Chưa có đề xuất nào</p>
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{t.tutorName ?? '—'}</div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', display: 'flex', gap: 8, marginTop: 2 }}>
-                {t.tutorType && <span style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1', padding: '1px 7px', borderRadius: 20, fontWeight: 600 }}>{t.tutorType}</span>}
-                {t.tutorPhone && <span><Phone size={10}/> {t.tutorPhone}</span>}
+          ) : tutors.map(t => (
+            <div key={t.applicationId} onClick={() => setSelectedTutor(t)} style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '12px', borderRadius: 12,
+              borderBottom: '1px solid var(--color-border)', cursor: 'pointer',
+            }} className="tutor-hover-row">
+              <div style={{
+                width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '1rem', fontWeight: 800,
+              }}>
+                {(t.tutorName ?? '?').charAt(0).toUpperCase()}
               </div>
-              {t.note && <p style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', fontStyle: 'italic', margin: '4px 0 0' }}>"{t.note}"</p>}
-            </div>
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              {t.proposedSalary != null && (
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#6366f1', marginBottom: 6 }}>
-                  {fmtCurrency(t.proposedSalary)}/tháng
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{t.tutorName ?? '—'}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', display: 'flex', gap: 8, marginTop: 2 }}>
+                  {t.tutorType && <span style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1', padding: '1px 7px', borderRadius: 20, fontWeight: 600 }}>{t.tutorType}</span>}
+                  {t.tutorPhone && <span><Phone size={10}/> {t.tutorPhone}</span>}
                 </div>
-              )}
-              {t.status === 'APPROVED' && (
-                <button onClick={() => onSelect(t.applicationId, t.tutorName ?? 'Gia sư')} style={{
-                  display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px',
-                  borderRadius: 8, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-                  color: '#fff', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                }}>
-                  <Star size={12}/> Chọn GS này
-                </button>
-              )}
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <ChevronRight size={16} style={{ color: '#9ca3af' }}/>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+      
+      {selectedTutor && (
+        <SharedTutorDetailModal
+          tutor={selectedTutor}
+          classStatus={cls.status}
+          onClose={() => setSelectedTutor(null)}
+          onSelect={async (id, name) => onSelect(id, name)}
+        />
+      )}
+    </>
   );
 }
 
 /* ─── My Classes Panel ───────────────────────────────────────────────────── */
-function MyClassesPanel({ classes, loading, onViewTutors }: { classes: ParentClass[], loading: boolean, onViewTutors: (cls: ParentClass) => void }) {
+function MyClassesPanel({ classes, loading, onViewTutors, onManageStudents }: { classes: ParentClass[], loading: boolean, onViewTutors: (cls: ParentClass) => void, onManageStudents: (cls: ParentClass) => void }) {
 
   if (loading) return <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Đang tải...</p>;
   if (classes.length === 0) return (
@@ -176,7 +165,7 @@ function MyClassesPanel({ classes, loading, onViewTutors }: { classes: ParentCla
     <div className="people-list" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {classes.map(cls => (
         <div key={cls.id} style={{
-          background: 'var(--color-bg)', borderRadius: 12, padding: '12px 14px',
+          background: 'var(--color-surface-2)', borderRadius: 12, padding: '12px 14px',
           border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 12,
         }}>
           <div style={{
@@ -187,8 +176,15 @@ function MyClassesPanel({ classes, loading, onViewTutors }: { classes: ParentCla
             {cls.subject.slice(0, 2).toUpperCase()}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {cls.title}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {cls.title}
+              </div>
+              {cls.classCode && (
+                <span style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 700, background: '#eef2ff', padding: '1px 7px', borderRadius: '10px', flexShrink: 0 }}>
+                  #{cls.classCode}
+                </span>
+              )}
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: 2 }}>
               {cls.subject} • {cls.grade}{cls.parentFee > 0 ? ` • ${fmtCurrency(cls.parentFee)}/tháng` : ''} • {fmtDate(cls.createdAt)}
@@ -196,6 +192,16 @@ function MyClassesPanel({ classes, loading, onViewTutors }: { classes: ParentCla
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             <StatusBadge status={cls.status}/>
+            {cls.status !== 'CANCELLED' && cls.status !== 'COMPLETED' && (
+              <button onClick={() => onManageStudents(cls)} style={{
+                display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px',
+                borderRadius: 8, border: '1px solid rgba(139,92,246,0.3)',
+                background: 'rgba(139,92,246,0.06)', color: '#8b5cf6',
+                fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer'
+              }}>
+                <Users size={12}/> Đổi HS
+              </button>
+            )}
             {(cls.status === 'OPEN' || cls.hasPendingProposals) && (
               <button onClick={() => onViewTutors(cls)} style={{
                 display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px',
@@ -221,8 +227,10 @@ export const ParentDashboard = () => {
   const [hasTutor, setHasTutor] = useState<boolean>(false);
   const [showRequestClass, setShowRequestClass] = useState(false);
   const [tutorsModal, setTutorsModal] = useState<ParentClass | null>(null);
+  const [manageStudentsModal, setManageStudentsModal] = useState<ParentClass | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
-  const [classesKey, setClassesKey] = useState(0); // force re-fetch MyClassesPanel
+  const [classesKey, setClassesKey] = useState(0);
+  const [upcomingSessions, setUpcomingSessions] = useState<SessionDTO[]>([]);
 
   // Lifted state for MyClasses
   const [myClasses, setMyClasses] = useState<ParentClass[]>([]);
@@ -238,6 +246,17 @@ export const ParentDashboard = () => {
       setHasTutor(data.length > 0);
     }).catch(() => {})
     .finally(() => setLoadingClasses(false));
+
+    // Fetch upcoming sessions
+    sessionApi.getSessions().then(res => {
+      const data = Array.isArray(res.data) ? res.data : (res.data as unknown as { data: SessionDTO[] })?.data ?? [];
+      const now = new Date();
+      const upcoming = data
+        .filter(s => getDisplayStatus(s.status, s.sessionDate, s.endTime) === 'SCHEDULED' && new Date(s.sessionDate) >= new Date(now.toDateString()))
+        .sort((a, b) => new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime())
+        .slice(0, 4);
+      setUpcomingSessions(upcoming);
+    }).catch(() => {});
   }, [classesKey]);
 
   const hasLinkedStudent = studentsCount > 0;
@@ -342,7 +361,7 @@ export const ParentDashboard = () => {
                 { val: `${studentsCount}`, lbl: 'Con em đang học', icon: <Users size={20}/>,      cls: 'color-indigo'  },
                 { val: `${activeClasses.length}`, lbl: 'Lớp học',  icon: <Calendar size={20}/>,   cls: 'color-violet'  },
                 { val: totalFeeFormatted,     lbl: 'Chi phí tháng',  icon: <TrendingUp size={20}/>, cls: 'color-amber'   },
-                { val: '88%',                 lbl: 'Tiến độ TB',     icon: <Award size={20}/>,      cls: 'color-emerald' },
+                { val: `${upcomingSessions.length}`, lbl: 'Buổi sắp tới', icon: <Award size={20}/>,      cls: 'color-emerald' },
               ].map((s, i) => (
                 <div key={i} className={`dash-stat-card ${s.cls}`}>
                   <div className="stat-icon-box">{s.icon}</div>
@@ -365,7 +384,7 @@ export const ParentDashboard = () => {
                 <Plus size={14}/> Yêu cầu mới
               </button>
             </div>
-            <MyClassesPanel classes={myClasses} loading={loadingClasses} onViewTutors={setTutorsModal} />
+            <MyClassesPanel classes={myClasses} loading={loadingClasses} onViewTutors={setTutorsModal} onManageStudents={setManageStudentsModal} />
           </div>
 
           {/* Two cols */}
@@ -373,19 +392,23 @@ export const ParentDashboard = () => {
             <div className="dash-panel">
               <div className="dash-section-head">
                 <span className="dash-section-title">📅 Lịch học sắp tới</span>
-                <button className="dash-see-all">Xem tất cả <ChevronRight size={14}/></button>
+                <button className="dash-see-all" onClick={() => navigate('/schedule')}>Xem tất cả <ChevronRight size={14}/></button>
               </div>
               <div className="upcoming-list">
-                {upcomingClasses.map((c, i) => (
-                  <div key={i} className="upcoming-item">
-                    <span className="upcoming-avatar">{c.avatar}</span>
-                    <div className="upcoming-info">
-                      <p className="upcoming-subj">{c.subject}</p>
-                      <p className="upcoming-who">{c.who}</p>
+                {upcomingSessions.length === 0 ? (
+                  <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Không có buổi học nào sắp tới.</p>
+                ) : (
+                  upcomingSessions.map(s => (
+                    <div key={s.id} className="upcoming-item">
+                      <span className="upcoming-avatar">📚</span>
+                      <div className="upcoming-info">
+                        <p className="upcoming-subj">{s.classTitle}</p>
+                        <p className="upcoming-who">{s.tutorName} · {s.subject}</p>
+                      </div>
+                      <div className="upcoming-time"><Clock size={12}/><span>{s.startTime?.substring(0, 5) ?? '--:--'}</span></div>
                     </div>
-                    <div className="upcoming-time"><Clock size={12}/><span>{c.time}</span></div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -422,8 +445,8 @@ export const ParentDashboard = () => {
             <div className="dash-qa-grid">
               {[
                 { emoji: '📋', label: 'Yêu cầu mở lớp', onClick: () => setShowRequestClass(true) },
-                { emoji: '🔍', label: 'Tìm gia sư',      onClick: () => navigate('/search')   },
                 { emoji: '👶', label: 'Quản lý con',     onClick: () => navigate('/my-children') },
+                { emoji: '📊', label: 'Báo cáo học tập', onClick: () => navigate('/learning-report') },
                 { emoji: '💳', label: 'Thanh toán',      onClick: () => navigate('/payment')  },
               ].map((a, i) => (
                 <button key={i} className="dash-qa-card" onClick={a.onClick}>
@@ -451,8 +474,6 @@ export const ParentDashboard = () => {
         </div>
       )}
 
-
-
       {/* Modal: Request Class */}
       {showRequestClass && (
         <RequestClassModal onClose={() => setShowRequestClass(false)} onSuccess={handleRequestSuccess}/>
@@ -461,6 +482,15 @@ export const ParentDashboard = () => {
       {/* Modal: View Tutors */}
       {tutorsModal && (
         <TutorsModal cls={tutorsModal} onClose={() => setTutorsModal(null)} onSelect={handleSelectTutor}/>
+      )}
+
+      {/* Modal: Manage Students */}
+      {manageStudentsModal && (
+        <ManageStudentsModal cls={manageStudentsModal} onClose={() => setManageStudentsModal(null)} onSuccess={() => {
+          setManageStudentsModal(null);
+          setClassesKey(k => k + 1);
+          showToast('success', 'Đã cập nhật danh sách học sinh cho lớp');
+        }}/>
       )}
     </div>
   );

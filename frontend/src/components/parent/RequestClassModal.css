@@ -13,7 +13,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 300;
+  z-index: 3000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -582,55 +582,135 @@
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
-.rcm-map-search-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  position: relative;
-}
-.rcm-map-search-btn {
-  padding: 0 16px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff;
-  font-weight: 700;
-  font-size: 0.83rem;
-  cursor: pointer;
-  font-family: inherit;
-  flex-shrink: 0;
-  transition: opacity 0.15s;
-}
-.rcm-map-search-btn:hover { opacity: 0.88; }
-.rcm-map-results {
+/* ── Floating Google Maps Style Search ── */
+.rcm-floating-search-wrap {
   position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 70px;
-  z-index: 10000;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-  max-height: 200px;
-  overflow-y: auto;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 440px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
 }
-.rcm-map-result-item {
-  display: block;
-  width: 100%;
-  padding: 10px 14px;
-  text-align: left;
+.rcm-floating-search-box {
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+  border-radius: 24px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05);
+  height: 48px;
+  padding: 0 8px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.rcm-floating-search-box:focus-within {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05);
+}
+.rcm-fs-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   border: none;
   background: transparent;
+  color: #5f6368;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  font-size: 0.8rem;
-  color: var(--color-text);
-  font-family: inherit;
-  border-bottom: 1px solid var(--color-border);
-  transition: background 0.12s;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
 }
-.rcm-map-result-item:last-child { border-bottom: none; }
-.rcm-map-result-item:hover { background: var(--color-surface-hover); }
+.rcm-fs-icon-btn:hover { background: rgba(0,0,0,0.05); color: #202124; }
+.rcm-fs-icon-btn.search { color: var(--color-primary); }
+.rcm-fs-icon-btn.search:hover { background: rgba(99, 102, 241, 0.1); }
+.rcm-fs-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  padding: 0 10px;
+  color: var(--color-text);
+  outline: none;
+  font-family: inherit;
+}
+.rcm-fs-actions {
+  display: flex;
+  align-items: center;
+}
+.rcm-fs-divider {
+  width: 1px;
+  height: 24px;
+  background: #dadce0;
+  margin: 0 4px;
+}
+.rcm-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.rcm-fs-results {
+  background: var(--color-surface);
+  border-radius: 16px;
+  margin-top: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05);
+  overflow-y: auto;
+  max-height: 240px;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  animation: rcm-slide-up 0.15s ease;
+}
+.rcm-fs-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.rcm-fs-result-item:hover { background: var(--color-surface-hover); }
+.rcm-fs-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.04);
+  color: #5f6368;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rcm-fs-result-item:hover .rcm-fs-icon-box { color: var(--color-primary); background: rgba(99, 102, 241, 0.08); }
+.rcm-fs-text-box {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.rcm-fs-main {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rcm-fs-sub {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .rcm-map-area { flex: 1; min-height: 340px; position: relative; }
 .rcm-map-loading {
   position: absolute; inset: 0;

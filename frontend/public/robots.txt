@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /private/
+Disallow: /dashboard/
+
+Sitemap: https://giasutinhhoa.edu.vn/sitemap.xml

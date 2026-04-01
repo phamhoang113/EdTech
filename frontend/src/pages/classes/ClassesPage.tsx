@@ -1,5 +1,6 @@
+import { Search, MapPin, BookOpen, GraduationCap, DollarSign, Hash, ChevronLeft, ChevronRight, User, Award, ChevronDown, ArrowUp, Loader2, Clock, Users } from 'lucide-react';
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Search, MapPin, BookOpen, GraduationCap, DollarSign, Hash, ChevronLeft, ChevronRight, User, Award, Compass, ChevronDown, ArrowUp, Loader2, Clock, Users } from 'lucide-react';
+
 import { Button } from '../../components/ui/Button';
 import { Header } from '../../components/layout/Header';
 import { Footer } from '../../components/layout/Footer';
@@ -10,9 +11,9 @@ import './ClassesPage.css';
 import { classApi } from '../../services/classApi';
 import type { OpenClassResponse, LevelFeeItem } from '../../services/classApi';
 import { tutorApi } from '../../services/tutorApi';
+import { locationApi } from '../../services/locationApi';
+import type { Province, Ward } from '../../services/locationApi';
 import { useAuthStore } from '../../store/useAuthStore';
-
-
 
 const ITEMS_PER_PAGE = 9;
 
@@ -100,10 +101,33 @@ function MultiSelectFilter({
   );
 }
 
+const normalizeLocationString = (str: string) => {
+  if (!str) return '';
+  let s = str.toLowerCase();
+  
+  // Xóa dấu tiếng việt
+  s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  s = s.replace(/đ/g, "d");
+
+  // Chuẩn hóa viết tắt phổ biến
+  s = s.replace(/\btp\s/g, "thanh pho ")
+       .replace(/\btp\./g, "thanh pho ")
+       .replace(/\bhcm\b/g, "ho chi minh")
+       .replace(/\bhn\b/g, "ha noi")
+       .replace(/\btt\s/g, "thi tran ")
+       .replace(/\btt\./g, "thi tran ")
+       .replace(/\bq\.\s*/g, "quan ")
+       .replace(/\bh\.\s*/g, "huyen ");
+
+  // Xóa khoảng trắng thừa
+  return s.replace(/\s+/g, ' ').trim();
+};
+
 export function ClassesPage() {
   const [filterClassCode, setFilterClassCode] = useState('');
   const [filterLocation, setFilterLocation] = useState('All');
-  const [filterDistance, setFilterDistance] = useState('All');
+  const [filterProvince, setFilterProvince] = useState('');
+  const [filterWard, setFilterWard] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
   
   const [filterSubjects, setFilterSubjects] = useState<string[]>([]);
@@ -111,10 +135,14 @@ export function ClassesPage() {
   const [filterGenders, setFilterGenders] = useState<string[]>([]);
   const [filterTutorLevels, setFilterTutorLevels] = useState<string[]>([]);
 
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
+
   const [appliedFilters, setAppliedFilters] = useState({
     classCode: '',
     location: 'All',
-    distance: 'All',
+    provinceName: '',
+    wardName: '',
     subjects: [] as string[],
     levels: [] as string[],
     genders: [] as string[],
@@ -174,10 +202,15 @@ export function ClassesPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [filtersData, classData] = await Promise.all([
-           classApi.getClassFilters(),
-           classApi.getOpenClasses()
+        const [filtersData, classData, provincesData] = await Promise.all([
+           classApi.getClassFilters().catch(() => null),
+           classApi.getOpenClasses().catch(() => []),
+           locationApi.getProvinces().catch(() => [])
         ]);
+        
+        if (provincesData) {
+            setProvinces(provincesData);
+        }
         
         if (filtersData) {
             setFilterOptions(filtersData);
@@ -185,7 +218,8 @@ export function ClassesPage() {
             setAppliedFilters({
               classCode: '',
               location: 'All',
-              distance: 'All',
+              provinceName: '',
+              wardName: '',
               subjects: filtersData.subjects || [],
               levels: filtersData.levels || [],
               genders: filtersData.genders || [],
@@ -200,7 +234,7 @@ export function ClassesPage() {
 
         const mapped = classData.map((c: any) => {
           let sessions = [2];
-          let scheduleStr = c.schedule || '';
+          const scheduleStr = c.schedule || '';
           
           if (typeof scheduleStr === 'string' && scheduleStr.includes("3 buổi")) sessions = [3];
           if (typeof scheduleStr === 'string' && scheduleStr.includes("1 buổi")) sessions = [1];
@@ -241,7 +275,8 @@ export function ClassesPage() {
             description: c.title,
             genderRequirement: c.genderRequirement ? [c.genderRequirement] : ['Không yêu cầu'],
             tutorLevelRequirement: c.tutorLevelRequirement || ['Sinh viên', 'Giáo viên'],
-            distance: 5,
+            provinceCode: c.provinceCode,
+            wardCode: c.wardCode,
             feePercentage: c.feePercentage || 30,
             postedAt: new Date().toLocaleDateString('vi-VN'),
             _raw: c as OpenClassResponse, // giữ ngêyn bản gốc cho ClassDetailModal
@@ -268,6 +303,17 @@ export function ClassesPage() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (filterProvince) {
+      locationApi.getWardsByProvince(filterProvince)
+        .then(setWards)
+        .catch(console.error);
+    } else {
+      setWards([]);
+    }
+    setFilterWard('');
+  }, [filterProvince]);
 
   const lastScrollYRef = useRef(0);
   
@@ -382,8 +428,35 @@ export function ClassesPage() {
       const lcCode = appliedFilters.classCode.trim().toLowerCase();
       const matchCode = lcCode === '' || c.id.toLowerCase().includes(lcCode);
       
-      const matchLocation = appliedFilters.location === 'All' || (appliedFilters.location === 'Online' ? c.location === 'Online' : c.location !== 'Online');
-      const matchDistance = appliedFilters.distance === 'All' || c.distance <= parseInt(appliedFilters.distance);
+      const isOnline = c.location === 'Online';
+      let matchLocationAndAddress = true;
+      
+      if (appliedFilters.location === 'Online') {
+         matchLocationAndAddress = isOnline;
+      } else if (appliedFilters.location === 'Offline') {
+         if (isOnline) {
+             matchLocationAndAddress = false;
+         } else {
+             const addr = normalizeLocationString(c.location);
+             const pFilter = normalizeLocationString(appliedFilters.provinceName);
+             const wFilter = normalizeLocationString(appliedFilters.wardName);
+             const matchP = pFilter === '' || addr.includes(pFilter);
+             const matchW = wFilter === '' || addr.includes(wFilter);
+             matchLocationAndAddress = matchP && matchW;
+         }
+      } else {
+         // All
+         if (isOnline) {
+            matchLocationAndAddress = true;
+         } else {
+             const addr = normalizeLocationString(c.location);
+             const pFilter = normalizeLocationString(appliedFilters.provinceName);
+             const wFilter = normalizeLocationString(appliedFilters.wardName);
+             const matchP = pFilter === '' || addr.includes(pFilter);
+             const matchW = wFilter === '' || addr.includes(wFilter);
+             matchLocationAndAddress = matchP && matchW;
+         }
+      }
       
       const matchSubject = appliedFilters.subjects.length === 0 || 
                            appliedFilters.subjects.includes(c.subject) ||
@@ -392,15 +465,19 @@ export function ClassesPage() {
       const matchGender = appliedFilters.genders.length === 0 || c.genderRequirement.includes('Không yêu cầu') || c.genderRequirement.some((g: string) => appliedFilters.genders.includes(g));
       const matchTutorLevel = appliedFilters.tutorLevels.length === 0 || c.tutorLevelRequirement.some((t: string) => appliedFilters.tutorLevels.includes(t));
       
-      return matchCode && matchSubject && matchLevel && matchLocation && matchDistance && matchGender && matchTutorLevel;
+      return matchCode && matchSubject && matchLevel && matchLocationAndAddress && matchGender && matchTutorLevel;
     });
-  }, [appliedFilters]);
+  }, [appliedFilters, dbClasses, filterOptions]);
 
   const handleSearch = () => {
+    const pName = provinces.find(p => p.code === filterProvince)?.name || '';
+    const wName = wards.find(w => w.code === filterWard)?.name || '';
+    
     setAppliedFilters({
       classCode: filterClassCode,
       location: filterLocation,
-      distance: filterDistance,
+      provinceName: pName,
+      wardName: wName,
       subjects: filterSubjects,
       levels: filterLevels,
       genders: filterGenders,
@@ -408,7 +485,6 @@ export function ClassesPage() {
     });
     setCurrentPage(1);
   };
-
 
   // Phân trang & Load More
   const totalPages = Math.ceil(filteredClasses.length / ITEMS_PER_PAGE);
@@ -441,7 +517,6 @@ export function ClassesPage() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
 
   return (
     <div className="classes-page">
@@ -510,6 +585,37 @@ export function ClassesPage() {
           
           {showAdvanced && (
             <div className="filters-advanced-grid filters-grid">
+              
+              <div className="filter-group">
+                <label><MapPin size={16} /> Tỉnh / Thành phố</label>
+                <select 
+                  value={filterProvince} 
+                  onChange={(e) => setFilterProvince(e.target.value)} 
+                  className="filter-select"
+                  disabled={filterLocation === 'Online'}
+                >
+                  <option value="">Tất cả tỉnh thành</option>
+                  {provinces.map(p => (
+                    <option key={p.code} value={p.code}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="filter-group">
+                <label><MapPin size={16} /> Quận / Huyện / Xã</label>
+                <select 
+                  value={filterWard} 
+                  onChange={(e) => setFilterWard(e.target.value)} 
+                  className="filter-select"
+                  disabled={!filterProvince || filterLocation === 'Online'}
+                >
+                  <option value="">Tất cả khu vực</option>
+                  {wards.map(w => (
+                    <option key={w.code} value={w.code}>{w.name}</option>
+                  ))}
+                </select>
+              </div>
+
               <MultiSelectFilter
                 label="Giới tính"
                 icon={User}
@@ -528,19 +634,6 @@ export function ClassesPage() {
                 placeholder="Tất cả trình độ"
               />
 
-              <div className="filter-group">
-                <label><Compass size={16} /> Khoảng cách</label>
-                <select 
-                  value={filterDistance} 
-                  onChange={(e) => setFilterDistance(e.target.value)} 
-                  className="filter-select"
-                >
-                  <option value="All">Tất cả</option>
-                  <option value="5">Dưới 5 km</option>
-                  <option value="10">Dưới 10 km</option>
-                  <option value="20">Dưới 20 km</option>
-                </select>
-              </div>
             </div>
           )}
 
@@ -553,7 +646,8 @@ export function ClassesPage() {
             
             <div className="filter-actions-right">
             <Button variant="ghost" onClick={() => {
-              setFilterClassCode(''); setFilterLocation('All'); setFilterDistance('All');
+              setFilterClassCode(''); setFilterLocation('All');
+              setFilterProvince(''); setFilterWard('');
               setFilterSubjects([]); setFilterLevels([]); setFilterGenders([]); setFilterTutorLevels([]);
             }} className="clear-filter-btn">
               Xóa bộ lọc
@@ -672,9 +766,10 @@ export function ClassesPage() {
                 <p>Không tìm thấy lớp học nào phù hợp với bộ lọc của bạn.</p>
                 <div style={{ marginTop: '16px' }}>
                   <Button variant="ghost" onClick={() => {
-                    setFilterClassCode(''); setFilterLocation('All'); setFilterDistance('All');
+                    setFilterClassCode(''); setFilterLocation('All');
+                    setFilterProvince(''); setFilterWard('');
                     setFilterSubjects([]); setFilterLevels([]); setFilterGenders([]); setFilterTutorLevels([]);
-                    setAppliedFilters({ classCode: '', location: 'All', distance: 'All', subjects: [], levels: [], genders: [], tutorLevels: [] });
+                    setAppliedFilters({ classCode: '', location: 'All', provinceName: '', wardName: '', subjects: [], levels: [], genders: [], tutorLevels: [] });
                     setCurrentPage(1);
                   }}>Xóa bộ lọc và thử lại</Button>
                 </div>

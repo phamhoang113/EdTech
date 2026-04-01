@@ -1,12 +1,12 @@
+import { X, Plus, Trash2, AlertCircle, MapPin, Clock, UserCircle } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Trash2, AlertCircle, MapPin, Clock } from 'lucide-react';
+
 import './RequestClassModal.css';
 import apiClient from '../../services/apiClient';
 import { parentApi } from '../../services/parentApi';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
-
 /* ── Types ───────────────────────────────────────────────────────────────── */
-interface LevelFeeRow {
+export interface LevelFeeRow {
   level: string;
   fee: number;
 }
@@ -18,14 +18,14 @@ interface Filters {
   genders: string[];
 }
 
-interface TimeSlot { start: number; end: number; }
-interface CaSchedule { ca: string; days: string[]; slots: TimeSlot[]; }
+export interface TimeSlot { start: number; end: number; }
+export interface CaSchedule { ca: string; days: string[]; slots: TimeSlot[]; }
 
 /* ── Constants ───────────────────────────────────────────────────────────── */
 const DAY_LABELS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const DAY_VALUES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-const CA_CONFIG: Record<string, { label: string; emoji: string; range: string; color: string; startMin: number; endMin: number }> = {
+export const CA_CONFIG: Record<string, { label: string; emoji: string; range: string; color: string; startMin: number; endMin: number }> = {
   Sáng:  { label: 'Ca sáng',  emoji: '🌅', range: '6:00 – 11:30',  color: '#f59e0b', startMin: 360,  endMin: 690  },
   Chiều: { label: 'Ca chiều', emoji: '☀️', range: '12:00 – 17:30', color: '#6366f1', startMin: 720,  endMin: 1050 },
   Tối:   { label: 'Ca tối',   emoji: '🌙', range: '18:00 – 21:30', color: '#8b5cf6', startMin: 1080, endMin: 1290 },
@@ -33,7 +33,7 @@ const CA_CONFIG: Record<string, { label: string; emoji: string; range: string; c
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 function fmtCurrency(n: number) { return n.toLocaleString('vi-VN') + ' ₫'; }
-function toHHMM(m: number): string {
+export function toHHMM(m: number): string {
   const h = Math.floor(m / 60).toString().padStart(2, '0');
   const mm = (m % 60).toString().padStart(2, '0');
   return `${h}:${mm}`;
@@ -56,97 +56,125 @@ function hasConflict(slots: TimeSlot[], cur: number): boolean {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Map Address Picker (OpenStreetMap + Leaflet + Nominatim — no API key)
+   Map Address Picker (Mapbox GL JS + Mapbox Search API v6)
 ══════════════════════════════════════════════════════════════════════════ */
 declare global {
-  interface Window { google?: unknown; initGoogleMaps?: () => void; }
+  interface Window { mapboxgl?: any; }
 }
 
-function loadLeaflet(): Promise<void> {
-  return new Promise(resolve => {
-    if ((window as { L?: unknown }).L) { resolve(); return; }
-    if (!document.getElementById('leaflet-css')) {
+function loadMapboxGL(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.mapboxgl) { resolve(); return; }
+    if (!document.getElementById('mapbox-css')) {
       const css = document.createElement('link');
-      css.id = 'leaflet-css'; css.rel = 'stylesheet';
-      css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      css.id = 'mapbox-css'; css.rel = 'stylesheet';
+      css.href = 'https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css';
       document.head.appendChild(css);
     }
-    if (document.getElementById('leaflet-js')) {
-      const check = setInterval(() => { if ((window as { L?: unknown }).L) { clearInterval(check); resolve(); } }, 50);
+    if (document.getElementById('mapbox-js')) {
+      const check = setInterval(() => { if (window.mapboxgl) { clearInterval(check); resolve(); } }, 50);
       return;
     }
     const script = document.createElement('script');
-    script.id = 'leaflet-js';
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.id = 'mapbox-js';
+    script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js';
     script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load Mapbox GL JS API'));
     document.head.appendChild(script);
   });
 }
 
-interface NominatimResult { display_name: string; lat: string; lon: string; }
+interface PlaceResult { display_name: string; place_id?: string; lat?: number; lon?: number; center?: [number, number]; }
 
-async function reverseGeocode(lat: number, lon: number): Promise<string> {
-  const res = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=vi`,
-    { headers: { 'User-Agent': 'EdTech/1.0' } }
-  );
-  const data = await res.json() as { display_name?: string };
-  return data.display_name ?? `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+async function reverseGeocodeMapbox(lat: number, lng: number): Promise<string> {
+  const apiKey = import.meta.env.VITE_MAPBOX_API_KEY;
+  if (!apiKey) return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  try {
+    const res = await fetch(`https://api.mapbox.com/search/geocode/v6/reverse?longitude=${lng}&latitude=${lat}&language=vi&access_token=${apiKey}`);
+    const data = await res.json();
+    if (data.features?.length > 0) {
+      const f = data.features[0].properties;
+      return f.full_address || f.name || f.place_formatted || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+  } catch (e) { console.error(e); }
+  return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 }
 
-async function searchAddress(q: string): Promise<NominatimResult[]> {
-  const res = await fetch(
-    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=vn&limit=5&accept-language=vi`,
-    { headers: { 'User-Agent': 'EdTech/1.0' } }
-  );
-  return res.json() as Promise<NominatimResult[]>;
+async function searchAddressMapbox(q: string): Promise<PlaceResult[]> {
+  if (!q.trim()) return [];
+  const apiKey = import.meta.env.VITE_MAPBOX_API_KEY;
+  if (!apiKey) return [];
+  try {
+    const res = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(q)}&country=vn&language=vi&access_token=${apiKey}`);
+    const data = await res.json();
+    if (data.features) {
+      return data.features.map((f: any) => ({
+        display_name: f.properties.full_address || f.properties.name || f.properties.place_formatted,
+        center: f.geometry.coordinates,
+        lat: f.geometry.coordinates[1],
+        lon: f.geometry.coordinates[0],
+        place_id: f.id
+      }));
+    }
+  } catch (e) { console.error(e); }
+  return [];
 }
 
 function MapPickerModal({ onClose, onSelect, initialAddress }: {
   onClose: () => void;
-  onSelect: (address: string) => void;
+  onSelect: (address: string, lat?: number, lon?: number) => void;
   initialAddress: string;
 }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<unknown>(null);
   const markerRef = useRef<unknown>(null);
   const [currentAddress, setCurrentAddress] = useState(initialAddress || 'Chưa chọn vị trí');
+  const [currentPos, setCurrentPos] = useState<{lat: number; lon: number} | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<NominatimResult[]>([]);
+  const [searchResults, setSearchResults] = useState<PlaceResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [loading, setLoading] = useState(true);
   const DEFAULT_LAT = 10.7769; const DEFAULT_LNG = 106.7009;
 
   useEffect(() => {
     let cancelled = false;
-    loadLeaflet().then(() => {
+    loadMapboxGL().then(() => {
       if (cancelled || !mapRef.current || mapInstanceRef.current) return;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const L = (window as any).L;
-      const map = L.map(mapRef.current).setView([DEFAULT_LAT, DEFAULT_LNG], 13);
+      const mapboxgl = window.mapboxgl;
+      mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_API_KEY;
+      
+      const map = new mapboxgl.Map({
+        container: mapRef.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [DEFAULT_LNG, DEFAULT_LAT],
+        zoom: 14,
+        attributionControl: false
+      });
+      map.addControl(new mapboxgl.AttributionControl({ compact: true }));
       mapInstanceRef.current = map;
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors', maxZoom: 19,
-      }).addTo(map);
-      const icon = L.icon({
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
-      });
-      const marker = L.marker([DEFAULT_LAT, DEFAULT_LNG], { icon, draggable: true }).addTo(map);
+      
+      const marker = new mapboxgl.Marker({ color: '#6366f1', draggable: true })
+        .setLngLat([DEFAULT_LNG, DEFAULT_LAT])
+        .addTo(map);
       markerRef.current = marker;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       map.on('click', async (e: any) => {
-        const { lat, lng } = e.latlng;
-        marker.setLatLng([lat, lng]);
-        setCurrentAddress(await reverseGeocode(lat, lng));
+        marker.setLngLat(e.lngLat);
+        setCurrentAddress(await reverseGeocodeMapbox(e.lngLat.lat, e.lngLat.lng));
+        setCurrentPos({ lat: e.lngLat.lat, lon: e.lngLat.lng });
       });
+
       marker.on('dragend', async () => {
-        const { lat, lng } = marker.getLatLng();
-        setCurrentAddress(await reverseGeocode(lat, lng));
+        const pos = marker.getLngLat();
+        setCurrentAddress(await reverseGeocodeMapbox(pos.lat, pos.lng));
+        setCurrentPos({ lat: pos.lat, lon: pos.lng });
       });
+      
       setLoading(false);
+    }).catch(err => {
+      console.error(err);
+      setLoading(false);
+      setCurrentAddress("Lỗi tải Mapbox. Vui lòng thử lại sau.");
     });
     return () => { cancelled = true; };
   }, []);
@@ -154,59 +182,67 @@ function MapPickerModal({ onClose, onSelect, initialAddress }: {
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setSearching(true);
-    try { setSearchResults(await searchAddress(searchQuery)); }
+    try { setSearchResults(await searchAddressMapbox(searchQuery)); }
     finally { setSearching(false); }
   };
 
-  const handleSelectResult = async (r: NominatimResult) => {
-    const lat = parseFloat(r.lat); const lng = parseFloat(r.lon);
-    if (mapInstanceRef.current && markerRef.current) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mapInstanceRef.current as any).setView([lat, lng], 16);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (markerRef.current as any).setLatLng([lat, lng]);
+  const handleSelectResult = async (r: PlaceResult) => {
+    if (r.center && mapInstanceRef.current && markerRef.current) {
+      const map = mapInstanceRef.current as any;
+      const marker = markerRef.current as any;
+      map.flyTo({ center: r.center, zoom: 16 });
+      marker.setLngLat(r.center);
     }
     setCurrentAddress(r.display_name);
+    setCurrentPos(r.lat && r.lon ? { lat: r.lat, lon: r.lon } : null);
     setSearchResults([]); setSearchQuery('');
   };
 
   return (
-    <div className="ap-overlay" onClick={onClose}>
+    <div className="rcm-overlay" onClick={onClose} style={{ zIndex: 999999 }}>
       <div className="rcm-map-modal" onClick={e => e.stopPropagation()}>
-        <div className="rcm-map-header">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <MapPin size={18} style={{ color: '#6366f1' }}/>
-              <span style={{ fontWeight: 800, fontSize: '0.95rem' }}>Chọn địa chỉ trên bản đồ</span>
+        <div className="rcm-map-area" style={{ position: 'relative' }}>
+          {loading && <div className="rcm-map-loading">🗺️ Đang tải bản đồ...</div>}
+          <div ref={mapRef} style={{ width: '100%', height: '100%', minHeight: 400 }}/>
+          
+          <div className="rcm-floating-search-wrap">
+            <div className="rcm-floating-search-box">
+              <MapPin size={18} style={{ color: '#6366f1', marginLeft: 8 }}/>
+              <input
+                className="rcm-fs-input"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
+                placeholder="Tìm kiếm vị trí (VD: Số 123...)"
+              />
+              <div className="rcm-fs-actions">
+                {searching && <div className="rcm-spinner-small" style={{ marginRight: 8 }}/>}
+                <div className="rcm-fs-divider"/>
+                <button onClick={handleSearch} disabled={searching} className="rcm-fs-icon-btn search" title="Tìm kiếm">
+                  <span style={{ fontSize: '0.86rem', fontWeight: 700 }}>Tìm</span>
+                </button>
+              </div>
             </div>
-            <button onClick={onClose} className="rcm-close"><X size={18}/></button>
-          </div>
-          <div className="rcm-map-search-row">
-            <input
-              className="rcm-input"
-              style={{ flex: 1 }}
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
-              placeholder="Tìm kiếm địa chỉ... (Enter)"
-            />
-            <button onClick={handleSearch} disabled={searching} className="rcm-map-search-btn">
-              {searching ? '...' : 'Tìm'}
-            </button>
+            
             {searchResults.length > 0 && (
-              <div className="rcm-map-results">
-                {searchResults.map((r, i) => (
-                  <button key={i} className="rcm-map-result-item" onClick={() => handleSelectResult(r)}>
-                    <MapPin size={11} style={{ marginRight: 6, color: '#6366f1' }}/>{r.display_name}
-                  </button>
-                ))}
+              <div className="rcm-fs-results">
+                {searchResults.map((r, i) => {
+                  const parts = r.display_name.split(',');
+                  const main = parts[0];
+                  const sub  = parts.slice(1).join(',').trim();
+                  return (
+                    <button key={i} className="rcm-fs-result-item" onClick={() => handleSelectResult(r)}>
+                      <div className="rcm-fs-icon-box"><MapPin size={16}/></div>
+                      <div className="rcm-fs-text-box">
+                        <div className="rcm-fs-main">{main}</div>
+                        {sub && <div className="rcm-fs-sub">{sub}</div>}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
-        </div>
-        <div className="rcm-map-area">
-          {loading && <div className="rcm-map-loading">🗺️ Đang tải bản đồ...</div>}
-          <div ref={mapRef} style={{ width: '100%', height: '100%', minHeight: 340 }}/>
         </div>
         <div className="rcm-map-footer">
           <div className="rcm-map-addr-label">Địa chỉ đã chọn:</div>
@@ -214,7 +250,7 @@ function MapPickerModal({ onClose, onSelect, initialAddress }: {
           <div className="rcm-map-actions">
             <button onClick={onClose} className="rcm-btn-cancel" style={{ flex: 1 }}>Huỷ</button>
             <button
-              onClick={() => { onSelect(currentAddress); onClose(); }}
+              onClick={() => { onSelect(currentAddress, currentPos?.lat, currentPos?.lon); onClose(); }}
               className="rcm-btn-submit" style={{ flex: 2 }}
             >
               ✓ Xác nhận địa chỉ này
@@ -226,9 +262,9 @@ function MapPickerModal({ onClose, onSelect, initialAddress }: {
   );
 }
 
-function MapAddressInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+export function MapAddressInput({ value, onChange }: { value: string; onChange: (v: string, lat?: number, lon?: number) => void }) {
   const [query, setQuery] = useState(value);
-  const [suggestions, setSuggestions] = useState<NominatimResult[]>([]);
+  const [suggestions, setSuggestions] = useState<PlaceResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
   const [showMap, setShowMap] = useState(false);
@@ -253,21 +289,21 @@ function MapAddressInput({ value, onChange }: { value: string; onChange: (v: str
     setQuery(text);
     onChange(text);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (text.trim().length < 3) { setSuggestions([]); return; }
+    if (text.trim().length < 2) { setSuggestions([]); return; }
 
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const results = await searchAddress(text);
+        const results = await searchAddressMapbox(text);
         setSuggestions(results);
       } catch { setSuggestions([]); }
       finally { setLoading(false); }
     }, 400);
   };
 
-  const handleSelect = (r: NominatimResult) => {
+  const handleSelect = (r: PlaceResult) => {
     setQuery(r.display_name);
-    onChange(r.display_name);
+    onChange(r.display_name, r.lat, r.lon);
     setSuggestions([]);
     setFocused(false);
   };
@@ -461,7 +497,7 @@ function CaAccordion({ caKey, value, onChange, sessionDurationMin }: {
   );
 }
 
-function SessionPicker({ caSchedules, onChange, sessionDurationMin }: {
+export function SessionPicker({ caSchedules, onChange, sessionDurationMin }: {
   caSchedules: CaSchedule[];
   onChange: (s: CaSchedule[]) => void;
   sessionDurationMin: number;
@@ -491,7 +527,7 @@ function SessionPicker({ caSchedules, onChange, sessionDurationMin }: {
 /* ══════════════════════════════════════════════════════════════════════════
    Level GS Multi-row
 ══════════════════════════════════════════════════════════════════════════ */
-function LevelFeesEditor({ rows, onChange, tutorLevels }: {
+export function LevelFeesEditor({ rows, onChange, tutorLevels }: {
   rows: LevelFeeRow[];
   onChange: (rows: LevelFeeRow[]) => void;
   tutorLevels: string[];
@@ -579,6 +615,11 @@ export function RequestClassModal({ onClose, onSuccess }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  // Chọn con em
+  const [children, setChildren] = useState<{ id: string; fullName: string; grade?: string }[]>([]);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [loadingChildren, setLoadingChildren] = useState(true);
+
   useEffect(() => {
     apiClient.get('/api/v1/classes/filters')
       .then(res => {
@@ -589,10 +630,19 @@ export function RequestClassModal({ onClose, onSuccess }: Props) {
         setLevelFees([]);
       })
       .catch(() => {});
+    // Fetch danh sách con em
+    parentApi.getMyChildren()
+      .then(res => { setChildren((res.data ?? []).map(s => ({ id: s.id, fullName: s.fullName, grade: s.grade ?? undefined }))); })
+      .catch(() => {})
+      .finally(() => setLoadingChildren(false));
   }, []);
 
   const set = <K extends keyof typeof form>(k: K, v: typeof form[K]) =>
     setForm(f => ({ ...f, [k]: v }));
+
+  const handleAddressSelect = async (addr: string) => {
+    set('address', addr);
+  };
 
   const effectiveSubject = form.subject === 'Khác' ? form.customSubject : form.subject;
   const buildTitle = () => (!effectiveSubject || !form.grade) ? '' : `Lớp ${effectiveSubject} ${form.grade}`;
@@ -601,6 +651,7 @@ export function RequestClassModal({ onClose, onSuccess }: Props) {
     if (!effectiveSubject) { setError('Vui lòng chọn môn học.'); return; }
     if (!form.grade)       { setError('Vui lòng chọn khối/lớp.'); return; }
     if (form.mode === 'OFFLINE' && !form.address.trim()) { setError('Vui lòng chọn địa chỉ học.'); return; }
+    if (children.length > 0 && selectedStudentIds.length === 0) { setError('Vui lòng chọn con em cho lớp này.'); return; }
     // Học phí PH tự động tính từ mức thấp nhất trong levelFees (0 nếu chưa chọn loại GS)
     const computedParentFee = levelFees.length > 0
       ? Math.min(...levelFees.map(r => r.fee))
@@ -638,6 +689,7 @@ export function RequestClassModal({ onClose, onSuccess }: Props) {
         genderRequirement: form.genderRequirement !== 'Không yêu cầu' ? form.genderRequirement : undefined,
         description: form.description.trim() || undefined,
         levelFees: levelFeesJson,
+        studentIds: selectedStudentIds.length > 0 ? selectedStudentIds : undefined,
       });
       onSuccess();
     } catch (e: unknown) {
@@ -670,6 +722,55 @@ export function RequestClassModal({ onClose, onSuccess }: Props) {
         <div className="rcm-body">
           {error && (
             <div className="rcm-error"><AlertCircle size={15}/> {error}</div>
+          )}
+
+          {/* Section 0 — Chọn con em (bắt buộc) */}
+          {children.length > 0 && (
+            <div className="rcm-section">
+              <div className="rcm-section-label">
+                <span className="rcm-sl-dot"/> 👶 Chọn con em <span className="rcm-label-req">*</span>
+              </div>
+              {loadingChildren ? (
+                <div style={{ fontSize: '0.84rem', color: 'var(--color-text-muted)', padding: '12px 0' }}>Đang tải...</div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {children.map(child => {
+                    const selected = selectedStudentIds.includes(child.id);
+                    return (
+                      <button
+                        key={child.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedStudentIds(prev =>
+                            selected ? prev.filter(id => id !== child.id) : [...prev, child.id]
+                          );
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '8px 14px', borderRadius: 20,
+                          border: `1.5px solid ${selected ? '#6366f1' : 'var(--color-border)'}`,
+                          background: selected ? 'rgba(99, 102, 241, 0.08)' : 'transparent',
+                          color: selected ? '#6366f1' : 'var(--color-text)',
+                          fontWeight: selected ? 700 : 500,
+                          fontSize: '0.84rem', cursor: 'pointer',
+                          fontFamily: 'inherit',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        <UserCircle size={16}/>
+                        <span>{child.fullName}</span>
+                        {child.grade && <span style={{ fontSize: '0.72rem', opacity: 0.7 }}>({child.grade})</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {selectedStudentIds.length === 0 && !loadingChildren && (
+                <p style={{ fontSize: '0.78rem', color: '#ef4444', marginTop: 6, fontWeight: 600 }}>
+                  Vui lòng chọn ít nhất 1 con em
+                </p>
+              )}
+            </div>
           )}
 
           {/* Section 1 — Thông tin lớp */}
@@ -710,8 +811,10 @@ export function RequestClassModal({ onClose, onSuccess }: Props) {
 
               {form.mode === 'OFFLINE' && (
                 <div className="rcm-field">
-                  <label className="rcm-label">Địa chỉ học <span className="rcm-label-req">*</span></label>
-                  <MapAddressInput value={form.address} onChange={(v: string) => set('address', v)}/>
+                  <label className="rcm-label">
+                    Địa chỉ học <span className="rcm-label-req">*</span>
+                  </label>
+                  <MapAddressInput value={form.address} onChange={(v) => handleAddressSelect(v)}/>
                 </div>
               )}
 

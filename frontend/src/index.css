@@ -56,3 +56,69 @@ a {
     padding: 0 var(--spacing-8);
   }
 }
+
+/* Chrome autofill fix for dark mode */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px var(--color-surface-hover) inset !important;
+    -webkit-text-fill-color: var(--color-text) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ── Scroll Reveal Animations ── */
+.reveal-base {
+  opacity: 0;
+  transition: opacity 0.8s cubic-bezier(0.5, 0, 0, 1), transform 0.8s cubic-bezier(0.5, 0, 0, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-up {
+  transform: translateY(40px);
+}
+
+.reveal-left {
+  transform: translateX(-40px);
+}
+
+.reveal-right {
+  transform: translateX(40px);
+}
+
+.reveal-scale {
+  transform: scale(0.95);
+}
+
+.reveal-base.revealed { /* When IntersectionObserver triggers */
+  opacity: 1;
+  transform: translateY(0) translateX(0) scale(1);
+}
+
+/* Animation Delays */
+.delay-100 { transition-delay: 100ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+.delay-500 { transition-delay: 500ms; }
+
+/* ── Auto Entry Animations (No Scroll Required) ── */
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease forwards;
+  opacity: 0;
+}

@@ -1,16 +1,26 @@
 package com.edtech.backend.admin.controller;
 
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.cls.enums.ClassStatus;
+import com.edtech.backend.admin.dto.AdminClassListItem;
+import com.edtech.backend.admin.dto.AdminClassScheduleStatsDTO;
 import com.edtech.backend.admin.dto.ApproveClassRequest;
 import com.edtech.backend.admin.dto.CreateClassRequest;
-import com.edtech.backend.admin.dto.AdminClassListItem;
+import com.edtech.backend.admin.dto.UpdateLearningStartDateRequest;
 import com.edtech.backend.admin.service.AdminClassService;
+import com.edtech.backend.cls.enums.ClassStatus;
+import com.edtech.backend.core.dto.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
@@ -57,6 +67,23 @@ public class AdminClassController {
             @RequestParam ClassStatus newStatus) {
         adminClassService.updateClassStatus(id, newStatus);
         return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    /**
+     * Set ngày bắt đầu học chính thức (learningStartDate)
+     */
+    @PatchMapping("/{id}/learning-start-date")
+    public ResponseEntity<ApiResponse<Void>> updateLearningStartDate(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateLearningStartDateRequest request) {
+        adminClassService.updateLearningStartDate(id, request.getLearningStartDate());
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    /** Lấy thống kê lịch dạy của một lớp */
+    @GetMapping("/{id}/schedule-stats")
+    public ResponseEntity<ApiResponse<AdminClassScheduleStatsDTO>> getScheduleStats(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(adminClassService.getScheduleStats(id)));
     }
 
     /** Xóa mềm lớp (nếu ASSIGNED → revert về OPEN + xóa tutorId) */

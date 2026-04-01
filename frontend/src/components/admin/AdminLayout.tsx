@@ -1,12 +1,11 @@
+import { LayoutDashboard, Users, GraduationCap, FileCheck, BookOpen, ClipboardList, CreditCard, BarChart3, Settings, LogOut, Search, Sun, Moon, Menu, X, UserIcon, ClipboardCheck, CalendarDays, ClockAlert, MessageSquare } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard, Users, GraduationCap, FileCheck, BookOpen, ClipboardList,
-  CreditCard, BarChart3, Settings, LogOut, Search, Bell,
-  Sun, Moon, Menu, X, User as UserIcon, ClipboardCheck,
-} from 'lucide-react';
+
 import { useAuthStore } from '../../store/useAuthStore';
 import { useBadgeCounts } from '../../hooks/useBadgeCounts';
+import { useNotificationStore } from '../../store/useNotificationStore';
+import { NotificationDropdown } from '../common/NotificationDropdown';
 import './AdminLayout.css';
 
 const NAV_ITEMS = [
@@ -16,7 +15,10 @@ const NAV_ITEMS = [
   { to: '/admin/verification',       icon: FileCheck,       label: 'Xác minh',           badgeKey: 'pendingVerifications' },
   { to: '/admin/class-requests',     icon: ClipboardCheck,  label: 'Yêu cầu mở lớp',    badgeKey: 'pendingClassRequests' },
   { to: '/admin/classes',            icon: BookOpen,        label: 'Lớp học' },
+  { to: '/admin/schedules',          icon: CalendarDays,    label: 'Lịch dạy' },
+  { to: '/admin/absences',           icon: ClockAlert,      label: 'Đơn báo nghỉ',      badgeKey: 'pendingAbsences' },
   { to: '/admin/class-applications', icon: ClipboardList,   label: 'Đơn nhận lớp',       badgeKey: 'pendingApplications' },
+  { to: '/admin/messages',           icon: MessageSquare,   label: 'Tin nhắn' },
   { to: '/admin/payments',           icon: CreditCard,      label: 'Thanh toán' },
   { to: '/admin/reports',            icon: BarChart3,       label: 'Báo cáo' },
   { to: '/admin/settings',           icon: Settings,        label: 'Cài đặt' },
@@ -29,7 +31,10 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/verification':       'Xác minh',
   '/admin/class-requests':     'Yêu cầu mở lớp',
   '/admin/classes':            'Lớp học',
+  '/admin/schedules':          'Lịch dạy',
+  '/admin/absences':           'Đơn báo nghỉ',
   '/admin/class-applications': 'Đơn nhận lớp',
+  '/admin/messages':           'Hộp thư hỗ trợ',
   '/admin/payments':           'Thanh toán',
   '/admin/reports':            'Báo cáo',
   '/admin/settings':           'Cài đặt',
@@ -43,6 +48,7 @@ export function AdminLayout() {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const badgeCounts = useBadgeCounts();
+  const { unreadMessages } = useNotificationStore();
 
   const adminName = user?.fullName ?? 'Admin';
   const adminInitial = adminName.trim().split(' ').pop()?.charAt(0).toUpperCase() ?? 'A';
@@ -74,7 +80,6 @@ export function AdminLayout() {
   };
 
   const currentTitle = PAGE_TITLES[location.pathname] ?? 'Admin';
-  const totalBadges = Object.values(badgeCounts).reduce((s, v) => s + v, 0);
 
   return (
     <div className="admin-layout">
@@ -88,8 +93,7 @@ export function AdminLayout() {
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-sidebar__logo">
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
-            <span className="admin-sidebar__logo-icon">🎓</span>
-            <span className="admin-sidebar__logo-text">EdTech Admin</span>
+            <img src="/logo.png" alt="Gia Sư Tinh Hoa" style={{ width: '100%', height: 'auto', maxHeight: '50px', objectFit: 'contain', filter: 'var(--logo-filter, none)' }} />
           </Link>
           <button
             className="admin-topbar__hamburger"
@@ -102,7 +106,10 @@ export function AdminLayout() {
 
         <nav className="admin-sidebar__nav">
           {NAV_ITEMS.map((item) => {
-            const count = item.badgeKey ? (badgeCounts[item.badgeKey] ?? 0) : 0;
+            let count = item.badgeKey ? (badgeCounts[item.badgeKey] ?? 0) : 0;
+            if (item.to === '/admin/messages') {
+              count += unreadMessages;
+            }
             return (
               <NavLink
                 key={item.to}
@@ -157,12 +164,7 @@ export function AdminLayout() {
             <button className="admin-topbar__icon-btn" onClick={toggleTheme} title="Đổi giao diện">
               {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
-            <button className="admin-topbar__icon-btn">
-              <Bell size={18} />
-              {totalBadges > 0 && (
-                <span className="admin-topbar__notification-badge">{totalBadges > 99 ? '99+' : totalBadges}</span>
-              )}
-            </button>
+            <NotificationDropdown />
             <div className="admin-topbar__avatar-wrap" ref={dropdownRef}>
               <button
                 className="admin-topbar__avatar"

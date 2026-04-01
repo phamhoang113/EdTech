@@ -14,7 +14,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
@@ -103,7 +108,7 @@ public class ClassApplicationController {
      * Phụ huynh xem danh sách gia sư được admin đề xuất (status=APPROVED) cho lớp của mình.
      */
     @GetMapping("/api/v1/classes/{classId}/proposed-tutors")
-    @PreAuthorize("hasRole('PARENT')")
+    @PreAuthorize("hasAnyRole('PARENT', 'STUDENT')")
     public ResponseEntity<ApiResponse<List<ClassApplicationResponse>>> getProposedTutors(
             @PathVariable UUID classId,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -118,7 +123,7 @@ public class ClassApplicationController {
      * → Lớp chuyển ASSIGNED, reject các đơn còn lại.
      */
     @PostMapping("/api/v1/class-applications/{applicationId}/select")
-    @PreAuthorize("hasRole('PARENT')")
+    @PreAuthorize("hasAnyRole('PARENT', 'STUDENT')")
     public ResponseEntity<ApiResponse<ClassApplicationResponse>> selectTutor(
             @PathVariable UUID applicationId,
             @AuthenticationPrincipal UserDetails userDetails) {

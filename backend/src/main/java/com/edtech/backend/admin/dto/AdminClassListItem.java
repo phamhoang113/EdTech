@@ -40,6 +40,7 @@ public class AdminClassListItem {
     String timeFrame;
     String schedule;
     String genderRequirement;
+    java.time.LocalDate learningStartDate;
     /** JSON array levelFees: [{level, fee}] — dùng khi lớp OPEN để hiển thị bảng học phí */
     String levelFees;
     /** JSON array tutorProposals: [{level, fee}] — lưu lương trung tâm đề xuất cho Gia sư */
@@ -47,9 +48,14 @@ public class AdminClassListItem {
     /** Lý do từ chối (chỉ có khi status = CANCELLED) */
     String rejectionReason;
 
+    // Quota Warnings
+    Integer missingSessionsThisWeek;
+    Integer pendingMakeupCount;
+
     ClassStatus status;
     /** True nếu admin đã đề xuất GS cho PH nhưng PH chưa chọn (tutor_proposals không rỗng) */
     boolean hasPendingProposals;
     long pendingApplicationCount;
     Instant createdAt;
+    java.util.List<UUID> studentIds;
 }

@@ -1,8 +1,6 @@
+import { CheckCircle, XCircle, Clock, User, Phone, MapPin, Calendar, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import {
-  CheckCircle, XCircle, Clock, User, Phone,
-  MapPin, Calendar, ChevronDown, ChevronUp, AlertCircle,
-} from 'lucide-react';
+
 import { adminApi } from '../../services/adminApi';
 import type { AdminClassListItem } from '../../services/adminApi';
 import './AdminClassRequests.css';
@@ -92,8 +90,8 @@ function ClassRequestCard({ cls, onApprove, onReject }: {
   // Nếu không có levelFees → single tutorFee
   const defaultSingleFee = parsedLevelFees.length === 0
     ? String(cls.tutorFee != null && cls.tutorFee > 0
-        ? cls.tutorFee
-        : Math.round(Number(cls.parentFee) * 0.7))
+      ? cls.tutorFee
+      : Math.round(Number(cls.parentFee) * 0.7))
     : '';
   const [singleFee, setSingleFee] = useState(defaultSingleFee);
 
@@ -126,13 +124,13 @@ function ClassRequestCard({ cls, onApprove, onReject }: {
           <div className="acr-card__badge">{cls.subject}</div>
           <h3 className="acr-card__title">{cls.title}</h3>
           <div className="acr-card__meta">
-            <span><User size={13}/> {cls.parentName ?? '—'}</span>
-            <span><Phone size={13}/> {cls.parentPhone ?? '—'}</span>
-            <span><Calendar size={13}/> {fmtDate(cls.createdAt)}</span>
+            <span><User size={13} /> {cls.parentName ?? '—'}</span>
+            <span><Phone size={13} /> {cls.parentPhone ?? '—'}</span>
+            <span><Calendar size={13} /> {fmtDate(cls.createdAt)}</span>
           </div>
         </div>
         <button className="acr-card__expand">
-          {expanded ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+          {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </button>
       </div>
 
@@ -145,7 +143,7 @@ function ClassRequestCard({ cls, onApprove, onReject }: {
             <div className="acr-detail-item"><span className="acr-detail-label">Hình thức</span><span>{MODE_LABEL[cls.mode ?? ''] ?? cls.mode}</span></div>
             <div className="acr-detail-item"><span className="acr-detail-label">Buổi/tuần</span><span>{cls.sessionsPerWeek} buổi</span></div>
             <div className="acr-detail-item"><span className="acr-detail-label">Thời lượng</span><span>{cls.sessionDurationMin} phút</span></div>
-            {cls.address && <div className="acr-detail-item acr-detail-item--full"><span className="acr-detail-label"><MapPin size={12}/> Địa chỉ</span><span>{cls.address}</span></div>}
+            {cls.address && <div className="acr-detail-item acr-detail-item--full"><span className="acr-detail-label"><MapPin size={12} /> Địa chỉ</span><span>{cls.address}</span></div>}
             {cls.timeFrame && <div className="acr-detail-item"><span className="acr-detail-label">Khung giờ</span><span>{cls.timeFrame}</span></div>}
             {cls.genderRequirement && <div className="acr-detail-item"><span className="acr-detail-label">Giới tính GS</span><span>{cls.genderRequirement}</span></div>}
           </div>
@@ -156,21 +154,21 @@ function ClassRequestCard({ cls, onApprove, onReject }: {
             <div className="acr-lf-summary-row">
               <div className="acr-lf-summary-item">
                 <span className="acr-lf-summary-label">% phí nhận lớp (1 lần)</span>
-                <div className="acr-tfs-row" style={{gap:6}}>
+                <div className="acr-tfs-row" style={{ gap: 6 }}>
                   <input
                     type="number"
                     className="acr-tfs-input acr-tfs-input--sm"
                     value={platformPct}
                     onChange={e => setPlatformPct(e.target.value)}
                     min={0} max={100} step={5}
-                    style={{width:64}}
+                    style={{ width: 64 }}
                   />
                   <span className="acr-tfs-unit">%</span>
                 </div>
               </div>
-              <div className="acr-lf-summary-item" style={{justifyContent:'center',alignItems:'center',flexDirection:'row'}}>
-                <span style={{fontSize:'0.73rem',color:'var(--color-text-muted)',lineHeight:1.5}}>
-                  💡 GS đóng phí <strong>{platformPct}%</strong> × Lương GS nhận, <strong>1 lần duy nhất</strong> khi nhận lớp<br/>
+              <div className="acr-lf-summary-item" style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+                <span style={{ fontSize: '0.73rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                  💡 GS đóng phí <strong>{platformPct}%</strong> × Lương GS nhận, <strong>1 lần duy nhất</strong> khi nhận lớp<br />
                   TT giữ hàng tháng = PH đề xuất − Lương GS nhận
                 </span>
               </div>
@@ -185,7 +183,7 @@ function ClassRequestCard({ cls, onApprove, onReject }: {
                   <tr>
                     <th>Loại gia sư</th>
                     <th>PH đề xuất/tháng</th>
-                    <th>Lương GS nhận <span style={{color:'var(--color-text-muted)',fontWeight:400}}>(TT set)</span></th>
+                    <th>Lương GS nhận <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>(TT set)</span></th>
                     <th>TT giữ/tháng</th>
                     <th>Phí nhận lớp (1 lần)</th>
                   </tr>
@@ -215,13 +213,13 @@ function ClassRequestCard({ cls, onApprove, onReject }: {
                             ttGiu >= 0 ? (
                               <span className="acr-lf-platform">{ttGiu.toLocaleString('vi-VN')} ₫</span>
                             ) : (
-                              <span style={{color:'#ef4444',fontWeight:700,fontSize:'0.78rem'}}>⚠ Vượt PH đề xuất</span>
+                              <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '0.78rem' }}>⚠ Vượt PH đề xuất</span>
                             )
                           ) : '—'}
                         </td>
                         <td>
                           {adminFeeNum > 0 && Number(platformPct) > 0 ? (
-                            <span style={{fontWeight:700,color:'#d97706',fontSize:'0.84rem'}}>
+                            <span style={{ fontWeight: 700, color: '#d97706', fontSize: '0.84rem' }}>
                               {Math.round(adminFeeNum * Number(platformPct) / 100).toLocaleString('vi-VN')} ₫
                             </span>
                           ) : '—'}
@@ -270,10 +268,10 @@ function ClassRequestCard({ cls, onApprove, onReject }: {
             onApprove(cls.id, tutorFee, levelFees, tutorProposals, pct);
           }}
         >
-          <CheckCircle size={15}/> Duyệt & Mở lớp
+          <CheckCircle size={15} /> Duyệt & Mở lớp
         </button>
         <button className="acr-btn acr-btn--reject" onClick={() => onReject(cls.id, cls.title)}>
-          <XCircle size={15}/> Từ chối
+          <XCircle size={15} /> Từ chối
         </button>
       </div>
     </div>
@@ -306,14 +304,19 @@ export function AdminClassRequests() {
 
   useEffect(() => { fetchRequests(); }, [fetchRequests]);
 
-  const handleApprove = async (id: string, tutorFee?: number, levelFees?: string, tutorProposals?: string, platformPct?: number) => {
+  const [approveTarget, setApproveTarget] = useState<{ id: string; title: string; tutorFee?: number; levelFees?: string; tutorProposals?: string; platformPct?: number } | null>(null);
+
+  const handleApprove = async () => {
+    if (!approveTarget) return;
     try {
-      await adminApi.approveClassRequest(id, tutorFee, levelFees, tutorProposals, platformPct);
+      await adminApi.approveClassRequest(approveTarget.id, approveTarget.tutorFee, approveTarget.levelFees, approveTarget.tutorProposals, approveTarget.platformPct);
       showToast('success', 'Đã duyệt! Lớp đã được mở cho gia sư đăng ký.');
       window.dispatchEvent(new Event('refetchBadgeCounts'));
       fetchRequests();
     } catch {
       showToast('error', 'Duyệt thất bại');
+    } finally {
+      setApproveTarget(null);
     }
   };
 
@@ -356,14 +359,42 @@ export function AdminClassRequests() {
         />
       )}
 
+      {/* Approve modal */}
+      {approveTarget && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'var(--color-surface)', borderRadius: 16, padding: '24px 28px', maxWidth: 460, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ margin: '0 0 10px', fontSize: '1.05rem', fontWeight: 800, color: '#059669', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <CheckCircle size={22} style={{ strokeWidth: 2.5 }} /> Xác nhận mở lớp
+            </h3>
+            <p style={{ margin: '14px 0 24px', fontSize: '0.92rem', color: 'var(--color-text)', lineHeight: 1.6 }}>
+              Bạn có chắc chắn muốn duyệt và mở lớp <strong>{approveTarget.title}</strong> này không? Yêu cầu này sẽ được đưa lên sàn ngay lập tức để các gia sư đăng ký ứng tuyển.
+            </p>
+            <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+              <button
+                onClick={handleApprove}
+                style={{ flex: 1, padding: '10px', borderRadius: 10, background: '#10b981', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
+                <CheckCircle size={16} /> Xác nhận duyệt
+              </button>
+              <button
+                onClick={() => setApproveTarget(null)}
+                style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'var(--color-bg, #f3f4f6)', color: 'var(--color-text)', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem' }}
+              >
+                Đóng để xem lại
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="acr-header">
         <div>
-          <h1 className="acr-title">Yêu cầu mở lớp từ Phụ huynh</h1>
+          <h1 className="acr-title">Yêu cầu mở lớp</h1>
           <p className="acr-subtitle">Xem xét, duyệt hoặc từ chối các yêu cầu mở lớp mới</p>
         </div>
         <div className="acr-badge-count">
-          <Clock size={16}/>
+          <Clock size={16} />
           {loading ? '...' : `${requests.length} yêu cầu chờ duyệt`}
         </div>
       </div>
@@ -373,7 +404,7 @@ export function AdminClassRequests() {
         <div style={{ padding: 48, textAlign: 'center', color: 'var(--color-text-muted)' }}>Đang tải...</div>
       ) : requests.length === 0 ? (
         <div className="acr-empty">
-          <AlertCircle size={48} style={{ color: 'var(--color-text-muted)', opacity: 0.4 }}/>
+          <AlertCircle size={48} style={{ color: 'var(--color-text-muted)', opacity: 0.4 }} />
           <p>Không có yêu cầu nào đang chờ duyệt</p>
         </div>
       ) : (
@@ -382,7 +413,7 @@ export function AdminClassRequests() {
             <ClassRequestCard
               key={cls.id}
               cls={cls}
-              onApprove={handleApprove}
+              onApprove={(id, tutorFee, levelFees, tutorProposals, platformPct) => setApproveTarget({ id, title: cls.title, tutorFee, levelFees, tutorProposals, platformPct })}
               onReject={(id, name) => setRejectTarget({ id, name })}
             />
           ))}

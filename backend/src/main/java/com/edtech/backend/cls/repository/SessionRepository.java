@@ -1,12 +1,14 @@
 package com.edtech.backend.cls.repository;
 
 import com.edtech.backend.cls.entity.SessionEntity;
+import com.edtech.backend.cls.enums.SessionStatus;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,8 +23,8 @@ public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
             Sort sort
     );
 
-    @Query("SELECT s FROM SessionEntity s JOIN SessionAttendanceEntity sa ON sa.session.id = s.id " +
-           "WHERE sa.student.id = :studentId " +
+    @Query("SELECT s FROM SessionEntity s JOIN s.cls.students st " +
+           "WHERE st.id = :studentId " +
            "AND s.sessionDate >= :startDate AND s.sessionDate <= :endDate")
     List<SessionEntity> findByStudentIdAndDateBetween(
             @Param("studentId") UUID studentId,
@@ -40,6 +42,63 @@ public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
             Sort sort
     );
 
+    @Query("SELECT s FROM SessionEntity s WHERE s.cls.tutorId = :tutorId " +
+           "AND s.status = :status " +
+           "AND s.sessionDate >= :startDate AND s.sessionDate <= :endDate")
+    List<SessionEntity> findByTutorIdAndStatusAndDateBetween(
+            @Param("tutorId") UUID tutorId,
+            @Param("status") SessionStatus status,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            Sort sort
+    );
+
+    @Query("SELECT s FROM SessionEntity s WHERE s.status = :status " +
+           "AND s.sessionDate >= :startDate AND s.sessionDate <= :endDate")
+    List<SessionEntity> findByStatusAndSessionDateBetween(
+            @Param("status") SessionStatus status,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    @Query("SELECT s FROM SessionEntity s WHERE s.sessionDate >= :startDate AND s.sessionDate <= :endDate")
+    List<SessionEntity> findBySessionDateBetween(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            Sort sort
+    );
+
+    @Query("SELECT s FROM SessionEntity s " +
+           "JOIN s.cls c " +
+           "LEFT JOIN UserEntity u ON c.tutorId = u.id " +
+           "WHERE s.sessionDate >= :startDate AND s.sessionDate <= :endDate " +
+           "AND (cast(:tutorId as uuid) IS NULL OR c.tutorId = :tutorId) " +
+           "AND (cast(:classCode as text) IS NULL OR LOWER(c.classCode) LIKE LOWER(CONCAT('%', cast(:classCode as text), '%'))) " +
+           "AND (cast(:tutorName as text) IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', cast(:tutorName as text), '%')))")
+    List<SessionEntity> findByAdminAdvancedFilters(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("tutorId") UUID tutorId,
+            @Param("classCode") String classCode,
+            @Param("tutorName") String tutorName,
+            Sort sort
+    );
+
+    boolean existsByClsIdAndSessionDateAndStartTime(UUID clsId, LocalDate sessionDate, LocalTime startTime);
+
     List<SessionEntity> findByClsId(UUID classId, Sort sort);
+
+    List<SessionEntity> findByClsIdIn(List<UUID> classIds);
+
+    @Query("SELECT s.cls.id, COUNT(s.id) " +
+           "FROM SessionEntity s " +
+           "WHERE s.status IN :statuses " +
+           "AND s.sessionDate >= :startDate AND s.sessionDate <= :endDate " +
+           "GROUP BY s.cls.id")
+    List<Object[]> countSessionsByClassAndDateRange(
+            @Param("statuses") List<SessionStatus> statuses,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 
 }

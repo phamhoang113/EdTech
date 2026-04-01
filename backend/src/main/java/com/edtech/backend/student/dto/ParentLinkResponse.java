@@ -14,5 +14,6 @@ public class ParentLinkResponse {
     private String parentName;  // Tên phụ huynh
     private String parentPhone; // SĐT phụ huynh
     private String linkStatus;  // PENDING | ACCEPTED
+    private String initiatedBy; // Mới thêm: PARENT | STUDENT
     private Instant createdAt;
 }

@@ -11,14 +11,19 @@
   /* ===== Surface & Background (Light) ===== */
   --color-background: #f8fafc;
   --color-surface: #ffffff;
+  --color-surface-2: #f9fafb;
   --color-surface-hover: #f1f5f9;
   --color-border: #e2e8f0;
 
   /* ===== Text (Light) ===== */
   --color-text: #0f172a;
+  --color-text-primary: #0f172a;
   --color-text-secondary: #475569;
   --color-text-muted: #94a3b8;
   --color-text-inverse: #ffffff;
+  --color-heading: #0f172a;
+
+  --color-scheme: light;
 
   /* ===== Auth Page Tokens (Light) ===== */
   --auth-bg-from: #eef2ff;
@@ -139,13 +144,18 @@
   /* Surface & Background */
   --color-background: #0f172a;
   --color-surface: #1e293b;
+  --color-surface-2: #0f172a;
   --color-surface-hover: #334155;
   --color-border: #334155;
 
   /* Text */
   --color-text: #f8fafc;
+  --color-text-primary: #f8fafc;
   --color-text-secondary: #cbd5e1;
   --color-text-muted: #64748b;
+  --color-heading: #f8fafc;
+
+  --color-scheme: dark;
 
   /* Shadows */
   --shadow-sm:  0 1px 2px 0 rgb(0 0 0 / 0.3);

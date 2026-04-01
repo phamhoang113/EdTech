@@ -74,3 +74,5 @@ app:
   environment: ${APP_ENV:development}
   # Set APP_ENV=production để bật OTP thật (sinh ngẫu nhiên, gửi SMS)
   # Mặc định development → OTP luôn là 123456
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:3000}

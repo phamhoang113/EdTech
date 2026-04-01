@@ -1,6 +1,7 @@
 package com.edtech.backend.tutor.controller;
 
 import com.edtech.backend.core.dto.ApiResponse;
+import com.edtech.backend.tutor.dto.response.ClassFilterResponse;
 import com.edtech.backend.tutor.dto.response.OpenClassResponse;
 import com.edtech.backend.tutor.service.OpenClassService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class OpenClassController {
     }
 
     @GetMapping("/filters")
-    public ResponseEntity<ApiResponse<com.edtech.backend.tutor.dto.response.ClassFilterResponse>> getFilters() {
+    public ResponseEntity<ApiResponse<ClassFilterResponse>> getFilters() {
         return ResponseEntity.ok(ApiResponse.ok(openClassService.getClassFilters()));
     }
 }

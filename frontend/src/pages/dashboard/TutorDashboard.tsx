@@ -1,10 +1,9 @@
+import { BookOpen, Star, TrendingUp, Users, ChevronRight, Clock, Calendar, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { getDisplayStatus } from '../../utils/sessionStatus';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
-import {
-  BookOpen, Star, TrendingUp, Users,
-  ChevronRight, Clock, Calendar, AlertCircle
-} from 'lucide-react';
+
 import { TutorVerificationModal } from './TutorVerificationModal';
 import { DashboardHeader } from '../../components/layout/DashboardHeader';
 import { TutorSidebar } from '../../components/tutor/TutorSidebar';
@@ -42,11 +41,6 @@ function formatSessionTime(s: TutorSessionDTO): string {
   return `${dayNames[d.getDay()]}, ${timeStr}`;
 }
 
-function isWeekendDay(): boolean {
-  const day = new Date().getDay();
-  return day === 0 || day === 5 || day === 6;
-}
-
 /* ── Main Dashboard ──────────────────────────────────── */
 export const TutorDashboard = () => {
   const { user } = useAuthStore();
@@ -60,6 +54,7 @@ export const TutorDashboard = () => {
   const [classes, setClasses] = useState<TutorClassDTO[]>([]);
   const [upcomingSessions, setUpcomingSessions] = useState<TutorSessionDTO[]>([]);
   const [scheduleWarning, setScheduleWarning] = useState(false);
+  const [draftCount, setDraftCount] = useState(0);
 
   useEffect(() => {
     fetchProfileStatus();
@@ -89,20 +84,19 @@ export const TutorDashboard = () => {
       ]);
       setClasses(classesData);
 
-      // Get upcoming sessions (status = SCHEDULED, future only)
+      // Get upcoming sessions (status = SCHEDULED, future only — exclude past endTime)
       const now = new Date();
       const upcoming = sessionsData
-        .filter(s => s.status === 'SCHEDULED' && new Date(s.sessionDate) >= new Date(now.toDateString()))
+        .filter(s => getDisplayStatus(s.status, s.sessionDate, s.endTime) === 'SCHEDULED' && new Date(s.sessionDate) >= new Date(now.toDateString()))
         .slice(0, 4);
       setUpcomingSessions(upcoming);
 
-      // Check schedule warning
-      if (isWeekendDay()) {
-        try {
-          const status = await tutorApi.getScheduleStatus();
-          setScheduleWarning(!status.hasNextWeekSessions);
-        } catch { /* ignore */ }
-      }
+      // Check schedule warning (draft sessions)
+      try {
+        const status = await tutorApi.getScheduleStatus();
+        setScheduleWarning(status.hasDraftSessions);
+        setDraftCount(status.draftCount);
+      } catch { /* ignore */ }
     } catch { /* ignore on dashboard */ }
   };
 
@@ -115,7 +109,7 @@ export const TutorDashboard = () => {
   return (
     <div className="dash-page">
       {/* SIDEBAR */}
-      <TutorSidebar active="overview" showScheduleWarning={scheduleWarning} />
+      <TutorSidebar active="overview" showScheduleWarning={scheduleWarning} draftCount={draftCount} />
 
       {/* MAIN */}
       <main className="dash-main">

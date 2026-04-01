@@ -1,6 +1,7 @@
+import { X, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../ui/Button';
-import { X, Eye, EyeOff, AlertCircle } from 'lucide-react';
+
 import { useAuthStore } from '../../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { RoleSelectionModal } from './RoleSelectionModal';
@@ -67,7 +68,7 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content glass-effect" onClick={e => e.stopPropagation()}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose} aria-label="Close">
           <X size={24} />
         </button>

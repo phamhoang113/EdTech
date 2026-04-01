@@ -1,26 +1,25 @@
+import { LayoutDashboard, BookOpen, Calendar, MessageSquare, User, BarChart3, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
-import {
-  LayoutDashboard, BookOpen, Calendar, MessageSquare,
-  Star, BarChart3, LogOut, AlertCircle
-} from 'lucide-react';
+import { useNotificationStore } from '../../store/useNotificationStore';
 
 type SidebarTab = 'overview' | 'classes' | 'schedule' | 'messages' | 'profile' | 'revenue';
 
 interface TutorSidebarProps {
   active: SidebarTab;
   showScheduleWarning?: boolean;
+  draftCount?: number;
 }
 
-export function TutorSidebar({ active, showScheduleWarning = false }: TutorSidebarProps) {
+export function TutorSidebar({ active, showScheduleWarning = false, draftCount = 0 }: TutorSidebarProps) {
   const navigate = useNavigate();
   const { logout } = useAuthStore();
+  const { unreadMessages } = useNotificationStore();
 
   return (
     <aside className="dash-sidebar">
-      <Link to="/" className="dash-sidebar-logo">
-        <span className="dash-sidebar-logo-icon">🎓</span>
-        <span className="dash-sidebar-logo-name">EdTech</span>
+      <Link to="/" className="dash-sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src="/logo.png" alt="Gia Sư Tinh Hoa" className="dash-logo-img" style={{ width: '100%', height: 'auto', maxHeight: '50px', objectFit: 'contain' }} />
       </Link>
 
       <div className="dash-sidebar-section">
@@ -42,14 +41,22 @@ export function TutorSidebar({ active, showScheduleWarning = false }: TutorSideb
           onClick={() => navigate('/tutor/schedule')}
         >
           <Calendar size={18} /> Lịch dạy
-          {showScheduleWarning && (
-            <span className="item-badge badge-pulse" title="Chưa set lịch tuần sau">
-              <AlertCircle size={12} />
+          {showScheduleWarning && draftCount > 0 && (
+            <span className="item-badge badge-pulse" title={`${draftCount} buổi chưa xác nhận`}>
+              {draftCount}
             </span>
           )}
         </button>
-        <button className="dash-sidebar-item">
+        <button 
+          className={`dash-sidebar-item ${active === 'messages' ? 'active' : ''}`}
+          onClick={() => navigate('/messages')}
+        >
           <MessageSquare size={18} /> Tin nhắn
+          {unreadMessages > 0 && (
+            <span className="item-badge badge-pulse" title="Tin nhắn mới">
+              {unreadMessages}
+            </span>
+          )}
         </button>
 
         <span className="dash-sidebar-section-label">Hồ sơ & Tài chính</span>
@@ -57,9 +64,12 @@ export function TutorSidebar({ active, showScheduleWarning = false }: TutorSideb
           className={`dash-sidebar-item ${active === 'profile' ? 'active' : ''}`}
           onClick={() => navigate('/profile')}
         >
-          <Star size={18} /> Hồ sơ gia sư
+          <User size={18} /> Hồ sơ gia sư
         </button>
-        <button className="dash-sidebar-item">
+        <button 
+          className={`dash-sidebar-item ${active === 'revenue' ? 'active' : ''}`}
+          onClick={() => navigate('/tutor/revenue')}
+        >
           <BarChart3 size={18} /> Doanh thu & Báo cáo
         </button>
       </div>

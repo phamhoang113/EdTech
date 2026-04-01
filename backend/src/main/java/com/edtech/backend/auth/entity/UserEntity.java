@@ -2,19 +2,10 @@ package com.edtech.backend.auth.entity;
 
 import com.edtech.backend.auth.enums.UserRole;
 import com.edtech.backend.core.entity.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.Instant;
 
@@ -61,6 +52,15 @@ public class UserEntity extends BaseEntity {
     @Column(name = "failed_attempts", nullable = false)
     @Builder.Default
     private Integer failedAttempts = 0;
+
+    @Column(length = 500)
+    private String address;
+
+    @Column(length = 255)
+    private String school;
+
+    @Column(length = 50)
+    private String grade;
 
     @Column(name = "locked_until")
     private Instant lockedUntil;

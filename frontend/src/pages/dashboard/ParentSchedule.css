@@ -79,7 +79,7 @@
   font-weight: 600;
   color: var(--color-text);
   outline: none;
-  background: var(--color-bg);
+  background: var(--color-surface-2);
   cursor: pointer;
   transition: border-color 0.2s;
 }
@@ -126,7 +126,7 @@
 .psched-card--cancelled {
   opacity: 0.6;
   filter: grayscale(0.5);
-  background: var(--color-bg);
+  background: var(--color-surface-2);
 }
 .psched-card--cancelled:hover {
   transform: none;
@@ -173,7 +173,7 @@
 }
 
 .psched-card-badge {
-  background: var(--color-bg);
+  background: var(--color-surface-2);
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 0.75rem;
@@ -268,7 +268,7 @@
   inset: 0;
   background: rgba(0,0,0,0.5);
   backdrop-filter: blur(4px);
-  z-index: 1000;
+  z-index: 3000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -340,7 +340,7 @@
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  background: var(--color-bg);
+  background: var(--color-surface-2);
 }
 
 .psched-btn {
