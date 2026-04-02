@@ -13,6 +13,7 @@ import java.util.UUID;
 public class AdminClassListItem {
     UUID id;
     String classCode;
+    Boolean isMock;
     String title;
     String subject;
     String grade;

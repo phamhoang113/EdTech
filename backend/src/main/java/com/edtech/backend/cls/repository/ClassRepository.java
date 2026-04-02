@@ -24,6 +24,9 @@ public interface ClassRepository extends JpaRepository<ClassEntity, UUID> {
     // ─── Tutor open classes ──────────────────────────────────────────────────
     List<ClassEntity> findByStatusAndIsDeletedFalseOrderByCreatedAtDesc(ClassStatus status);
 
+    @Query("SELECT c FROM ClassEntity c WHERE c.status = :status AND c.isDeleted = false AND (:includeMock = true OR c.isMock = false) ORDER BY c.isMock ASC, c.createdAt DESC")
+    List<ClassEntity> findPublicOpenClasses(@Param("status") ClassStatus status, @Param("includeMock") boolean includeMock);
+
     /** Đếm số lớp đang dạy của 1 gia sư */
     long countByTutorIdAndStatusAndIsDeletedFalse(UUID tutorId, ClassStatus status);
 

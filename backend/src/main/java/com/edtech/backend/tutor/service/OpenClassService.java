@@ -4,6 +4,7 @@ import com.edtech.backend.cls.enums.ClassMode;
 import com.edtech.backend.cls.enums.ClassStatus;
 import com.edtech.backend.tutor.dto.response.OpenClassResponse;
 import com.edtech.backend.cls.repository.ClassRepository;
+import com.edtech.backend.core.service.SystemSettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,9 +32,11 @@ public class OpenClassService {
 
     private final ClassRepository classRepository;
     private final ObjectMapper objectMapper;
+    private final SystemSettingsService systemSettingsService;
 
     public List<OpenClassResponse> getAllOpenClasses() {
-        return classRepository.findByStatusAndIsDeletedFalseOrderByCreatedAtDesc(ClassStatus.OPEN).stream()
+        boolean includeMock = systemSettingsService.getSettings().isMockDataEnabled();
+        return classRepository.findPublicOpenClasses(ClassStatus.OPEN, includeMock).stream()
                 .map(entity -> {
                     String location = entity.getMode() == ClassMode.ONLINE ? "Online" : entity.getAddress();
                     
@@ -41,9 +44,9 @@ public class OpenClassService {
                     BigDecimal maxTutorFee = entity.getTutorFee();
                     List<String> requiredLevels = new ArrayList<>();
 
-                    if (entity.getTutorProposals() != null && !entity.getTutorProposals().isEmpty()) {
+                    if (entity.getLevelFees() != null && !entity.getLevelFees().isEmpty()) {
                         try {
-                            List<Map<String, Object>> feeList = objectMapper.readValue(entity.getTutorProposals(), new TypeReference<List<Map<String, Object>>>(){});
+                            List<Map<String, Object>> feeList = objectMapper.readValue(entity.getLevelFees(), new TypeReference<List<Map<String, Object>>>(){});
                             if (!feeList.isEmpty()) {
                                 minTutorFee = null;
                                 maxTutorFee = null;
@@ -51,15 +54,16 @@ public class OpenClassService {
                                     if (feeObj.containsKey("level")) {
                                         requiredLevels.add((String) feeObj.get("level"));
                                     }
-                                    if (feeObj.containsKey("fee")) {
-                                        BigDecimal tFee = new BigDecimal(feeObj.get("fee").toString());
+                                    if (feeObj.containsKey("fee") || feeObj.containsKey("tutor_fee")) {
+                                        Object feeVal = feeObj.containsKey("tutor_fee") ? feeObj.get("tutor_fee") : feeObj.get("fee");
+                                        BigDecimal tFee = new BigDecimal(feeVal.toString());
                                         if (minTutorFee == null || tFee.compareTo(minTutorFee) < 0) minTutorFee = tFee;
                                         if (maxTutorFee == null || tFee.compareTo(maxTutorFee) > 0) maxTutorFee = tFee;
                                     }
                                 }
                             }
                         } catch (Exception e) {
-                            log.error("Failed to parse tutorProposals JSON: {}", e.getMessage());
+                            log.error("Failed to parse levelFees JSON: {}", e.getMessage());
                         }
                     }
 
@@ -70,8 +74,8 @@ public class OpenClassService {
                                 TutorType.TEACHER.getDisplayName()
                         );
                     }
-                    if (minTutorFee == null) minTutorFee = entity.getTutorFee() != null ? entity.getTutorFee() : BigDecimal.ZERO;
-                    if (maxTutorFee == null) maxTutorFee = entity.getTutorFee() != null ? entity.getTutorFee() : BigDecimal.ZERO;
+                    if (minTutorFee == null || minTutorFee.compareTo(BigDecimal.ZERO) == 0) minTutorFee = entity.getParentFee() != null ? entity.getParentFee() : BigDecimal.ZERO;
+                    if (maxTutorFee == null || maxTutorFee.compareTo(BigDecimal.ZERO) == 0) maxTutorFee = entity.getParentFee() != null ? entity.getParentFee() : BigDecimal.ZERO;
 
                     return OpenClassResponse.builder()
                             .id(entity.getId())
@@ -92,7 +96,7 @@ public class OpenClassService {
                             .sessionsPerWeek(entity.getSessionsPerWeek() != null ? entity.getSessionsPerWeek() : 1)
                             .sessionDurationMin(entity.getSessionDurationMin() != null ? entity.getSessionDurationMin() : 90)
                             .studentCount(1) // Placeholder for UI until class_students logic is fully handled
-                            .levelFees(entity.getTutorProposals())
+                            .levelFees(entity.getLevelFees())
                             .build();
                 })
                 .collect(Collectors.toList());

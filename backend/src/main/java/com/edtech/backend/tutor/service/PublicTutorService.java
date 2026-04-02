@@ -7,6 +7,7 @@ import com.edtech.backend.tutor.dto.response.TutorPublicResponse;
 import com.edtech.backend.tutor.entity.TutorProfileEntity;
 import com.edtech.backend.tutor.enums.VerificationStatus;
 import com.edtech.backend.tutor.repository.TutorProfileRepository;
+import com.edtech.backend.core.service.SystemSettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,11 +27,13 @@ public class PublicTutorService {
 
     private final TutorProfileRepository tutorProfileRepository;
     private final UserRepository userRepository;
+    private final SystemSettingsService systemSettingsService;
 
     @Transactional(readOnly = true)
     public Page<TutorPublicResponse> getPublicTutors(Pageable pageable) {
+        boolean includeMock = systemSettingsService.getSettings().isMockDataEnabled();
         // Fetch verified profiles
-        Page<TutorProfileEntity> profilesPage = tutorProfileRepository.findByVerificationStatus(VerificationStatus.APPROVED, pageable);
+        Page<TutorProfileEntity> profilesPage = tutorProfileRepository.findPublicProfiles(VerificationStatus.APPROVED, includeMock, pageable);
 
         // Optimization: fetch users in one query
         var userIds = profilesPage.getContent().stream()

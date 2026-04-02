@@ -14,6 +14,10 @@ java {
     }
 }
 
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
 // Cần thiết để Jackson deserialize Java records/constructor parameter names
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs << '-parameters'

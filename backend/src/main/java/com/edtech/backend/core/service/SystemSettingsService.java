@@ -29,6 +29,7 @@ public class SystemSettingsService {
                 .contactEmail(map.getOrDefault("contact_email", "support@edtech.vn"))
                 .contactPhone(map.getOrDefault("contact_phone", "1800 1234"))
                 .maintenanceMode(parseBool(map, "maintenance_mode", false))
+                .mockDataEnabled(parseBool(map, "mock_data_enabled", true))
                 // Nền tảng
                 .platformFeePercent(parseInt(map, "platform_fee_percent", 20))
                 .minHourlyRate(parseBd(map, "min_hourly_rate", new BigDecimal("50000")))
@@ -36,9 +37,7 @@ public class SystemSettingsService {
                 .maxClassesPerTutor(parseInt(map, "max_classes_per_tutor", 5))
                 .autoApproveEnabled(parseBool(map, "auto_approve_enabled", false))
                 // Bảo mật
-                .requireStrongPassword(parseBool(map, "require_strong_password", true))
-                .sessionTimeoutMinutes(parseInt(map, "session_timeout_minutes", 60))
-                .maxLoginAttempts(parseInt(map, "max_login_attempts", 5))
+                // Đã xoá: requireStrongPassword, sessionTimeoutMinutes, maxLoginAttempts
                 // Thông báo
                 .emailOnNewUser(parseBool(map, "email_on_new_user", true))
                 .emailOnVerification(parseBool(map, "email_on_verification", true))
@@ -56,14 +55,13 @@ public class SystemSettingsService {
         upsert("contact_email",           dto.getContactEmail());
         upsert("contact_phone",           dto.getContactPhone());
         upsert("maintenance_mode",        String.valueOf(dto.isMaintenanceMode()));
+        upsert("mock_data_enabled",       String.valueOf(dto.isMockDataEnabled()));
         upsert("platform_fee_percent",    String.valueOf(dto.getPlatformFeePercent()));
         upsert("min_hourly_rate",         dto.getMinHourlyRate() != null ? dto.getMinHourlyRate().toPlainString() : "50000");
         upsert("max_hourly_rate",         dto.getMaxHourlyRate() != null ? dto.getMaxHourlyRate().toPlainString() : "2000000");
         upsert("max_classes_per_tutor",   String.valueOf(dto.getMaxClassesPerTutor()));
         upsert("auto_approve_enabled",    String.valueOf(dto.isAutoApproveEnabled()));
-        upsert("require_strong_password", String.valueOf(dto.isRequireStrongPassword()));
-        upsert("session_timeout_minutes", String.valueOf(dto.getSessionTimeoutMinutes()));
-        upsert("max_login_attempts",      String.valueOf(dto.getMaxLoginAttempts()));
+        // (Đã xoá các trường bảo mật)
         upsert("email_on_new_user",       String.valueOf(dto.isEmailOnNewUser()));
         upsert("email_on_verification",   String.valueOf(dto.isEmailOnVerification()));
         upsert("email_on_new_class",      String.valueOf(dto.isEmailOnNewClass()));

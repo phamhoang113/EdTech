@@ -16,6 +16,7 @@ public class ClassApplicationResponse {
     private UUID classId;
     private String classTitle;
     private String classCode;
+    private Boolean isMockClass;
     private String description;
     private String subject;
     private String grade;

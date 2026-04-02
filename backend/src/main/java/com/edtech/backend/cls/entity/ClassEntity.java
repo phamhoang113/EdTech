@@ -129,4 +129,8 @@ public class ClassEntity extends BaseEntity {
     )
     @Builder.Default
     private java.util.Set<UserEntity> students = new java.util.HashSet<>();
+
+    @Column(name = "is_mock")
+    @Builder.Default
+    private Boolean isMock = false;
 }

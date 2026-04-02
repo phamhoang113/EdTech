@@ -64,4 +64,7 @@ public class UserEntity extends BaseEntity {
 
     @Column(name = "locked_until")
     private Instant lockedUntil;
+    
+    @Column(name = "is_mock")
+    private Boolean isMock = false;
 }

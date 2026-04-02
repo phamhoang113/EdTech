@@ -76,11 +76,11 @@ export interface SystemSettings {
   maxHourlyRate: number;
   maxClassesPerTutor: number;
   autoApproveEnabled: boolean;
-  // Bảo mật
-  requireStrongPassword: boolean;
-  sessionTimeoutMinutes: number;
-  maxLoginAttempts: number;
-  // Thông báo
+  mockDataEnabled: boolean;
+  // ── Bảo mật ───────────────────────────────────────────────────────────
+  // Đã cấu hình server-side nên ẩn khỏi UI
+
+  // ── Thông báo ─────────────────────────────────────────────────────────
   emailOnNewUser: boolean;
   emailOnVerification: boolean;
   emailOnNewClass: boolean;
@@ -310,6 +310,7 @@ export interface ClassApplicationItem {
   classId: string;
   classTitle: string;
   classCode: string;
+  isMockClass?: boolean;
   description?: string;
   subject: string;
   grade: string;
@@ -359,6 +360,7 @@ export type ClassStatus = 'OPEN' | 'ASSIGNED' | 'MATCHED' | 'ACTIVE' | 'COMPLETE
 export interface AdminClassListItem {
   id: string;
   classCode: string;
+  isMock?: boolean;
   title: string;
   subject: string;
   grade: string;

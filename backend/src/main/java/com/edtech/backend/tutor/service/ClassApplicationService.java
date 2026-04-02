@@ -389,6 +389,7 @@ public class ClassApplicationService {
                 .classId(app.getClassId())
                 .classTitle(cls != null ? cls.getTitle() : null)
                 .classCode(cls != null ? cls.getClassCode() : null)
+                .isMockClass(cls != null ? cls.getIsMock() : null)
                 .description(cls != null ? cls.getDescription() : null)
                 .subject(cls != null ? cls.getSubject() : null)
                 .grade(cls != null ? cls.getGrade() : null)

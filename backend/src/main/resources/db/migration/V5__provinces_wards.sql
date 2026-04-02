@@ -1,4 +1,4 @@
--- V64: Import Provinces and Wards for Filtering from flourish.json (Tỉnh, Phường xã mới)
+﻿-- V64: Import Provinces and Wards for Filtering from flourish.json (Tỉnh, Phường xã mới)
 
 ALTER TABLE provinces DROP COLUMN IF EXISTS full_name CASCADE;
 ALTER TABLE provinces DROP COLUMN IF EXISTS type CASCADE;

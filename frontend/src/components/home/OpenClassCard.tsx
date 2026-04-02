@@ -2,6 +2,7 @@ import { MapPin, Calendar, Clock, GraduationCap } from 'lucide-react';
 import { Button } from '../ui/Button';
 
 import { useAuthStore } from '../../store/useAuthStore';
+import { useNavigate } from 'react-router-dom';
 import './OpenClassCard.css';
 
 export interface OpenClass {
@@ -26,14 +27,16 @@ interface OpenClassCardProps {
 export const OpenClassCard = ({ classInfo, onAuthRequired }: OpenClassCardProps) => {
   const { isAuthenticated, setRedirectUrl } = useAuthStore();
 
+  const navigate = useNavigate();
+
   const handleApplyClick = () => {
     if (!isAuthenticated) {
-      setRedirectUrl(`/class/${classInfo.id}`);
+      setRedirectUrl(`/classes`);
       onAuthRequired();
       return;
     }
-    // Proceed to class application
-    console.log(`Navigate to /class/${classInfo.id}`);
+    navigate('/classes');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const isRange = classInfo.minTutorFee !== classInfo.maxTutorFee;

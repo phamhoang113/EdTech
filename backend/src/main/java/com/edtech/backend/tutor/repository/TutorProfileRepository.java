@@ -13,4 +13,7 @@ public interface TutorProfileRepository extends JpaRepository<TutorProfileEntity
     Optional<TutorProfileEntity> findByUserId(UUID userId);
     long countByVerificationStatus(VerificationStatus status);
     org.springframework.data.domain.Page<TutorProfileEntity> findByVerificationStatus(VerificationStatus status, org.springframework.data.domain.Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM TutorProfileEntity p WHERE p.verificationStatus = :status AND (:includeMock = true OR p.isMock = false) ORDER BY p.isMock ASC, p.rating DESC, p.ratingCount DESC")
+    org.springframework.data.domain.Page<TutorProfileEntity> findPublicProfiles(@org.springframework.data.repository.query.Param("status") VerificationStatus status, @org.springframework.data.repository.query.Param("includeMock") boolean includeMock, org.springframework.data.domain.Pageable pageable);
 }

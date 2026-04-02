@@ -215,7 +215,14 @@ function ClassApplicationDetail({
         {/* Lớp information */}
         <div className="aca-detail-class-box">
           <div className="aca-detail-class-header">
-            <span className="aca-card-code"><BookOpen size={14} />#{cls.classCode}</span>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span className="aca-card-code"><BookOpen size={14} />#{cls.classCode}</span>
+              {cls.isMockClass && (
+                <span style={{ backgroundColor: '#ec4899', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>
+                  LỚP ẢO / MOCK
+                </span>
+              )}
+            </div>
             <h2 className="aca-detail-class-title">{cls.classTitle}</h2>
           </div>
 
@@ -440,7 +447,14 @@ function ClassCard({
   return (
     <div className="aca-class-card" onClick={onClick}>
       <div className="aca-class-card-left">
-        <div className="aca-card-code"><BookOpen size={13} />#{cls.classCode}</div>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '4px' }}>
+          <div className="aca-card-code" style={{ margin: 0 }}><BookOpen size={13} />#{cls.classCode}</div>
+          {cls.isMockClass && (
+            <span style={{ backgroundColor: '#ec4899', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>
+              LỚP ẢO / MOCK
+            </span>
+          )}
+        </div>
         <h3 className="aca-card-title">{cls.classTitle}</h3>
         <div className="aca-card-meta">
           <span><GraduationCap size={12} />{cls.subject} – {cls.grade}</span>

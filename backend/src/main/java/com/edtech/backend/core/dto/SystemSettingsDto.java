@@ -15,6 +15,7 @@ public class SystemSettingsDto {
     String contactEmail;
     String contactPhone;
     boolean maintenanceMode;
+    boolean mockDataEnabled;
 
     // ── Nền tảng ──────────────────────────────────────────────────────────
     int platformFeePercent;
@@ -24,9 +25,7 @@ public class SystemSettingsDto {
     boolean autoApproveEnabled;
 
     // ── Bảo mật ───────────────────────────────────────────────────────────
-    boolean requireStrongPassword;
-    int sessionTimeoutMinutes;
-    int maxLoginAttempts;
+    // Đã xóa: requireStrongPassword, sessionTimeoutMinutes, maxLoginAttempts do không sử dụng
 
     // ── Thông báo ─────────────────────────────────────────────────────────
     boolean emailOnNewUser;

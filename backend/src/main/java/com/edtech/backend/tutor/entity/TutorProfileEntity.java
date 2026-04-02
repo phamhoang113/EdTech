@@ -99,4 +99,7 @@ public class TutorProfileEntity extends BaseEntity {
 
     @Column(name = "bank_owner_name", length = 150)
     private String bankOwnerName;
+    
+    @Column(name = "is_mock")
+    private Boolean isMock = false;
 }

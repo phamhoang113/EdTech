@@ -1,4 +1,0 @@
--- V52: Add profile fields for Parent and Student roles
-ALTER TABLE users ADD COLUMN IF NOT EXISTS address VARCHAR(500);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS school VARCHAR(255);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS grade VARCHAR(50);

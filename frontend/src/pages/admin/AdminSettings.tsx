@@ -24,9 +24,7 @@ const DEFAULT: SystemSettings = {
   maxHourlyRate: 2000000,
   maxClassesPerTutor: 5,
   autoApproveEnabled: false,
-  requireStrongPassword: true,
-  sessionTimeoutMinutes: 60,
-  maxLoginAttempts: 5,
+  mockDataEnabled: true,
   emailOnNewUser: true,
   emailOnVerification: true,
   emailOnNewClass: false,
@@ -212,34 +210,27 @@ export function AdminSettings() {
                   </label>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* ── Bảo mật ── */}
-          {activeSection === 'security' && (
-            <div className="as-section">
-              <h2 className="as-section__title">Bảo mật & Xác thực</h2>
               <div className="as-group">
                 <div className="as-toggle-row">
                   <div>
-                    <div className="as-label">Yêu cầu mật khẩu mạnh</div>
-                    <div className="as-hint">Tối thiểu 8 ký tự, bao gồm chữ và số</div>
+                    <div className="as-label" style={{ color: '#ec4899' }}>Hiển thị Dữ liệu Ảo (Mock Data)</div>
+                    <div className="as-hint">Bật hiển thị 7 Gia sư ảo và 20 Lớp học ảo chống Cold-Start (các dữ liệu thật được xếp lên trước).</div>
                   </div>
-                  <label className="as-toggle">
-                    <input type="checkbox" checked={settings.requireStrongPassword} onChange={e => set('requireStrongPassword', e.target.checked)}/>
+                  <label className="as-toggle" style={{ '--color-primary': '#ec4899' } as React.CSSProperties}>
+                    <input type="checkbox" checked={settings.mockDataEnabled} onChange={e => set('mockDataEnabled', e.target.checked)}/>
                     <span className="as-toggle__slider"/>
                   </label>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* ── Bảo mật (Đã cấu hình hard-code Server-side, ẩn thông số UI) ── */}
+          {activeSection === 'security' && (
+            <div className="as-section">
+              <h2 className="as-section__title">Bảo mật & Xác thực</h2>
               <div className="as-group">
-                <label className="as-label">Thời gian hết phiên (phút)</label>
-                <input className="as-input" type="number" min={5} max={10080} value={settings.sessionTimeoutMinutes} onChange={e => set('sessionTimeoutMinutes', Number(e.target.value))}/>
-                <span className="as-hint">{settings.sessionTimeoutMinutes >= 60 ? `${(settings.sessionTimeoutMinutes / 60).toFixed(1)} giờ` : `${settings.sessionTimeoutMinutes} phút`}</span>
-              </div>
-              <div className="as-group">
-                <label className="as-label">Số lần đăng nhập thất bại tối đa</label>
-                <input className="as-input" type="number" min={1} max={20} value={settings.maxLoginAttempts} onChange={e => set('maxLoginAttempts', Number(e.target.value))}/>
-                <span className="as-hint">Tài khoản sẽ bị khóa tạm thời sau {settings.maxLoginAttempts} lần nhập sai</span>
+                <p className="as-hint">Lưu ý: Các cấu hình bảo mật như Session Timeout hiện đã được cấu hình cố định phía Server-side để tối ưu hệ thống và bảo mật (1 ngày với Admin, 7-365 ngày với User).</p>
               </div>
             </div>
           )}

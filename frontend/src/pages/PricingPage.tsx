@@ -1,4 +1,4 @@
-import { Sparkles, GraduationCap, BookOpen, Award, Star, CheckCircle, ArrowRight, Users, Briefcase } from 'lucide-react';
+import { Sparkles, Star, CheckCircle, ArrowRight, Users, Briefcase } from 'lucide-react';
 import { useOutletContext, Link } from 'react-router-dom';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import type { PublicLayoutContext } from '../components/layout/PublicLayout';
