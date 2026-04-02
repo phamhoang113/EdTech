@@ -164,18 +164,11 @@ function MyClassesPanel({ classes, loading, onViewTutors, onManageStudents }: { 
   return (
     <div className="people-list" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {classes.map(cls => (
-        <div key={cls.id} style={{
-          background: 'var(--color-surface-2)', borderRadius: 12, padding: '12px 14px',
-          border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 12,
-        }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-            color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.8rem', fontWeight: 800, flexShrink: 0,
-          }}>
+        <div key={cls.id} className="dash-my-class-card">
+          <div className="dash-my-class-icon">
             {cls.subject.slice(0, 2).toUpperCase()}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="dash-my-class-info">
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               <div style={{ fontWeight: 700, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {cls.title}
@@ -186,11 +179,11 @@ function MyClassesPanel({ classes, loading, onViewTutors, onManageStudents }: { 
                 </span>
               )}
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: 2 }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: 2, whiteSpace: 'normal', wordBreak: 'break-word' }}>
               {cls.subject} • {cls.grade}{cls.parentFee > 0 ? ` • ${fmtCurrency(cls.parentFee)}/tháng` : ''} • {fmtDate(cls.createdAt)}
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <div className="dash-my-class-actions">
             <StatusBadge status={cls.status}/>
             {cls.status !== 'CANCELLED' && cls.status !== 'COMPLETED' && (
               <button onClick={() => onManageStudents(cls)} style={{

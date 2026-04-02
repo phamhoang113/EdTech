@@ -38,9 +38,6 @@ export const OpenClassesSection = ({ onAuthRequired }: OpenClassesSectionProps) 
             <h2 className="section-title">Lớp Học <span className="highlight-green">Mới Nhất</span></h2>
             <p className="section-subtitle">Các lớp học đang tìm kiếm gia sư phù hợp ngay hôm nay.</p>
           </div>
-          <Button variant="secondary" onClick={() => navigate('/classes')} className="view-all-btn">
-            Xem Tất Cả Lớp
-          </Button>
         </div>
 
         <div className="class-list-wrapper">
@@ -56,6 +53,14 @@ export const OpenClassesSection = ({ onAuthRequired }: OpenClassesSectionProps) 
             </div>
           )}
         </div>
+        
+        {!loading && classes.length > 0 && (
+          <div className={`section-footer reveal-base reveal-up delay-300 ${isRevealed ? 'revealed' : ''}`}>
+            <Button variant="secondary" onClick={() => navigate('/classes')} className="view-all-btn mobile-full-width">
+              Xem Tất Cả Lớp
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );

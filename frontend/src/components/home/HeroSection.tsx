@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { Users, BookOpen, Star } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import heroBg1 from '../../assets/photorealistic_hero.png';
 import heroBg2 from '../../assets/photorealistic_hero_2.png';
 import heroBg3 from '../../assets/photorealistic_hero_3.png';
+import heroMobile from '../../assets/hero_mobile.png';
 import './HeroSection.css';
 
 interface HeroSectionProps {
@@ -26,9 +28,9 @@ export const HeroSection = ({}: HeroSectionProps) => {
   return (
     <section className="hero">
       <div className="hero-crossfade-bg" style={{ transform: `translateY(${scrollY * 0.4}px)` }}>
-        <img src={heroBg1} alt="Online Tutoring 1" className="crossfade-img" />
-        <img src={heroBg2} alt="Online Tutoring 2" className="crossfade-img" />
-        <img src={heroBg3} alt="Online Tutoring 3" className="crossfade-img" />
+        <img src={heroBg1} alt="Online Tutoring 1" className="crossfade-img" fetchPriority="high" />
+        <img src={heroBg2} alt="Online Tutoring 2" className="crossfade-img" loading="lazy" />
+        <img src={heroBg3} alt="Online Tutoring 3" className="crossfade-img" loading="lazy" />
       </div>
       <div className="container hero-container">
         <div className="hero-content">
@@ -39,6 +41,20 @@ export const HeroSection = ({}: HeroSectionProps) => {
             Kết nối với hàng ngàn gia sư chất lượng cao trải dài trên toàn quốc. 
             <span className="mobile-hidden">Học trực tuyến hay tại nhà, tất cả đều trong tầm tay.</span>
           </p>
+          <div className="hero-mobile-illustration animate-fade-up delay-200">
+            <img src={heroMobile} alt="Gia sư dạy học trực tuyến" />
+          </div>
+          <div className="hero-trust-badge animate-fade-up delay-300">
+            <span className="trust-item">
+              <Users size={16} /> 10,000+ Học sinh
+            </span>
+            <span className="trust-item">
+              <BookOpen size={16} /> 3,000+ Gia sư
+            </span>
+            <span className="trust-item">
+              <Star size={16} /> 4.8/5 Đánh giá
+            </span>
+          </div>
           <div className="hero-actions animate-fade-up delay-200">
             {(!isAuthenticated || !user) && (
               <>

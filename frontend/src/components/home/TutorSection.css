@@ -1,5 +1,6 @@
 .tutor-section {
   padding: var(--spacing-8) 0;
+  background-color: var(--color-surface-hover);
 }
 
 @media (min-width: 768px) {
@@ -13,6 +14,13 @@
   flex-direction: column;
   gap: var(--spacing-4);
   margin-bottom: var(--spacing-10);
+}
+
+@media (max-width: 767px) {
+  .section-header {
+    text-align: center;
+    align-items: center;
+  }
 }
 
 @media (min-width: 640px) {
@@ -46,36 +54,26 @@
 }
 
 .tutor-list-wrapper {
-  margin: 0 calc(var(--spacing-4) * -1);
-  padding: 0 var(--spacing-4);
-  overflow-x: auto;
+  margin: 0;
+  padding: 0;
   padding-bottom: var(--spacing-6);
-  scroll-snap-type: x mandatory;
-  scroll-padding-left: var(--spacing-4);
-  /* Hide scrollbar for a cleaner look but still support scrolling */
-  scrollbar-width: none;
-}
-
-.tutor-list-wrapper::-webkit-scrollbar {
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .tutor-list-wrapper {
-    margin: 0;
-    padding: 0;
-    overflow-x: visible;
-  }
 }
 
 .tutor-list {
   display: flex;
-  gap: var(--spacing-6);
+  flex-direction: column;
+  gap: var(--spacing-4);
 }
 
 @media (min-width: 768px) {
   .tutor-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-6);
+  }
+  .tutor-list-wrapper {
+    margin: 0;
+    padding: 0;
+    overflow-x: visible;
   }
 }

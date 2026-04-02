@@ -1,0 +1,20 @@
+.landing-main-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-hero-wrapper { order: 1; }
+.landing-stats-wrapper { order: 2; }
+.landing-classes-wrapper { order: 3; }
+.landing-tutors-wrapper { order: 4; }
+.landing-hiw-wrapper { order: 5; }
+
+@media (max-width: 768px) {
+  /* Bring OpenClasses up high right below Hero */
+  .landing-classes-wrapper {
+    order: 2;
+  }
+  .landing-stats-wrapper {
+    order: 3;
+  }
+}

@@ -85,12 +85,39 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
 
         <div className={`nav-actions-container ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
           <nav className="nav-links">
+            {isAuthenticated && user && (
+              <div className="mobile-user-profile mobile-only" style={{ padding: '16px', background: 'var(--color-surface-2)', borderRadius: '12px', margin: '0 16px 16px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div className="header-avatar">{getInitials(user.fullName)}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--color-text-primary)' }}>{user.fullName}</span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>{roleEmoji[user.role]} {roleLabel[user.role]}</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', fontWeight: 600, fontSize: '0.9rem' }}
+                >
+                  <LogOut size={16} /> Đăng xuất
+                </button>
+              </div>
+            )}
+            
             <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Trang Chủ</Link>
             <Link to="/tutors" className={`nav-link ${isActive('/tutors') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Tìm Gia Sư</Link>
             <Link to="/classes" className={`nav-link ${isActive('/classes') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Lớp Học Hiện Có</Link>
             <Link to="/about" className={`nav-link ${isActive('/about') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Về Chúng Tôi</Link>
           </nav>
+          
+          <div className="nav-theme-toggle mobile-only">
+            <button className="mobile-theme-btn" onClick={toggleTheme} aria-label="Toggle theme">
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+              <span className="theme-text">Giao diện {isDark ? 'Sáng' : 'Tối'}</span>
+            </button>
+          </div>
+        </div>
 
+        <div className="header-right">
           <div className="header-actions">
             {isAuthenticated && user && (
               <Link to="/dashboard" className="header-dash-link" title="Vào Dashboard" onClick={() => setIsMobileMenuOpen(false)}>
@@ -101,7 +128,7 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
 
             {isAuthenticated && user ? (
               /* ── Đã đăng nhập: hiện avatar + dropdown ── */
-              <div className="header-user-menu" ref={dropdownRef}>
+              <div className="header-user-menu desktop-only" ref={dropdownRef}>
                 <button
                   className="header-avatar-btn"
                   onClick={() => setDropdownOpen(prev => !prev)}
@@ -144,26 +171,32 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
               </div>
             ) : (
               /* ── Chưa đăng nhập: hiện 2 nút ── */
-              <div className="auth-buttons">
-                <Button variant="ghost" onClick={() => { onLoginClick(); setIsMobileMenuOpen(false); }}>Đăng Nhập</Button>
-                <Button variant="primary" onClick={() => { onRegisterClick(); setIsMobileMenuOpen(false); }}>Đăng Ký</Button>
-              </div>
+              <>
+                <div className="auth-buttons desktop-only">
+                  <Button variant="ghost" onClick={() => { onLoginClick(); setIsMobileMenuOpen(false); }}>Đăng Nhập</Button>
+                  <Button variant="primary" onClick={() => { onRegisterClick(); setIsMobileMenuOpen(false); }}>Đăng Ký</Button>
+                </div>
+                <div className="auth-buttons mobile-only">
+                  <Button variant="secondary" size="sm" onClick={() => { onLoginClick(); setIsMobileMenuOpen(false); }}>Đăng Nhập</Button>
+                  <Button variant="primary" size="sm" onClick={() => { onRegisterClick(); setIsMobileMenuOpen(false); }}>Đăng Ký</Button>
+                </div>
+              </>
             )}
           </div>
-        </div>
 
-        <div className="mobile-controls">
-          <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
-            {isDark ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-          
-          <button 
-            className="mobile-menu-btn" 
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle mobile menu"
-          >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="mobile-controls">
+            <button className="theme-toggle desktop-only" onClick={toggleTheme} aria-label="Toggle theme">
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+
+            <button 
+              className="mobile-menu-btn" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
     </header>

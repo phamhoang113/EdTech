@@ -4,7 +4,13 @@
 
    .classes-page {
     min-height: 100vh;
-    background-color: var(--color-background);
+    background: linear-gradient(180deg, var(--hero-gradient-from) 0%, var(--hero-gradient-mid) 30%, var(--hero-gradient-to) 100%);
+  }
+
+  @media (min-width: 768px) {
+    .classes-page {
+      background: var(--color-background);
+    }
   }
   
   /* Hero Section */
@@ -13,7 +19,7 @@
     padding: var(--spacing-16) 0 var(--spacing-12);
     text-align: center;
     overflow: hidden;
-    background: linear-gradient(to bottom, var(--color-surface), var(--color-background));
+    background: transparent;
     border-bottom: 1px solid var(--color-border);
     animation: fadeInDown 0.6s ease-out forwards;
     opacity: 0;
@@ -666,12 +672,16 @@
       padding: var(--spacing-4);
     }
 
+    .classes-hero {
+      padding: var(--spacing-8) 0 var(--spacing-6);
+    }
+
     .hero-title {
-      font-size: 2rem;
+      font-size: 1.5rem;
     }
 
     .hero-subtitle {
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
 
     .back-to-top-btn {
@@ -679,5 +689,9 @@
       right: var(--spacing-4);
       width: 44px;
       height: 44px;
+    }
+
+    .classes-grid {
+      gap: var(--spacing-3);
     }
   }

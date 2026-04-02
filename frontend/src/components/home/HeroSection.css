@@ -3,12 +3,16 @@
   overflow: hidden;
   position: relative;
   min-height: 500px;
+  background: linear-gradient(180deg, var(--hero-gradient-from) 0%, var(--hero-gradient-mid) 30%, var(--hero-gradient-to) 100%);
 }
 
 @media (min-width: 768px) {
   .hero {
     padding: var(--spacing-16) 0;
-    min-height: 600px;
+    min-height: calc(100vh - 64px);
+    display: flex;
+    align-items: center;
+    background: var(--color-background);
   }
 }
 
@@ -38,6 +42,22 @@
   font-weight: 800;
   margin-bottom: var(--spacing-4);
   color: var(--color-text);
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    text-align: center;
+    font-size: 1.75rem;
+    margin-bottom: var(--spacing-2);
+  }
+  .hero-subtitle {
+    text-align: center;
+    font-size: 0.95rem;
+    margin-bottom: var(--spacing-3);
+  }
+  .hero-content {
+    max-width: 100%;
+  }
 }
 
 @media (min-width: 768px) {
@@ -76,6 +96,42 @@
   }
 }
 
+/* Mobile-only hero illustration */
+.hero-mobile-illustration {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hero-mobile-illustration {
+    display: flex;
+    justify-content: center;
+    margin: var(--spacing-2) 0 var(--spacing-4);
+    flex: 1;
+    align-items: center;
+  }
+  .hero-mobile-illustration img {
+    width: 92%;
+    max-width: 360px;
+    height: auto;
+    border-radius: var(--radius-xl);
+    animation: floatIllustration 4s ease-in-out infinite;
+    filter: drop-shadow(0 12px 24px rgba(99, 102, 241, 0.15));
+  }
+}
+
+/* Mobile trust badge — disabled */
+.hero-trust-badge {
+  display: none;
+}
+
+
+
+
+@keyframes floatIllustration {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
@@ -101,6 +157,32 @@
   filter: blur(40px);
 }
 
+@media (max-width: 768px) {
+  .hero-visual {
+    display: none;
+  }
+  .hero-crossfade-bg {
+    display: none;
+  }
+  .hero {
+    min-height: calc(100vh - 56px);
+    min-height: calc(100dvh - 56px);
+    padding-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hero-actions {
+    display: none;
+  }
+  .hero-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
 .hero-crossfade-bg {
   position: absolute;
   top: 0;
@@ -112,6 +194,12 @@
   opacity: 0.15;
   mask-image: linear-gradient(to top, transparent, black 100%);
   -webkit-mask-image: linear-gradient(to top, transparent, black 100%);
+}
+
+@media (max-width: 768px) {
+  .hero-crossfade-bg {
+    display: none;
+  }
 }
 
 @media (min-width: 900px) {

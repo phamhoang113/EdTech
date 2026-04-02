@@ -322,6 +322,7 @@
 .tsched-cal-block--draft {
   border-left-style: dashed;
   cursor: grab;
+  touch-action: none;
 }
 
 .tsched-cal-block--draft:active {
@@ -791,6 +792,7 @@
 
 .tsched-session-card[draggable="true"] {
   cursor: grab;
+  touch-action: none;
 }
 
 .tsched-session-card[draggable="true"]:active {

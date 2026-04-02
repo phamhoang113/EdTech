@@ -3,7 +3,6 @@ import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 import type { PublicLayoutContext } from '../../components/layout/PublicLayout';
 import { HeroSection } from '../../components/home/HeroSection';
-import { StatsSection } from '../../components/home/StatsSection';
 import { TutorSection } from '../../components/home/TutorSection';
 import { OpenClassesSection } from '../../components/home/OpenClassesSection';
 import { HowItWorksSection } from '../../components/home/HowItWorksSection';
@@ -15,12 +14,11 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="landing-page">
-      <main>
-        <HeroSection />
-        <StatsSection />
-        <OpenClassesSection onAuthRequired={openLogin} />
-        <TutorSection onAuthRequired={openLogin} />
-        <HowItWorksSection />
+      <main className="landing-main-layout">
+        <div className="landing-hero-wrapper"><HeroSection /></div>
+        <div className="landing-classes-wrapper"><OpenClassesSection onAuthRequired={openLogin} /></div>
+        <div className="landing-tutors-wrapper"><TutorSection onAuthRequired={openLogin} /></div>
+        <div className="landing-hiw-wrapper"><HowItWorksSection /></div>
       </main>
 
       </div>

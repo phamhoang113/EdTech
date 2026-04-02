@@ -14,6 +14,9 @@
   --color-surface-2: #f9fafb;
   --color-surface-hover: #f1f5f9;
   --color-border: #e2e8f0;
+  --hero-gradient-from: #f0eeff;
+  --hero-gradient-mid: #e8e5ff;
+  --hero-gradient-to: #ffffff;
 
   /* ===== Text (Light) ===== */
   --color-text: #0f172a;
@@ -147,6 +150,9 @@
   --color-surface-2: #0f172a;
   --color-surface-hover: #334155;
   --color-border: #334155;
+  --hero-gradient-from: #1e1b4b;
+  --hero-gradient-mid: #1e293b;
+  --hero-gradient-to: #0f172a;
 
   /* Text */
   --color-text: #f8fafc;

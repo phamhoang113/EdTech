@@ -11,6 +11,18 @@ import { TutorSidebar } from '../../components/tutor/TutorSidebar';
 import { uploadImage } from '../../services/storageApi';
 import '../dashboard/Dashboard.css';
 import './TutorSchedule.css';
+import { polyfill } from "mobile-drag-drop";
+import { scrollBehaviourDragImageTranslateOverride } from "mobile-drag-drop/scroll-behaviour";
+import "mobile-drag-drop/default.css";
+
+// Enable mobile drag and drop polyfill
+polyfill({
+  dragImageTranslateOverride: scrollBehaviourDragImageTranslateOverride,
+  holdToDrag: 300 // 300ms long press to drag on mobile
+});
+
+// Polyfill fix for iOS to prevent scrolling when dragging
+window.addEventListener('touchmove', function() {}, {passive: false});
 
 /* ── Helpers ─────────────────────────────────────────── */
 const DAY_NAMES = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
@@ -54,7 +66,7 @@ function toLocalDateString(d: Date): string {
 /* ── Time Edit Modal ─────────────────────────────────── */
 interface TimeEditModalProps {
   session: TutorSessionDTO;
-  onSave: (sessionId: string, startTime: string, endTime: string) => void;
+  onSave: (sessionId: string, startTime: string, endTime: string, sessionDate: string) => void;
   onClose: () => void;
 }
 
@@ -73,10 +85,15 @@ function TimeEditModal({ session, onSave, onClose }: TimeEditModalProps) {
     return `${String(Math.floor(total / 60) % 24).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
   };
 
+  const [sessionDate, setSessionDate] = useState(session.sessionDate);
   const [startTime, setStartTime] = useState(formatTime(session.startTime));
-  const endTime = computeEndTime(startTime);
+  const [endTime, setEndTime] = useState(computeEndTime(startTime));
   const [error, setError] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setEndTime(computeEndTime(startTime));
+  }, [startTime]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -93,19 +110,34 @@ function TimeEditModal({ session, onSave, onClose }: TimeEditModalProps) {
       setError('Giờ bắt đầu phải trước giờ kết thúc');
       return;
     }
-    onSave(session.id, startTime, endTime);
+    if (!sessionDate) {
+      setError('Vui lòng chọn ngày học');
+      return;
+    }
+    onSave(session.id, startTime, endTime, sessionDate);
   };
 
   return (
     <div className="tsched-time-modal-overlay">
       <div className="tsched-time-modal" ref={modalRef}>
         <div className="tsched-time-modal-header">
-          <h4>Chỉnh giờ dạy</h4>
+          <h4>Chỉnh lịch dạy</h4>
           <button className="tsched-time-modal-close" onClick={onClose}><X size={16} /></button>
         </div>
         <div className="tsched-time-modal-body">
           <div className="tsched-time-modal-title">{session.classTitle}</div>
           <div className="tsched-time-modal-duration">Thời lượng: <strong>{durationMin} phút</strong></div>
+          <div className="tsched-time-inputs" style={{ marginBottom: 16 }}>
+            <div className="tsched-time-field" style={{ width: '100%' }}>
+              <label>Ngày học</label>
+              <input 
+                type="date" 
+                value={sessionDate} 
+                onChange={e => setSessionDate(e.target.value)}
+                style={{ width: '100%', padding: '8px', border: '1px solid var(--color-border)', borderRadius: '4px', fontSize: '0.9rem', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)', colorScheme: 'var(--color-scheme)' }}
+              />
+            </div>
+          </div>
           <div className="tsched-time-inputs">
             <div className="tsched-time-field">
               <label>Bắt đầu</label>
@@ -315,7 +347,7 @@ function CreateDraftModal({ onClose, onSuccess, initialDateStr, initialClassId, 
                   onChange={e => setClassId(e.target.value)}
                   style={{ width: '100%', padding: '8px', border: '1px solid var(--color-border)', borderRadius: '4px', fontSize: '0.9rem', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }}
                 >
-                  {classes.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                  {classes.map(c => <option key={c.id} value={c.id}>{c.title}{c.classCode ? ` - ${c.classCode}` : ''}</option>)}
                 </select>
                 {selectedClass && selectedClass.address && (
                   <div style={{ marginTop: '8px', padding: '10px 12px', background: 'var(--color-surface-hover)', border: '1px solid var(--color-border)', borderRadius: '6px', fontSize: '0.8rem', color: 'var(--color-text-secondary)', lineHeight: '1.4' }}>
@@ -660,9 +692,9 @@ export function TutorSchedulePage() {
   };
 
   /* ── Time Edit ───────────────────────────────────── */
-  const handleTimeSave = async (sessionId: string, startTime: string, endTime: string) => {
+  const handleTimeSave = async (sessionId: string, startTime: string, endTime: string, sessionDate: string) => {
     try {
-      await tutorApi.updateDraft(sessionId, { startTime, endTime });
+      await tutorApi.updateDraft(sessionId, { sessionDate, startTime, endTime });
       setEditingSession(null);
       await fetchData();
     } catch (err: any) {

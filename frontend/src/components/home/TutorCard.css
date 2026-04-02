@@ -7,16 +7,13 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-4);
-  
-  /* Mobile optimization: takes 85% width so next card peaks through */
-  min-width: 85vw;
-  max-width: 320px;
-  scroll-snap-align: start;
+  width: 100%;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .tutor-card {
-    min-width: 300px;
+    min-width: 0;
+    max-width: none;
   }
 }
 

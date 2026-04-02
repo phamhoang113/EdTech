@@ -1,0 +1,101 @@
+.floating-contact {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  z-index: 9999;
+}
+
+.float-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  text-decoration: none;
+  color: white;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.float-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+}
+
+.float-btn .btn-text {
+  display: none; /* Only icons as requested */
+}
+
+.float-btn .btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  z-index: 2;
+  position: relative;
+}
+
+.phone-btn {
+  background: #ff2a2a;
+  animation: ringPulseRed 2s infinite;
+}
+
+.phone-btn .btn-icon svg {
+  animation: shake 2.5s infinite;
+}
+
+.zalo-btn {
+  background: #0084ff;
+  animation: ringPulseBlue 2s infinite;
+  font-weight: 900;
+  font-size: 1.5rem;
+  font-family: Arial, sans-serif;
+}
+
+.zalo-btn .btn-icon {
+  animation: shakeZalo 2.5s infinite;
+}
+
+@keyframes ringPulseRed {
+  0% { box-shadow: 0 0 0 0 rgba(255, 42, 42, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(255, 42, 42, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 42, 42, 0); }
+}
+
+@keyframes ringPulseBlue {
+  0% { box-shadow: 0 0 0 0 rgba(0, 132, 255, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(0, 132, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 132, 255, 0); }
+}
+
+@keyframes shake {
+  0%, 50%, 100% { transform: rotate(0deg); }
+  5%, 15%, 25%, 35%, 45% { transform: rotate(10deg); }
+  10%, 20%, 30%, 40% { transform: rotate(-10deg); }
+}
+
+@keyframes shakeZalo {
+  0%, 50%, 100% { transform: rotate(0deg) scale(1); }
+  10%, 30% { transform: rotate(5deg) scale(1.1); }
+  20%, 40% { transform: rotate(-5deg) scale(1.1); }
+}
+
+@media (max-width: 768px) {
+  .floating-contact {
+    bottom: 20px;
+    right: 16px;
+    gap: 16px;
+  }
+  .float-btn {
+    width: 50px;
+    height: 50px;
+  }
+  .floating-contact.hide-on-mobile {
+    display: none !important;
+  }
+}

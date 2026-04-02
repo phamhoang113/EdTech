@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { LoginModal } from '../auth/LoginModal';
+import { FloatingContact } from './FloatingContact';
 
 export type PublicLayoutContext = {
   openLogin: () => void;
@@ -27,6 +28,7 @@ export const PublicLayout = () => {
       </div>
       <Footer />
       {authModalState.isOpen && <LoginModal onClose={closeAuth} initialMode={authModalState.mode} />}
+      <FloatingContact />
     </div>
   );
 };

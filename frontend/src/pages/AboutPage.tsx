@@ -8,7 +8,6 @@ import './AboutPage.css';
 
 export const AboutPage = () => {
   const { openLogin, openRegister } = useOutletContext<PublicLayoutContext>();
-  const { ref: statsRef, isRevealed: statsRevealed } = useScrollReveal();
   const { ref: bentoRef, isRevealed: bentoRevealed } = useScrollReveal();
   const { ref: ctaRef, isRevealed: ctaRevealed } = useScrollReveal();
 
@@ -35,27 +34,7 @@ export const AboutPage = () => {
           </div>
         </section>
 
-        {/* STATS STRIP */}
-        <section className="about-stats-strip" ref={statsRef}>
-          <div className="container stats-grid">
-            <div className={`stat-box reveal-base reveal-up ${statsRevealed ? 'revealed' : ''}`}>
-              <h2 className="stat-number">10,000+</h2>
-              <p className="stat-label">Gia sư được kiểm duyệt</p>
-            </div>
-            <div className={`stat-box reveal-base reveal-up delay-100 ${statsRevealed ? 'revealed' : ''}`}>
-              <h2 className="stat-number">50,000+</h2>
-              <p className="stat-label">Học sinh toàn quốc</p>
-            </div>
-            <div className={`stat-box reveal-base reveal-up delay-200 ${statsRevealed ? 'revealed' : ''}`}>
-              <h2 className="stat-number">4.9/5</h2>
-              <p className="stat-label">Đánh giá trung bình</p>
-            </div>
-            <div className={`stat-box reveal-base reveal-up delay-300 ${statsRevealed ? 'revealed' : ''}`}>
-              <h2 className="stat-number">98%</h2>
-              <p className="stat-label">Cải thiện điểm số</p>
-            </div>
-          </div>
-        </section>
+
 
         {/* BENTO GRID VALUES */}
         <section className="about-bento-section" ref={bentoRef}>

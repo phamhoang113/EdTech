@@ -1,7 +1,8 @@
-import { Search, Sun, Moon, UserIcon, LogOut } from 'lucide-react';
+import { Search, Sun, Moon, UserIcon, LogOut, Menu, Home } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useSidebarStore } from '../../store/useSidebarStore';
 
 import { NotificationDropdown } from '../common/NotificationDropdown';
 import '../../pages/dashboard/Dashboard.css';
@@ -12,6 +13,7 @@ export const DashboardHeader = () => {
   const [isDark, setIsDark] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { toggle: toggleSidebar } = useSidebarStore();
 
   useEffect(() => {
     setIsDark(localStorage.getItem('theme') === 'dark');
@@ -43,14 +45,26 @@ export const DashboardHeader = () => {
 
   return (
     <header className="dash-topbar">
-      <div className="topbar-search-wrap">
-        <Search size={15} className="si" />
-        <input type="text" placeholder="Tìm gia sư, môn học..." />
+      <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <button className="topbar-icon-btn mobile-menu-btn" onClick={toggleSidebar} aria-label="Menu">
+          <Menu size={20} />
+        </button>
+        <div className="topbar-search-wrap">
+          <Search size={15} className="si" />
+          <input type="text" placeholder="Tìm kiếm..." />
+        </div>
       </div>
       <div className="topbar-right">
-        <button className="topbar-icon-btn" onClick={toggleTheme} aria-label="theme">
+        {/* MOBILE ONLY: Home Button */}
+        <button className="topbar-icon-btn dash-mobile-only" onClick={() => navigate('/')} aria-label="Trang chủ" title="Về trang chủ">
+          <Home size={17} />
+        </button>
+
+        {/* DESKTOP ONLY: Theme Toggle */}
+        <button className="topbar-icon-btn dash-desktop-only" onClick={toggleTheme} aria-label="theme">
           {isDark ? <Sun size={17} /> : <Moon size={17} />}
         </button>
+        
         <NotificationDropdown />
 
         <div className="topbar-profile-wrap" ref={dropdownRef}>
@@ -77,12 +91,23 @@ export const DashboardHeader = () => {
                 </p>
               </div>
               <div className="profile-dropdown-divider"></div>
+              
+              {/* MOBILE ONLY: Theme Toggle in dropdown */}
+              <button 
+                className="profile-dropdown-item dash-mobile-only-flex" 
+                onClick={toggleTheme}
+              >
+                {isDark ? <Sun size={16} /> : <Moon size={16} />} 
+                {isDark ? 'Giao diện Sáng' : 'Giao diện Tối'}
+              </button>
+              
               <button 
                 className="profile-dropdown-item" 
                 onClick={() => { setShowDropdown(false); navigate('/profile'); }}
               >
                 <UserIcon size={16} /> Hồ sơ cá nhân
               </button>
+              
               <button 
                 className="profile-dropdown-item text-danger" 
                 onClick={handleLogout}

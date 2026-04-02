@@ -221,8 +221,8 @@ export const ParentPaymentPage = () => {
                         </div>
                       </div>
 
-                      <div style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 12, overflow: 'hidden' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+                      <div style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 12, overflowX: 'auto' }}>
+                        <table style={{ width: '100%', minWidth: '400px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
                           <thead style={{ background: 'rgba(0,0,0,0.02)' }}>
                             <tr>
                               <th style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)' }}>Lớp học</th>

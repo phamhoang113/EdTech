@@ -43,9 +43,6 @@ export const TutorSection = ({ onAuthRequired }: TutorSectionProps) => {
             <h2 className="section-title">Gia Sư <span className="highlight">Nổi Bật</span></h2>
             <p className="section-subtitle">Danh sách các gia sư được đánh giá cao nhất trong hệ thống.</p>
           </div>
-          <Button variant="secondary" onClick={() => navigate('/tutors')} className="view-all-btn">
-            Xem Tất Cả
-          </Button>
         </div>
 
         <div className="tutor-list-wrapper">
@@ -76,6 +73,14 @@ export const TutorSection = ({ onAuthRequired }: TutorSectionProps) => {
             </div>
           )}
         </div>
+
+        {!loading && tutors.length > 0 && (
+          <div className={`section-footer reveal-base reveal-up delay-300 ${isRevealed ? 'revealed' : ''}`}>
+            <Button variant="secondary" onClick={() => navigate('/tutors')} className="view-all-btn mobile-full-width">
+              Xem Tất Cả Gia Sư
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );
