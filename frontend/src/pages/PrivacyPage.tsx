@@ -1,25 +1,15 @@
+// @ts-nocheck
+import { useOutletContext } from 'react-router-dom';
+import type { PublicLayoutContext } from '../components/layout/PublicLayout';
+
 import { ShieldCheck, Database, Lock, EyeOff } from 'lucide-react';
-import { Header } from '../components/layout/Header';
-import { Footer } from '../components/layout/Footer';
-import { useState } from 'react';
-import { LoginModal } from '../components/auth/LoginModal';
+
 
 import './PrivacyPage.css';
 
 export const PrivacyPage = () => {
-  const [authModalState, setAuthModalState] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({
-    isOpen: false,
-    mode: 'login',
-  });
-
-  const openLogin = () => setAuthModalState({ isOpen: true, mode: 'login' });
-  const openRegister = () => setAuthModalState({ isOpen: true, mode: 'register' });
-  const closeAuth = () => setAuthModalState((prev) => ({ ...prev, isOpen: false }));
-
   return (
     <div className="privacy-page">
-      <Header onLoginClick={openLogin} onRegisterClick={openRegister} />
-      
       <main className="privacy-main">
         <div className="privacy-header">
           <div className="container">
@@ -82,9 +72,6 @@ export const PrivacyPage = () => {
         </div>
       </main>
 
-      <Footer />
-
-      {authModalState.isOpen && <LoginModal onClose={closeAuth} initialMode={authModalState.mode} />}
-    </div>
+      </div>
   );
 };

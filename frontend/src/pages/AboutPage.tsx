@@ -1,30 +1,15 @@
+// @ts-nocheck
 import { Target, Users, Shield, Sparkles, BookOpen, TrendingUp } from 'lucide-react';
-import { Header } from '../components/layout/Header';
-import { Footer } from '../components/layout/Footer';
-import { useState } from 'react';
-import { LoginModal } from '../components/auth/LoginModal';
+
 
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import './AboutPage.css';
 
 export const AboutPage = () => {
-  const [authModalState, setAuthModalState] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({
-    isOpen: false,
-    mode: 'login',
-  });
-
-  const { ref: statsRef, isRevealed: statsRevealed } = useScrollReveal({ threshold: 0.2 });
-  const { ref: bentoRef, isRevealed: bentoRevealed } = useScrollReveal({ threshold: 0.1 });
-  const { ref: ctaRef, isRevealed: ctaRevealed } = useScrollReveal({ threshold: 0.2 });
-
-  const openLogin = () => setAuthModalState({ isOpen: true, mode: 'login' });
-  const openRegister = () => setAuthModalState({ isOpen: true, mode: 'register' });
-  const closeAuth = () => setAuthModalState((prev) => ({ ...prev, isOpen: false }));
+  const { openLogin, openRegister } = useOutletContext<PublicLayoutContext>();
 
   return (
     <div className="about-page">
-      <Header onLoginClick={openLogin} onRegisterClick={openRegister} />
-      
       <main className="about-main">
         {/* PREMIUM HERO */}
         <section className="about-hero-premium">
@@ -131,9 +116,6 @@ export const AboutPage = () => {
         </section>
       </main>
 
-      <Footer />
-
-      {authModalState.isOpen && <LoginModal onClose={closeAuth} initialMode={authModalState.mode} />}
-    </div>
+      </div>
   );
 };

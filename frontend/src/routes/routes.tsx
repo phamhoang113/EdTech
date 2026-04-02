@@ -3,9 +3,11 @@ import App from '../App';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 import ErrorPage from '../pages/ErrorPage';
 
+import { PublicLayout } from '../components/layout/PublicLayout';
+
 /* ====================================================
    Route config
-   PUBLIC  → /, /register, /verify-otp, /admin/login
+   PUBLIC  → /, /register, /admin/login
    PROTECTED → /dashboard (+ future pages)
    ADMIN → /admin/* (AdminLayout)
    ==================================================== */
@@ -16,74 +18,78 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       {
-        path: '/',
-        lazy: async () => {
-          const { LandingPage } = await import('../pages/home/LandingPage');
-          return { Component: LandingPage };
-        },
-      },
-      {
-        path: '/tutors',
-        lazy: async () => {
-          const { TutorsPage } = await import('../pages/home/TutorsPage');
-          return { Component: TutorsPage };
-        },
+        element: <PublicLayout />,
+        children: [
+          {
+            path: '/',
+            lazy: async () => {
+              const { LandingPage } = await import('../pages/home/LandingPage');
+              return { Component: LandingPage };
+            },
+          },
+          {
+            path: '/tutors',
+            lazy: async () => {
+              const { TutorsPage } = await import('../pages/home/TutorsPage');
+              return { Component: TutorsPage };
+            },
+          },
+          {
+            path: '/about',
+            lazy: async () => {
+              const { AboutPage } = await import('../pages/AboutPage');
+              return { Component: AboutPage };
+            },
+          },
+          {
+            path: '/classes',
+            lazy: async () => {
+              const { ClassesPage } = await import('../pages/classes/ClassesPage');
+              return { Component: ClassesPage };
+            },
+          },
+          {
+            path: '/terms',
+            lazy: async () => {
+              const { TermsPage } = await import('../pages/TermsPage');
+              return { Component: TermsPage };
+            },
+          },
+          {
+            path: '/privacy',
+            lazy: async () => {
+              const { PrivacyPage } = await import('../pages/PrivacyPage');
+              return { Component: PrivacyPage };
+            },
+          },
+          {
+            path: '/faq',
+            lazy: async () => {
+              const { FaqPage } = await import('../pages/FaqPage');
+              return { Component: FaqPage };
+            },
+          },
+          {
+            path: '/contact',
+            lazy: async () => {
+              const { ContactPage } = await import('../pages/ContactPage');
+              return { Component: ContactPage };
+            },
+          },
+          {
+            path: '/careers',
+            lazy: async () => {
+              const { CareersPage } = await import('../pages/CareersPage');
+              return { Component: CareersPage };
+            },
+          },
+        ]
       },
       {
         path: '/register',
         lazy: async () => {
           const { RegisterPage } = await import('../pages/RegisterPage');
           return { Component: RegisterPage };
-        },
-      },
-
-      {
-        path: '/about',
-        lazy: async () => {
-          const { AboutPage } = await import('../pages/AboutPage');
-          return { Component: AboutPage };
-        },
-      },
-      {
-        path: '/classes',
-        lazy: async () => {
-          const { ClassesPage } = await import('../pages/classes/ClassesPage');
-          return { Component: ClassesPage };
-        },
-      },
-      {
-        path: '/terms',
-        lazy: async () => {
-          const { TermsPage } = await import('../pages/TermsPage');
-          return { Component: TermsPage };
-        },
-      },
-      {
-        path: '/privacy',
-        lazy: async () => {
-          const { PrivacyPage } = await import('../pages/PrivacyPage');
-          return { Component: PrivacyPage };
-        },
-      },
-      {
-        path: '/faq',
-        lazy: async () => {
-          const { FaqPage } = await import('../pages/FaqPage');
-          return { Component: FaqPage };
-        },
-      },
-      {
-        path: '/contact',
-        lazy: async () => {
-          const { ContactPage } = await import('../pages/ContactPage');
-          return { Component: ContactPage };
-        },
-      },
-      {
-        path: '/careers',
-        lazy: async () => {
-          const { CareersPage } = await import('../pages/CareersPage');
-          return { Component: CareersPage };
         },
       },
 
