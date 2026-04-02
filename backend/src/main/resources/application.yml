@@ -1,6 +1,8 @@
 spring:
   application:
     name: edtech-backend
+  config:
+    import: optional:classpath:application-secret.yml
 
   servlet:
     multipart:
@@ -48,6 +50,12 @@ management:
   info:
     env:
       enabled: true
+
+google:
+  calendar:
+    client-id: ${GOOGLE_CLIENT_ID:}
+    client-secret: ${GOOGLE_CLIENT_SECRET:}
+    refresh-token: ${GOOGLE_REFRESH_TOKEN:}
 
 info:
   app:

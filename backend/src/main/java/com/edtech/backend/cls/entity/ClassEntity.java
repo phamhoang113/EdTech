@@ -114,6 +114,9 @@ public class ClassEntity extends BaseEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     private String tutorProposals;
 
+    @Column(name = "meet_link", length = 500)
+    private String meetLink;
+
     /** Lý do từ chối yêu cầu mở lớp (admin điền khi reject PENDING_APPROVAL) */
     @Column(name = "rejection_reason", columnDefinition = "TEXT")
     private String rejectionReason;

@@ -1,10 +1,8 @@
 package com.edtech.backend.auth.controller;
 
+import com.edtech.backend.auth.dto.request.FirebaseAuthRequest;
 import com.edtech.backend.auth.dto.request.LoginRequest;
-import com.edtech.backend.auth.dto.request.RegisterRequest;
 import com.edtech.backend.auth.dto.request.TokenRefreshRequest;
-import com.edtech.backend.auth.dto.request.VerifyOtpRequest;
-import com.edtech.backend.auth.dto.response.RegisterResponse;
 import com.edtech.backend.auth.dto.response.TokenResponse;
 import com.edtech.backend.auth.service.AuthService;
 import com.edtech.backend.core.dto.ApiResponse;
@@ -22,15 +20,9 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/register")
-    public ApiResponse<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
-        RegisterResponse response = authService.register(request);
-        return ApiResponse.ok(response, response.getMessage());
-    }
-
-    @PostMapping("/verify-otp")
-    public ApiResponse<TokenResponse> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
-        return ApiResponse.ok(authService.verifyOtp(request), "OTP verified successfully. User activated.");
+    @PostMapping("/firebase")
+    public ApiResponse<TokenResponse> verifyFirebaseAuth(@Valid @RequestBody FirebaseAuthRequest request) {
+        return ApiResponse.ok(authService.verifyFirebaseAuth(request), "Firebase authentication successful.");
     }
 
     @PostMapping("/login")

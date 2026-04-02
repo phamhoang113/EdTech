@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Local Dev Secrets
+application-secret.yml
+
+firebase-service-account.json

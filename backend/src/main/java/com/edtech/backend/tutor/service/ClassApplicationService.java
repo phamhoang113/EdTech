@@ -13,6 +13,7 @@ import com.edtech.backend.cls.entity.ClassEntity;
 import com.edtech.backend.cls.enums.ApplicationStatus;
 import com.edtech.backend.cls.repository.ClassApplicationRepository;
 import com.edtech.backend.cls.repository.ClassRepository;
+import com.edtech.backend.core.service.GoogleMeetService;
 import com.edtech.backend.tutor.entity.TutorProfileEntity;
 import com.edtech.backend.tutor.repository.TutorProfileRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -26,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,6 +43,7 @@ public class ClassApplicationService {
     private final ClassRepository classRepository;
     private final UserRepository userRepository;
     private final TutorProfileRepository tutorProfileRepository;
+    private final GoogleMeetService googleMeetService;
 
     /** Gia sư nộp đơn nhận lớp */
     @Transactional
@@ -213,6 +217,25 @@ public class ClassApplicationService {
         // PlatformFee = PH trả - GS nhận
         if (parentFee != null && tutorFee != null) {
             classEntity.setPlatformFee(parentFee.subtract(tutorFee));
+        }
+
+        // Tạo Google Meet Link cố định tĩnh nếu là lớp ONLINE
+        if (classEntity.getMode() == ClassMode.ONLINE) {
+            try {
+                List<String> emails = new ArrayList<>();
+                userRepository.findById(classEntity.getParentId()).ifPresent(u -> emails.add(u.getEmail()));
+                userRepository.findById(application.getTutorId()).ifPresent(u -> emails.add(u.getEmail()));
+
+                String summary = String.format("Lớp %s (Mã %s)", classEntity.getTitle(), classEntity.getClassCode());
+                String description = "Đường link cố định dành cho Lớp Học trực tuyến thuộc nền tảng Gia Sư Tinh Hoa.";
+                OffsetDateTime now = OffsetDateTime.now();
+                
+                String meetUrl = googleMeetService.createMeetLink(summary, description, now, now.plusHours(1), emails);
+                classEntity.setMeetLink(meetUrl);
+                log.info("Fixed Google Meet link generated for class {}: {}", classEntity.getId(), meetUrl);
+            } catch (Exception e) {
+                log.error("Failed to generate Google Meet link for class " + classEntity.getId(), e);
+            }
         }
 
         classRepository.save(classEntity);

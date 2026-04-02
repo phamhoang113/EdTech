@@ -1,18 +1,13 @@
 package com.edtech.backend.auth.service.impl;
 
+import com.edtech.backend.auth.dto.request.FirebaseAuthRequest;
 import com.edtech.backend.auth.dto.request.LoginRequest;
-import com.edtech.backend.auth.dto.request.RegisterRequest;
-import com.edtech.backend.auth.dto.request.TokenRefreshRequest;
-import com.edtech.backend.auth.dto.request.VerifyOtpRequest;
-import com.edtech.backend.auth.dto.response.RegisterResponse;
-import com.edtech.backend.auth.dto.response.TokenResponse;
-import com.edtech.backend.auth.entity.OtpCodeEntity;
 import com.edtech.backend.auth.entity.RefreshTokenEntity;
 import com.edtech.backend.auth.entity.UserDeviceEntity;
 import com.edtech.backend.auth.entity.UserEntity;
-import com.edtech.backend.auth.enums.OtpPurpose;
 import com.edtech.backend.auth.enums.UserRole;
-import com.edtech.backend.auth.repository.OtpCodeRepository;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseToken;
 import com.edtech.backend.auth.repository.RefreshTokenRepository;
 import com.edtech.backend.auth.repository.UserDeviceRepository;
 import com.edtech.backend.auth.repository.UserRepository;
@@ -42,7 +37,6 @@ import java.util.UUID;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
-    private final OtpCodeRepository otpCodeRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserDeviceRepository userDeviceRepository;
     private final PasswordEncoder passwordEncoder;
@@ -54,7 +48,6 @@ public class AuthServiceImpl implements AuthService {
     private String appEnvironment;
 
     // ─────────── Constants ───────────
-    private static final String DEV_OTP_CODE        = "123456";
     private static final int    MAX_FAILED_ATTEMPTS  = 5;
     private static final int    LOCKOUT_MINUTES      = 15;
     private static final int    OTP_EXPIRY_MINUTES   = 5;
@@ -65,66 +58,51 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public RegisterResponse register(RegisterRequest request) {
-        log.info("Registering user with phone: {}", request.getPhone());
+    public TokenResponse verifyFirebaseAuth(FirebaseAuthRequest request) {
+        try {
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(request.getIdToken());
+            // Extract phone_number claim (usually in E.164 format like +84912345678)
+            Object phoneObj = decodedToken.getClaims().get("phone_number");
+            if (phoneObj == null) {
+                throw new BusinessRuleException("Không tìm thấy số điện thoại trong chứng chỉ Firebase.");
+            }
+            String phone = phoneObj.toString();
+            
+            // Standardize format to local VN standard for matching
+            if (phone.startsWith("+84")) {
+                phone = "0" + phone.substring(3);
+            }
 
-        if (request.getPhone() != null && userRepository.existsByPhoneAndIsDeletedFalse(request.getPhone())) {
-            throw new BusinessRuleException("Phone number already exists.");
+            Optional<UserEntity> userOpt = userRepository.findByPhoneAndIsDeletedFalse(phone);
+            UserEntity user;
+
+            if (userOpt.isPresent()) {
+                user = userOpt.get(); // Existing user -> Login
+                log.info("Firebase Auth successful for existing user: {}", phone);
+            } else {
+                // New User -> Register
+                if (request.getPassword() == null || request.getFullName() == null || request.getRole() == null) {
+                    throw new BusinessRuleException("Số điện thoại chưa đăng ký. Vui lòng cung cấp mật khẩu, Họ và tên và Quyền (role) để hoàn tất đăng ký.");
+                }
+                user = UserEntity.builder()
+                        .phone(phone)
+                        .passwordHash(passwordEncoder.encode(request.getPassword()))
+                        .fullName(request.getFullName())
+                        .role(request.getRole())
+                        .isActive(true) // Authenticated by Firebase immediately
+                        .isDeleted(false)
+                        .failedAttempts(0)
+                        .build();
+                userRepository.save(user);
+                log.info("Firebase Auth successful. Registered new user: {}", phone);
+            }
+
+            return generateTokenResponse(user);
+
+        } catch (Exception e) {
+            log.error("Failed to verify Firebase token", e);
+            throw new BusinessRuleException("Xác thực Firebase thất bại: " + e.getMessage());
         }
-        if (request.getPhone() == null) {
-            throw new BusinessRuleException("Phone must be provided.");
-        }
-
-        UserEntity user = UserEntity.builder()
-                .phone(request.getPhone())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .fullName(request.getFullName())
-                .role(request.getRole())
-                .isActive(false)
-                .isDeleted(false)
-                .failedAttempts(0)
-                .build();
-        userRepository.save(user);
-
-        if (request.getPhone() != null) {
-            OtpCodeEntity otp = generateAndSendOtp(request.getPhone(), OtpPurpose.REGISTER);
-            return RegisterResponse.builder()
-                    .otpToken(otp.getOtpToken().toString())
-                    .message(isProduction()
-                            ? "OTP has been sent to your phone."
-                            : "[DEV] OTP is " + DEV_OTP_CODE + ". otpToken: " + otp.getOtpToken())
-                    .build();
-        } else {
-            user.setIsActive(true);
-            userRepository.save(user);
-            return RegisterResponse.builder()
-                    .message("Account created and activated (no phone, no OTP required).")
-                    .build();
-        }
-    }
-
-    @Override
-    @Transactional
-    public TokenResponse verifyOtp(VerifyOtpRequest request) {
-        OtpCodeEntity otp = otpCodeRepository.findByOtpTokenAndIsUsedFalse(UUID.fromString(request.getOtpToken()))
-                .orElseThrow(() -> new BusinessRuleException("Invalid or already used OTP token."));
-
-        if (otp.getExpiresAt().isBefore(Instant.now())) {
-            throw new BusinessRuleException("OTP has expired.");
-        }
-        if (!otp.getCode().equals(request.getCode())) {
-            throw new BusinessRuleException("Invalid OTP code.");
-        }
-
-        otp.setIsUsed(true);
-        otpCodeRepository.save(otp);
-
-        UserEntity user = userRepository.findByPhoneAndIsDeletedFalse(otp.getPhone())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        user.setIsActive(true);
-        userRepository.save(user);
-
-        return generateTokenResponse(user);
     }
 
     @Override
@@ -209,32 +187,6 @@ public class AuthServiceImpl implements AuthService {
                 .avatarBase64(user.getAvatarBase64())
                 .isActive(user.getIsActive())
                 .build();
-    }
-
-    /**
-     * Sinh OTP, lưu DB và trả về OtpCodeEntity để lấy otpToken.
-     * Non-PRODUCTION: OTP luôn là 123456 để dễ test.
-     */
-    private OtpCodeEntity generateAndSendOtp(String phone, OtpPurpose purpose) {
-        String code = isProduction()
-                ? String.format("%06d", new Random().nextInt(999_999))
-                : DEV_OTP_CODE;
-
-        OtpCodeEntity otp = OtpCodeEntity.builder()
-                .phone(phone)
-                .code(code)
-                .purpose(purpose)
-                .expiresAt(Instant.now().plus(OTP_EXPIRY_MINUTES, ChronoUnit.MINUTES))
-                .build();
-        otpCodeRepository.save(otp);
-
-        if (isProduction()) {
-            log.info("OTP sent via SMS to phone {}", phone);
-            // TODO: Integrate SMS provider (e.g. Twilio, ESMS)
-        } else {
-            log.warn("[DEV] OTP for phone {} is {} (otpToken: {})", phone, code, otp.getOtpToken());
-        }
-        return otp;
     }
 
     private void saveUserDevice(UserEntity user, String fcmToken) {

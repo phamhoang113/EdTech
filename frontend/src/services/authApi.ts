@@ -9,10 +9,12 @@ export interface TokenResponse {
   isActive: boolean;
 }
 
-/** Trả về từ backend sau khi register thành công */
-export interface RegisterResponse {
-  otpToken: string; // UUID để verify OTP (gửi kèm code)
-  message: string;
+/** Payload for registering or authenticating via Firebase */
+export interface FirebaseAuthPayload {
+  idToken: string;
+  fullName: string;
+  password?: string;
+  role: 'PARENT' | 'TUTOR' | 'STUDENT';
 }
 
 export interface LoginPayload {
@@ -20,17 +22,6 @@ export interface LoginPayload {
   password: string;
 }
 
-export interface RegisterPayload {
-  phone: string;
-  password: string;
-  fullName: string;
-  role: 'PARENT' | 'TUTOR' | 'STUDENT';
-}
-
-export interface VerifyOtpPayload {
-  otpToken: string; // UUID nhận được sau register — KHÔNG gửi phone
-  code: string;
-}
 
 const unwrap = <T>(res: { data: { data: T } }): T => res.data.data;
 
@@ -39,14 +30,8 @@ export const loginApi = async (payload: LoginPayload): Promise<TokenResponse> =>
   return unwrap(res);
 };
 
-/** Returns RegisterResponse { otpToken, message } */
-export const registerApi = async (payload: RegisterPayload): Promise<RegisterResponse> => {
-  const res = await apiClient.post('/api/v1/auth/register', payload);
-  return unwrap(res);
-};
-
-/** Gửi otpToken (UUID) + code — backend không cần phone nữa */
-export const verifyOtpApi = async (payload: VerifyOtpPayload): Promise<TokenResponse> => {
-  const res = await apiClient.post('/api/v1/auth/verify-otp', payload);
+/** Send idToken along with registration info to Backend */
+export const firebaseAuthApi = async (payload: FirebaseAuthPayload): Promise<TokenResponse> => {
+  const res = await apiClient.post('/api/v1/auth/firebase', payload);
   return unwrap(res);
 };

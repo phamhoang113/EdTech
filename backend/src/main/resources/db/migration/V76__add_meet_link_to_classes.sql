@@ -1,0 +1,1 @@
+ALTER TABLE classes ADD COLUMN meet_link VARCHAR(500);
