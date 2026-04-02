@@ -36,13 +36,7 @@ export const router = createBrowserRouter([
           return { Component: RegisterPage };
         },
       },
-      {
-        path: '/verify-otp',
-        lazy: async () => {
-          const { OtpVerifyPage } = await import('../pages/OtpVerifyPage');
-          return { Component: OtpVerifyPage };
-        },
-      },
+
       {
         path: '/about',
         lazy: async () => {
