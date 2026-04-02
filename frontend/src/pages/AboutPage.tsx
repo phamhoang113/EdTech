@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { useOutletContext } from 'react-router-dom';
+import type { PublicLayoutContext } from '../components/layout/PublicLayout';
 import { Target, Users, Shield, Sparkles, BookOpen, TrendingUp } from 'lucide-react';
 
 

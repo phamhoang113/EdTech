@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { useOutletContext } from 'react-router-dom';
+import type { PublicLayoutContext } from '../../components/layout/PublicLayout';
 import { Search } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { TutorCard } from '../../components/home/TutorCard';

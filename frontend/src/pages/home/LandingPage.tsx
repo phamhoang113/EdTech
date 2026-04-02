@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { useOutletContext } from 'react-router-dom';
+import type { PublicLayoutContext } from '../../components/layout/PublicLayout';
 import React from 'react';
 import { HeroSection } from '../../components/home/HeroSection';
 import { StatsSection } from '../../components/home/StatsSection';
