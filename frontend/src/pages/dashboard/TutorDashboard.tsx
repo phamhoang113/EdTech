@@ -247,7 +247,7 @@ export const TutorDashboard = () => {
               {[
                 { emoji: '📅', label: 'Lịch dạy', onClick: () => navigate('/tutor/schedule') },
                 { emoji: '📚', label: 'Lớp học', onClick: () => navigate('/tutor/classes') },
-                { emoji: '👤', label: 'Hồ sơ gia sư', onClick: () => navigate('/profile') },
+                { emoji: '🔎', label: 'Tìm lớp mới', onClick: () => navigate('/classes') },
                 { emoji: '📊', label: 'Báo cáo', onClick: () => navigate('/reports') },
               ].map((a, i) => {
                 const isDisabled = (a.label === 'Lịch dạy' || a.label === 'Lớp học') && verificationStatus !== 'APPROVED';
