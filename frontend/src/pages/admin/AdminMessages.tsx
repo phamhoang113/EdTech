@@ -1,4 +1,4 @@
-import { Send, MessageSquare, UserPlus, X, Phone, Mail, Calendar, MapPin, Star, Shield, ImageIcon, Images } from 'lucide-react';
+import { Send, MessageSquare, UserPlus, X, Phone, Mail, Calendar, MapPin, Star, Shield, ImageIcon, Images, ArrowLeft } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
@@ -329,6 +329,9 @@ export function AdminMessages() {
           {/* Chat Header */}
           <div className="chat-header">
             <div className="chat-header-info">
+              <button className="msg-back-btn" onClick={() => { setActiveConv(null); setPendingNew(null); }} title="Quay lại">
+                <ArrowLeft size={20} />
+              </button>
               <div className="msg-avatar clickable" onClick={(e) => handleAvatarClick(activeConv.userId, e)} title="Xem thông tin người dùng">
                 {activeConv.userAvatarBase64 ? (
                   <img src={activeConv.userAvatarBase64} alt="avt" />
@@ -492,7 +495,7 @@ export function AdminMessages() {
         <p className="admin-page__subtitle">Quản lý tin nhắn từ Gia sư, Phụ huynh và Học sinh.</p>
       </div>
 
-      <div className="msg-container">
+      <div className={`msg-container ${(activeConv || pendingNew) ? 'chat-active' : ''}`}>
         {/* INBOX LIST */}
         <div className="msg-list-panel">
           <div className="msg-list-header">

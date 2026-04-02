@@ -308,6 +308,7 @@
   }
   .admin-sidebar-overlay.open {
     display: block;
+    backdrop-filter: blur(2px);
   }
   .admin-main {
     margin-left: 0;
@@ -318,6 +319,22 @@
   .admin-topbar__search {
     width: 200px;
   }
+  /* Ẩn scrollbar mặc định trên sidebar mobile */
+  .admin-sidebar__nav {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .admin-sidebar__nav::-webkit-scrollbar {
+    display: none;
+  }
+  /* Nút đóng sidebar dễ bấm hơn trên mobile */
+  .admin-sidebar__logo .admin-topbar__hamburger {
+    min-width: 40px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 640px) {
@@ -326,6 +343,28 @@
   }
   .admin-content {
     padding: var(--spacing-4);
+  }
+  /* Topbar compact hơn trên mobile nhỏ */
+  .admin-topbar {
+    padding: 0 var(--spacing-3);
+    height: 56px;
+  }
+  .admin-topbar__breadcrumb {
+    font-size: 13px;
+  }
+  .admin-topbar__breadcrumb span {
+    font-size: 13px;
+  }
+  /* Avatar nhỏ hơn trên mobile */
+  .admin-topbar__avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+  .admin-topbar__icon-btn {
+    width: 34px;
+    height: 34px;
+    padding: 6px;
   }
 }
 

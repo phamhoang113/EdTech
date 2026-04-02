@@ -335,3 +335,279 @@
   background: rgba(139,92,246,0.1); color: #8b5cf6;
   font-size: 0.72rem; font-weight: 700;
 }
+
+/* ===== Mobile Responsive (Full-screen) ===== */
+@media (max-width: 640px) {
+  /* Page: padding tối thiểu, tận dụng full width */
+  .acl-page {
+    padding: 8px;
+  }
+
+  /* ─── Header ─── */
+  .acl-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 0 4px;
+  }
+  .acl-title {
+    font-size: 1.1rem;
+  }
+  .acl-subtitle {
+    font-size: 0.75rem;
+    margin-bottom: 0;
+  }
+
+  /* ─── Stats: cuộn ngang (horizontal scroll strip) ─── */
+  .acl-stats {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 0 4px 4px;
+  }
+  .acl-stats::-webkit-scrollbar {
+    display: none;
+  }
+  .acl-stat-card {
+    flex-shrink: 0;
+    min-width: 80px;
+    padding: 8px 10px;
+    border-radius: 10px;
+  }
+  .acl-stat-num {
+    font-size: 1.05rem;
+  }
+  .acl-stat-lbl {
+    font-size: 0.62rem;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+
+  /* ─── Toolbar ─── */
+  .acl-toolbar {
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+  .acl-search-box {
+    min-width: 0;
+    padding: 7px 10px;
+  }
+  .acl-search-box input {
+    font-size: 0.82rem;
+  }
+
+  /* Tab bar cuộn ngang */
+  .acl-tab-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 2px;
+    gap: 4px;
+  }
+  .acl-tab-bar::-webkit-scrollbar {
+    display: none;
+  }
+  .acl-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 5px 10px;
+    font-size: 0.73rem;
+  }
+
+  /* Grid 1 cột, gap nhỏ */
+  .acl-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 0 2px;
+  }
+
+  /* ─── Card: edge-to-edge ─── */
+  .acl-card {
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+  /* Badges wrap */
+  .acl-card-top {
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 5px;
+  }
+  .acl-card-code {
+    font-size: 0.63rem;
+    padding: 1px 6px;
+  }
+  .acl-badge {
+    font-size: 0.63rem;
+    padding: 1px 6px;
+    gap: 2px;
+  }
+  .acl-pending-badge {
+    font-size: 0.6rem;
+    padding: 1px 5px;
+  }
+  /* Title */
+  .acl-card-title {
+    font-size: 0.9rem;
+    line-height: 1.3;
+    margin-bottom: 5px;
+  }
+  /* Meta: truncate dòng dài */
+  .acl-card-meta {
+    font-size: 0.73rem;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 6px;
+    overflow: hidden;
+  }
+  .acl-card-meta > span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    min-width: 0;
+  }
+  /* People: compact */
+  .acl-card-people {
+    flex-direction: column;
+    gap: 3px;
+    padding: 4px 0;
+    margin-bottom: 2px;
+  }
+  .acl-person {
+    font-size: 0.75rem;
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+  .acl-phone {
+    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+  .acl-no-tutor {
+    font-size: 0.73rem;
+  }
+  /* Footer */
+  .acl-card-footer {
+    padding-top: 5px;
+    gap: 4px;
+  }
+  .acl-fee-row {
+    font-size: 0.73rem;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .acl-fee-val {
+    font-size: 0.78rem;
+  }
+  .acl-btn-icon-danger {
+    padding: 4px;
+  }
+  .acl-chevron {
+    display: none;
+  }
+
+  /* ─── Drawer: full-screen ─── */
+  .acl-drawer {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+  .acl-drawer-header {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+  .acl-drawer-code {
+    font-size: 0.65rem;
+    padding: 2px 7px;
+  }
+  .acl-drawer-title-wrap h2 {
+    font-size: 0.92rem;
+    line-height: 1.3;
+    margin-bottom: 2px;
+  }
+  .acl-drawer-title-wrap .acl-badge {
+    font-size: 0.58rem;
+    padding: 1px 5px;
+  }
+  .acl-drawer-title-wrap .acl-pending-badge {
+    font-size: 0.56rem;
+    padding: 1px 4px;
+  }
+  .acl-close-btn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+  /* Drawer body tighter */
+  .acl-drawer-body {
+    padding: 10px 12px;
+    gap: 14px;
+  }
+  .acl-drawer-section {
+    margin-bottom: 0;
+  }
+  .acl-drawer-section h3 {
+    font-size: 0.7rem;
+    margin-bottom: 6px;
+  }
+  /* Field grid: 2 cột */
+  .acl-dgrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+  }
+  .acl-dfield {
+    padding: 7px 9px;
+    border-radius: 7px;
+  }
+  .acl-dfield span {
+    font-size: 0.62rem;
+  }
+  .acl-dfield strong {
+    font-size: 0.8rem;
+    word-break: break-word;
+  }
+  /* Drawer footer */
+  .acl-drawer-footer {
+    padding: 8px 12px;
+  }
+  /* Fees table cuộn ngang */
+  .acl-level-fees-table {
+    overflow-x: auto !important;
+  }
+  /* Status change buttons */
+  .acl-status-btn {
+    font-size: 0.73rem;
+    padding: 6px 10px;
+  }
+  /* Schedule list */
+  .acl-schedule-item {
+    font-size: 0.8rem;
+    padding: 5px 8px;
+  }
+  .acl-day {
+    font-size: 0.7rem;
+    min-width: 40px;
+  }
+
+  /* ─── Modal ─── */
+  .acl-modal {
+    max-width: 96vw;
+    border-radius: 12px;
+  }
+  .acl-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .acl-btn-primary {
+    padding: 8px 14px;
+    font-size: 0.82rem;
+  }
+
+  /* ─── Empty state ─── */
+  .acl-empty {
+    padding: 40px 12px;
+  }
+}

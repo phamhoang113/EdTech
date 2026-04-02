@@ -348,8 +348,57 @@
 @media (max-width: 640px) {
   .admin-dashboard__stats {
     grid-template-columns: 1fr;
+    gap: var(--spacing-3);
+  }
+  .admin-dashboard__header {
+    margin-bottom: var(--spacing-4);
+  }
+  .admin-dashboard__title {
+    font-size: 20px;
+  }
+  .admin-stat-card {
+    padding: var(--spacing-4);
+  }
+  .admin-stat-card__icon {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+  .admin-stat-card__value {
+    font-size: 20px;
+  }
+  .admin-chart-card {
+    padding: var(--spacing-4);
+  }
+  .admin-chart-card__title {
+    font-size: 14px;
+  }
+  .admin-bar-chart {
+    height: 140px;
+  }
+  .admin-donut__chart {
+    width: 130px;
+    height: 130px;
+  }
+  /* Table cuộn ngang trên mobile */
+  .admin-table-card {
+    overflow-x: auto;
   }
   .admin-table {
-    font-size: 13px;
+    min-width: 500px;
+    font-size: 12px;
+  }
+  .admin-table th,
+  .admin-table td {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: 12px;
+  }
+  .admin-table__avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  .admin-table-card__header {
+    padding: var(--spacing-4);
   }
 }

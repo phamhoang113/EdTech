@@ -168,8 +168,10 @@ public class AuthServiceImpl implements AuthService {
                         user.getPasswordHash(),
                         java.util.Collections.emptyList());
 
-        String jwt = jwtService.generateToken(userDetails);
-        String refreshTokenStr = jwtService.generateRefreshToken(userDetails);
+        UserRole role = user.getRole();
+        String jwt = jwtService.generateTokenForRole(userDetails, role);
+        String refreshTokenStr = jwtService.generateRefreshTokenForRole(userDetails, role);
+        long refreshTtlMs = jwtService.getRefreshTokenTtlMs(role);
 
         // Xóa refresh token cũ để tránh duplicate key constraint
         refreshTokenRepository.deleteAllByUserId(user.getId());
@@ -177,7 +179,7 @@ public class AuthServiceImpl implements AuthService {
         RefreshTokenEntity rt = RefreshTokenEntity.builder()
                 .user(user)
                 .tokenHash(refreshTokenStr)
-                .expiresAt(Instant.now().plusMillis(REFRESH_TOKEN_TTL_MS))
+                .expiresAt(Instant.now().plusMillis(refreshTtlMs))
                 .build();
         refreshTokenRepository.save(rt);
 

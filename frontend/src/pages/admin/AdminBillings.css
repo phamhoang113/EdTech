@@ -556,6 +556,86 @@
   .ab-table-wrap { overflow-x: auto; }
 }
 
+@media (max-width: 640px) {
+  .ab-page-title {
+    font-size: 1.2rem;
+  }
+  /* Stat chips cuộn ngang thay vì wrap */
+  .ab-stats-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 4px;
+  }
+  .ab-stats-bar::-webkit-scrollbar {
+    display: none;
+  }
+  .ab-stat-chip {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  }
+  /* Filter tabs cuộn ngang */
+  .ab-filter-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .ab-filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .ab-filter-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 5px 10px;
+    font-size: 0.72rem;
+  }
+  /* Main tabs compact */
+  .ab-main-tab {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  /* Table compact trên mobile */
+  .ab-table {
+    min-width: 700px;
+    font-size: 0.75rem;
+  }
+  .ab-table th {
+    padding: 8px 10px;
+    font-size: 0.68rem;
+  }
+  .ab-table td {
+    padding: 10px;
+  }
+  .ab-tx-code {
+    font-size: 0.68rem;
+    padding: 2px 6px;
+  }
+  /* Period picker compact */
+  .ab-period-picker {
+    padding: 4px 12px;
+  }
+  .ab-period-label {
+    font-size: 0.78rem;
+  }
+  .ab-period-input {
+    font-size: 0.85rem;
+  }
+  /* Buttons compact */
+  .ab-btn {
+    padding: 7px 12px;
+    font-size: 0.78rem;
+  }
+  /* Modal full-width */
+  .ab-modal {
+    max-width: 95vw;
+    padding: 20px;
+    border-radius: 14px;
+  }
+}
+
 /* ── Checkboxes & Selection ── */
 .ab-checkbox {
   width: 16px;

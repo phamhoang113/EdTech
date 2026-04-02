@@ -790,6 +790,14 @@
     transition: opacity var(--transition-base);
   }
   .dash-cols    { grid-template-columns: 1fr; }
+  /* Ẩn scrollbar thô trên sidebar mobile */
+  .dash-sidebar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .dash-sidebar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .mobile-menu-btn {
@@ -804,9 +812,25 @@
 @media (max-width: 600px) {
   .dash-body     { padding: 14px; }
   .dash-topbar   { padding: 10px 14px; }
-  .topbar-search-wrap { width: 140px; }
+  .topbar-search-wrap { display: none; }
   .dash-stats-grid { grid-template-columns: 1fr 1fr; }
   .greeting-name { font-size: 1.25rem; }
+  /* Topbar items compact hơn */
+  .topbar-icon-btn {
+    width: 34px;
+    height: 34px;
+  }
+  .topbar-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 0.85rem;
+  }
+  .dash-greeting {
+    padding: 18px 20px;
+  }
+  .greeting-emoji {
+    font-size: 2.5rem;
+  }
 }
 
 /* =============================================

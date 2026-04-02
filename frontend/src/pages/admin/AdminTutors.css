@@ -285,4 +285,39 @@
   .at-card-main { flex-direction: column; align-items: stretch; }
   .at-card-right { align-items: flex-start; flex-direction: row; }
   .at-toolbar { flex-direction: column; align-items: stretch; }
+  .at-drawer { width: 100%; max-width: 100vw; }
+  .at-drawer-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .at-title { font-size: 1.15rem; }
+  /* Filter buttons cuộn ngang */
+  .at-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .at-filters::-webkit-scrollbar { display: none; }
+  .at-filter-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+  }
+  /* Card compact */
+  .at-card-main { padding: 14px 16px; }
+  .at-avatar { width: 40px; height: 40px; font-size: 1.1rem; }
+  .at-card-name { font-size: 0.95rem; }
+  .at-card-meta { font-size: 0.75rem; }
+  .at-subject-tag { font-size: 0.68rem; padding: 1px 6px; }
+  /* Stats compact */
+  .at-stat-card { padding: 12px; }
+  .at-stat-num { font-size: 1.4rem; }
+  .at-stat-lbl { font-size: 0.72rem; }
+  /* Search box */
+  .at-search-box { min-width: 0; padding: 8px 12px; }
+  .at-search-box input { font-size: 0.85rem; }
+  /* Modal full-width */
+  .at-modal { max-width: 95vw; }
 }

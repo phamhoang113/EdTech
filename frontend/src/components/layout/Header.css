@@ -177,12 +177,14 @@ Modern CSS supports relative colors, but let's stick to simple backdrop. */
     background: var(--color-surface);
     flex-direction: column;
     align-items: stretch;
-    padding: var(--spacing-5) var(--spacing-6);
+    padding: var(--spacing-4) var(--spacing-5);
     box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.15);
     border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
-    gap: var(--spacing-5);
+    gap: var(--spacing-4);
     margin-left: 0;
+    max-height: 80vh;
+    overflow-y: auto;
     
     /* Animation state hidden */
     transform: translateY(-10px);
@@ -202,9 +204,27 @@ Modern CSS supports relative colors, but let's stick to simple backdrop. */
 
   .nav-links {
     flex-direction: column;
-    gap: var(--spacing-4);
+    gap: 0;
     border-bottom: 1px solid var(--color-border);
-    padding-bottom: var(--spacing-5);
+    padding-bottom: var(--spacing-3);
+  }
+
+  /* Nav links to lớn, dễ bấm trên mobile */
+  .nav-links .nav-link {
+    padding: 14px 16px;
+    font-size: 1rem;
+    border-radius: var(--radius-lg);
+    transition: background var(--transition-base), color var(--transition-base);
+  }
+  .nav-links .nav-link:hover {
+    background: var(--color-surface-hover);
+  }
+  /* Active indicator gọn gàng hơn (không kéo dài full-width) */
+  .nav-links .nav-link.active {
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  }
+  .nav-links .nav-link.active::after {
+    display: none;
   }
 
   .nav-theme-toggle {
@@ -224,6 +244,14 @@ Modern CSS supports relative colors, but let's stick to simple backdrop. */
 
   .mobile-only {
     display: flex !important;
+  }
+
+  /* Dashboard icon & menu button khoảng cách hợp lý */
+  .header-right {
+    gap: var(--spacing-3);
+  }
+  .header-dash-link {
+    padding: 6px 10px;
   }
 }
 

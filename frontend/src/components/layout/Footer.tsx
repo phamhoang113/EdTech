@@ -51,7 +51,7 @@ export const Footer = () => {
         <div className="container footer-bottom-content">
           <p>&copy; {new Date().getFullYear()} Gia Sư Tinh Hoa Platform. All rights reserved.</p>
           <p className="footer-hotline">
-            <Phone size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+            <Phone size={14} />
             Hotline: 0336 652 085
           </p>
         </div>

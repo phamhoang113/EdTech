@@ -1,5 +1,6 @@
 package com.edtech.backend.security.jwt;
 
+import com.edtech.backend.auth.enums.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -28,6 +29,12 @@ public class JwtService {
     @Value("${application.security.jwt.refresh-token.expiration:604800000}")
     private long refreshExpiration;
 
+    // Session durations theo role
+    private static final long ADMIN_ACCESS_EXPIRY_MS  = 86_400_000L;       // 1 ngày
+    private static final long ADMIN_REFRESH_EXPIRY_MS = 86_400_000L;       // 1 ngày
+    private static final long USER_ACCESS_EXPIRY_MS   = 604_800_000L;      // 7 ngày
+    private static final long USER_REFRESH_EXPIRY_MS  = 31_536_000_000L;   // 365 ngày
+
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -47,6 +54,23 @@ public class JwtService {
 
     public String generateRefreshToken(UserDetails userDetails) {
         return buildToken(new HashMap<>(), userDetails, refreshExpiration);
+    }
+
+    /** Tạo access token theo role: ADMIN 1 ngày, user thường 7 ngày */
+    public String generateTokenForRole(UserDetails userDetails, UserRole role) {
+        long expiry = (role == UserRole.ADMIN) ? ADMIN_ACCESS_EXPIRY_MS : USER_ACCESS_EXPIRY_MS;
+        return buildToken(new HashMap<>(), userDetails, expiry);
+    }
+
+    /** Tạo refresh token theo role: ADMIN 1 ngày, user thường 365 ngày */
+    public String generateRefreshTokenForRole(UserDetails userDetails, UserRole role) {
+        long expiry = (role == UserRole.ADMIN) ? ADMIN_REFRESH_EXPIRY_MS : USER_REFRESH_EXPIRY_MS;
+        return buildToken(new HashMap<>(), userDetails, expiry);
+    }
+
+    /** Lấy refresh token TTL (ms) theo role */
+    public long getRefreshTokenTtlMs(UserRole role) {
+        return (role == UserRole.ADMIN) ? ADMIN_REFRESH_EXPIRY_MS : USER_REFRESH_EXPIRY_MS;
     }
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {

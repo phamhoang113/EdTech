@@ -228,9 +228,50 @@
 
 /* ─── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .aca-page { padding: 20px 16px; }
   .aca-tutor-card-main { flex-direction: column; align-items: stretch; gap: 12px; }
   .aca-tutor-fee-info { border-left: none; border-top: 1px solid var(--color-border); padding-left: 0; padding-top: 12px; }
   .aca-tutor-right { align-items: flex-start; flex-direction: row; }
+}
+
+@media (max-width: 640px) {
+  .aca-title { font-size: 1.15rem; }
+  /* Tabs cuộn ngang */
+  .aca-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .aca-tabs::-webkit-scrollbar { display: none; }
+  .aca-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+  }
+  /* Class card xếp dọc */
+  .aca-class-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+  }
+  .aca-class-card-right {
+    flex-direction: row;
+    align-items: center;
+  }
+  .aca-card-title { font-size: 0.95rem; }
+  .aca-card-meta { font-size: 0.75rem; gap: 8px; }
+  /* Detail view compact */
+  .aca-detail-class-box { padding: 18px; }
+  .aca-detail-class-title { font-size: 1.1rem; }
+  .aca-detail-grid { grid-template-columns: 1fr; }
+  /* Modal full-width */
+  .aca-modal { max-width: 95vw; }
+  /* Tutor card compact */
+  .aca-tutor-card-main { padding: 14px 16px; }
+  .aca-avatar { width: 40px; height: 40px; font-size: 1.1rem; }
+  .aca-tutor-name-text { font-size: 0.95rem; }
 }
 
 /* ─── Ghost Button ──────────────────────────────────────────────────────────── */
