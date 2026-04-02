@@ -2,6 +2,7 @@
 import { useOutletContext } from 'react-router-dom';
 import type { PublicLayoutContext } from '../components/layout/PublicLayout';
 
+import { useState } from 'react';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 
 
@@ -45,6 +46,15 @@ const faqs = [
 ];
 
 export const FaqPage = () => {
+  const [openIndexes, setOpenIndexes] = useState<Record<string, boolean>>({});
+
+  const toggleAccordion = (cIdx: number, iIdx: number) => {
+    const key = `${cIdx}-${iIdx}`;
+    setOpenIndexes(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
   return (
     <div className="faq-page">
       <main className="faq-main">

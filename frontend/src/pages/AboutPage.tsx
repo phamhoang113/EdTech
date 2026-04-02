@@ -1,14 +1,16 @@
 // @ts-nocheck
-import { useOutletContext } from 'react-router-dom';
-import type { PublicLayoutContext } from '../components/layout/PublicLayout';
 import { Target, Users, Shield, Sparkles, BookOpen, TrendingUp } from 'lucide-react';
-
+import { useOutletContext } from 'react-router-dom';
 
 import { useScrollReveal } from '../hooks/useScrollReveal';
+import type { PublicLayoutContext } from '../components/layout/PublicLayout';
 import './AboutPage.css';
 
 export const AboutPage = () => {
   const { openLogin, openRegister } = useOutletContext<PublicLayoutContext>();
+  const { ref: statsRef, isRevealed: statsRevealed } = useScrollReveal();
+  const { ref: bentoRef, isRevealed: bentoRevealed } = useScrollReveal();
+  const { ref: ctaRef, isRevealed: ctaRevealed } = useScrollReveal();
 
   return (
     <div className="about-page">
