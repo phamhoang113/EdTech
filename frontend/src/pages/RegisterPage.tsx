@@ -40,6 +40,7 @@ export const RegisterPage = () => {
     return () => {
       if ((window as any).recaptchaVerifier) {
         (window as any).recaptchaVerifier.clear();
+        (window as any).recaptchaVerifier = null;
       }
     };
   }, []);
@@ -83,11 +84,28 @@ export const RegisterPage = () => {
 
     setIsLoading(true);
     try {
-      initRecaptcha();
-      const appVerifier = (window as any).recaptchaVerifier;
-      const confirmResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-      setConfirmationResult(confirmResult);
-      setStep('OTP');
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // BYPASS: Môi trường Local/SIT bỏ qua gọi Firebase thật để tránh block IP
+        setConfirmationResult({
+          confirm: async (code: string) => {
+            if (code === '123456') {
+              return {
+                user: {
+                  getIdToken: async () => 'MOCK_TOKEN_' + formattedPhone
+                }
+              };
+            }
+            throw new Error('Mã OTP sai. Môi trường test vui lòng nhập: 123456');
+          }
+        } as any);
+        setStep('OTP');
+      } else {
+        initRecaptcha();
+        const appVerifier = (window as any).recaptchaVerifier;
+        const confirmResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+        setConfirmationResult(confirmResult);
+        setStep('OTP');
+      }
     } catch (err: any) {
       console.error(err);
       setError('Lỗi gửi SMS từ Firebase: ' + (err.message || 'Thử lại sau.'));

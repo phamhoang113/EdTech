@@ -58,6 +58,10 @@ export const TutorVerificationModal = ({ onSuccess }: VerificationModalProps) =>
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (dateOfBirth.length !== 10) {
+      setError('Vui lòng nhập đầy đủ ngày tháng năm sinh (DD/MM/YYYY).');
+      return;
+    }
     if (!idCardNumber.trim()) {
       setError('Vui lòng nhập số CCCD / CMND.');
       return;
@@ -81,7 +85,15 @@ export const TutorVerificationModal = ({ onSuccess }: VerificationModalProps) =>
     try {
       const formData = new FormData();
       formData.append('tutorType', tutorType);
-      formData.append('dateOfBirth', dateOfBirth);
+      
+      // Convert DD/MM/YYYY -> YYYY-MM-DD
+      const [dd, mm, yyyy] = dateOfBirth.split('/');
+      if (dd && mm && yyyy) {
+        formData.append('dateOfBirth', `${yyyy}-${mm}-${dd}`);
+      } else {
+        formData.append('dateOfBirth', dateOfBirth);
+      }
+      
       formData.append('idCardNumber', idCardNumber);
       formData.append('degree', degree);
       subjects.forEach(s => formData.append('subjects', s));
@@ -148,10 +160,16 @@ export const TutorVerificationModal = ({ onSuccess }: VerificationModalProps) =>
               Ngày tháng năm sinh <span className="info-text">(Bắt buộc)</span>
             </label>
             <input
-              type="date"
+              type="text"
               value={dateOfBirth}
-              max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
-              onChange={(e) => setDateOfBirth(e.target.value)}
+              placeholder="DD/MM/YYYY"
+              onChange={(e) => {
+                let val = e.target.value.replace(/\D/g, '');
+                if (val.length > 8) val = val.slice(0, 8);
+                if (val.length > 4) val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4);
+                else if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2);
+                setDateOfBirth(val);
+              }}
               required
               className="v-input"
             />

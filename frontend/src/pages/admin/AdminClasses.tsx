@@ -221,8 +221,18 @@ function ClassDetailDrawer({
                     } else {
                       let levels: any[] = [];
                       let proposals: any[] = [];
-                      try { if (cls.levelFees) levels = JSON.parse(cls.levelFees); } catch {}
-                      try { if (cls.tutorProposals) proposals = JSON.parse(cls.tutorProposals); } catch {}
+                      try { 
+                        if (cls.levelFees) {
+                          const parsed = JSON.parse(cls.levelFees);
+                          levels = Array.isArray(parsed) ? parsed : [];
+                        }
+                      } catch {}
+                      try { 
+                        if (cls.tutorProposals) {
+                          const parsed = JSON.parse(cls.tutorProposals);
+                          proposals = Array.isArray(parsed) ? parsed : [];
+                        }
+                      } catch {}
                       
                       const combinedFees = levels.length > 0 ? levels.map(lv => {
                         const p = proposals.find(pr => pr.level === lv.level);
@@ -365,8 +375,18 @@ function ClassDetailDrawer({
             {cls.status !== 'ACTIVE' && (cls.levelFees || cls.tutorProposals) ? (() => {
               let levels: Array<{ level: string; fee?: number }> = [];
               let proposals: Array<{ level: string; fee?: number }> = [];
-              try { if (cls.levelFees) levels = JSON.parse(cls.levelFees); } catch {}
-              try { if (cls.tutorProposals) proposals = JSON.parse(cls.tutorProposals); } catch {}
+              try { 
+                if (cls.levelFees) {
+                  const parsed = JSON.parse(cls.levelFees);
+                  levels = Array.isArray(parsed) ? parsed : [];
+                }
+              } catch {}
+              try { 
+                if (cls.tutorProposals) {
+                  const parsed = JSON.parse(cls.tutorProposals);
+                  proposals = Array.isArray(parsed) ? parsed : [];
+                }
+              } catch {}
               
               const combinedFees = levels.length > 0 ? levels.map(lv => {
                 const p = proposals.find(pr => pr.level === lv.level);

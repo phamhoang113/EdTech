@@ -65,13 +65,21 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public TokenResponse verifyFirebaseAuth(FirebaseAuthRequest request) {
         try {
-            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(request.getIdToken());
-            // Extract phone_number claim (usually in E.164 format like +84912345678)
-            Object phoneObj = decodedToken.getClaims().get("phone_number");
-            if (phoneObj == null) {
-                throw new BusinessRuleException("Không tìm thấy số điện thoại trong chứng chỉ Firebase.");
+            String phone;
+            
+            // BYPASS CHO LOCAL/SIT: Cho phép dùng MOCK_TOKEN_ + số điện thoại để đăng ký mà không cần check Firebase
+            if (!isProduction() && request.getIdToken() != null && request.getIdToken().startsWith("MOCK_TOKEN_")) {
+                phone = request.getIdToken().substring("MOCK_TOKEN_".length());
+                log.info("Bypassing Firebase Auth (Local/SIT) for mock token with phone: {}", phone);
+            } else {
+                FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(request.getIdToken());
+                // Extract phone_number claim (usually in E.164 format like +84912345678)
+                Object phoneObj = decodedToken.getClaims().get("phone_number");
+                if (phoneObj == null) {
+                    throw new BusinessRuleException("Không tìm thấy số điện thoại trong chứng chỉ Firebase.");
+                }
+                phone = phoneObj.toString();
             }
-            String phone = phoneObj.toString();
             
             // Standardize format to local VN standard for matching
             if (phone.startsWith("+84")) {

@@ -41,9 +41,14 @@ export function AdminVerification() {
       setLoading(true);
       const res = await adminApi.getTutorVerifications();
       if (res.data) {
-        setTutors(res.data);
-        if (res.data.length > 0 && !selectedId) {
-          setSelectedId(res.data[0].id);
+        const sortedData = [...res.data].sort((a, b) => {
+          if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
+          if (a.status !== 'PENDING' && b.status === 'PENDING') return 1;
+          return 0;
+        });
+        setTutors(sortedData);
+        if (sortedData.length > 0 && !selectedId) {
+          setSelectedId(sortedData[0].id);
         }
       }
     } catch (error) {
