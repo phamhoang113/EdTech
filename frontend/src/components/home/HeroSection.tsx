@@ -6,7 +6,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import heroBg1 from '../../assets/photorealistic_hero.png';
 import heroBg2 from '../../assets/photorealistic_hero_2.png';
 import heroBg3 from '../../assets/photorealistic_hero_3.png';
-import heroMobile from '../../assets/hero_mobile.png';
+import heroMobile from '../../assets/hero_mobile.webp';
 import './HeroSection.css';
 
 interface HeroSectionProps {
@@ -42,7 +42,7 @@ export const HeroSection = ({}: HeroSectionProps) => {
             <span className="mobile-hidden">Học trực tuyến hay tại nhà, tất cả đều trong tầm tay.</span>
           </p>
           <div className="hero-mobile-illustration animate-fade-up delay-200">
-            <img src={heroMobile} alt="Gia sư dạy học trực tuyến" width={612} height={612} loading="lazy" />
+            <img src={heroMobile} alt="Gia sư dạy học trực tuyến" width={612} height={612} fetchPriority="high" />
           </div>
           <div className="hero-trust-badge animate-fade-up delay-300">
             <span className="trust-item">
