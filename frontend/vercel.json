@@ -10,15 +10,6 @@
       ]
     },
     {
-      "source": "/(.*\\.(ico|jpg|jpeg|png|gif|svg|webp|js|css|woff|woff2|ttf|eot))",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=86400, stale-while-revalidate=86400"
-        }
-      ]
-    },
-    {
       "source": "/(.*)",
       "headers": [
         {
