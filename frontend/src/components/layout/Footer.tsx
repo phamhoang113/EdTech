@@ -9,7 +9,7 @@ export const Footer = () => {
         <div className="footer-brand">
           <div className="footer-logo">
             <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
-              <img src="/logo.png" alt="Gia Sư Tinh Hoa" style={{ height: '48px', width: 'auto', objectFit: 'contain' }} className="footer-logo-img" />
+              <img src="/logo.png" alt="Gia Sư Tinh Hoa" width={130} height={48} style={{ height: '48px', width: 'auto', objectFit: 'contain' }} className="footer-logo-img" />
             </Link>
           </div>
           <p className="footer-description" style={{ marginTop: '12px' }}>

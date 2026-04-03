@@ -42,7 +42,7 @@ export const HeroSection = ({}: HeroSectionProps) => {
             <span className="mobile-hidden">Học trực tuyến hay tại nhà, tất cả đều trong tầm tay.</span>
           </p>
           <div className="hero-mobile-illustration animate-fade-up delay-200">
-            <img src={heroMobile} alt="Gia sư dạy học trực tuyến" />
+            <img src={heroMobile} alt="Gia sư dạy học trực tuyến" width={612} height={612} loading="lazy" />
           </div>
           <div className="hero-trust-badge animate-fade-up delay-300">
             <span className="trust-item">
