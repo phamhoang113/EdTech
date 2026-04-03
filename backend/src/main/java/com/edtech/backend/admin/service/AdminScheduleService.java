@@ -1,5 +1,23 @@
 package com.edtech.backend.admin.service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.edtech.backend.admin.dto.AdminScheduleAnalyticsDTO;
 import com.edtech.backend.admin.dto.QuotaShortfallItem;
 import com.edtech.backend.admin.dto.ScheduleSuggestDTO;
@@ -14,23 +32,6 @@ import com.edtech.backend.cls.enums.SessionStatus;
 import com.edtech.backend.cls.repository.ClassRepository;
 import com.edtech.backend.cls.repository.SessionRepository;
 import com.edtech.backend.core.exception.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j

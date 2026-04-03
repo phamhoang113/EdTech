@@ -1,12 +1,15 @@
 package com.edtech.backend.admin.dto;
 
-import com.edtech.backend.cls.enums.ClassStatus;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
 import lombok.Builder;
 import lombok.Value;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.UUID;
+import com.edtech.backend.cls.enums.ClassStatus;
 
 @Value
 @Builder
@@ -41,7 +44,7 @@ public class AdminClassListItem {
     String timeFrame;
     String schedule;
     String genderRequirement;
-    java.time.LocalDate learningStartDate;
+    LocalDate learningStartDate;
     /** JSON array levelFees: [{level, fee}] — dùng khi lớp OPEN để hiển thị bảng học phí */
     String levelFees;
     /** JSON array tutorProposals: [{level, fee}] — lưu lương trung tâm đề xuất cho Gia sư */
@@ -58,5 +61,5 @@ public class AdminClassListItem {
     boolean hasPendingProposals;
     long pendingApplicationCount;
     Instant createdAt;
-    java.util.List<UUID> studentIds;
+    List<UUID> studentIds;
 }

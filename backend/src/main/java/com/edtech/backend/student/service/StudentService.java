@@ -1,11 +1,11 @@
 package com.edtech.backend.student.service;
 
+import java.util.List;
+import java.util.UUID;
+
 import com.edtech.backend.student.dto.ParentLinkResponse;
 import com.edtech.backend.student.dto.StudentRequest;
 import com.edtech.backend.student.dto.StudentResponse;
-
-import java.util.List;
-import java.util.UUID;
 
 public interface StudentService {
 

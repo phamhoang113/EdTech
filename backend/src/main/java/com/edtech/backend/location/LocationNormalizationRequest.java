@@ -1,5 +1,7 @@
 package com.edtech.backend.location;
 
+import java.math.BigDecimal;
+
 import lombok.Getter;
 
 @Getter
@@ -8,6 +10,6 @@ public class LocationNormalizationRequest {
     private String provinceName;
     private String districtName;
     private String wardName;
-    private java.math.BigDecimal latitude;
-    private java.math.BigDecimal longitude;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
 }

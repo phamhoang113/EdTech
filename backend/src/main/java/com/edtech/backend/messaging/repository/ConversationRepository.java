@@ -1,14 +1,17 @@
 package com.edtech.backend.messaging.repository;
 
-import com.edtech.backend.messaging.entity.ConversationEntity;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-import java.util.UUID;
+import com.edtech.backend.messaging.entity.ConversationEntity;
 
 @Repository
 public interface ConversationRepository extends JpaRepository<ConversationEntity, UUID> {
@@ -26,5 +29,5 @@ public interface ConversationRepository extends JpaRepository<ConversationEntity
     Long getUnreadCountUser(UUID userId);
 
     @Query("SELECT c FROM ConversationEntity c WHERE (c.lastMessageAt IS NOT NULL AND c.lastMessageAt < :threshold) OR (c.lastMessageAt IS NULL AND c.updatedAt < :threshold)")
-    java.util.List<ConversationEntity> findIdleConversations(java.time.LocalDateTime threshold);
+    List<ConversationEntity> findIdleConversations(LocalDateTime threshold);
 }

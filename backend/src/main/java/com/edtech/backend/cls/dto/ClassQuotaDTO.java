@@ -1,8 +1,9 @@
 package com.edtech.backend.cls.dto;
 
+import java.util.UUID;
+
 import lombok.Builder;
 import lombok.Getter;
-import java.util.UUID;
 
 @Getter
 @Builder

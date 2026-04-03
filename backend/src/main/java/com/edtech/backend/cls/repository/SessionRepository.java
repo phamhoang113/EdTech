@@ -1,16 +1,17 @@
 package com.edtech.backend.cls.repository;
 
-import com.edtech.backend.cls.entity.SessionEntity;
-import com.edtech.backend.cls.enums.SessionStatus;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.UUID;
+import com.edtech.backend.cls.entity.SessionEntity;
+import com.edtech.backend.cls.enums.SessionStatus;
 
 public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
 

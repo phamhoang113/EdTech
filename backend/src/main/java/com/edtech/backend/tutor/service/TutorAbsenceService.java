@@ -1,5 +1,14 @@
 package com.edtech.backend.tutor.service;
 
+import java.util.UUID;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.cls.entity.AbsenceRequestEntity;
@@ -12,13 +21,6 @@ import com.edtech.backend.cls.repository.SessionRepository;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
 import com.edtech.backend.tutor.dto.request.TutorAbsenceReqDTO;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -73,7 +75,7 @@ public class TutorAbsenceService {
             Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             String username = null;
             
-            if (principal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
+            if (principal instanceof UserDetails userDetails) {
                 username = userDetails.getUsername();
             } else if (principal instanceof String principalStr) {
                 username = principalStr;

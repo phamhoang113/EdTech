@@ -1,9 +1,9 @@
 package com.edtech.backend.admin.controller;
 
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.admin.dto.AdminTutorListItem;
-import com.edtech.backend.admin.dto.AdminTutorVerificationResponse;
-import com.edtech.backend.admin.service.AdminTutorService;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,9 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
+import com.edtech.backend.admin.dto.AdminTutorListItem;
+import com.edtech.backend.admin.dto.AdminTutorVerificationResponse;
+import com.edtech.backend.admin.service.AdminTutorService;
+import com.edtech.backend.core.dto.ApiResponse;
 
 @RestController
 @RequiredArgsConstructor

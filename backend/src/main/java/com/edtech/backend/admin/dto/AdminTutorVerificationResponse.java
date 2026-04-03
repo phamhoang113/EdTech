@@ -1,16 +1,17 @@
 package com.edtech.backend.admin.dto;
 
-import com.edtech.backend.tutor.enums.TutorType;
-import com.edtech.backend.tutor.enums.VerificationStatus;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import com.edtech.backend.tutor.enums.TutorType;
+import com.edtech.backend.tutor.enums.VerificationStatus;
 
 @Getter
 @Builder

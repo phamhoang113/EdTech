@@ -1,10 +1,8 @@
 package com.edtech.backend.tutor.controller;
 
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.tutor.dto.request.UpdateTutorProfileRequest;
-import com.edtech.backend.tutor.dto.response.TutorProfileResponse;
-import com.edtech.backend.tutor.enums.TutorType;
-import com.edtech.backend.tutor.service.TutorProfileService;
+import java.time.LocalDate;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,8 +16,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
-import java.util.List;
+import com.edtech.backend.core.dto.ApiResponse;
+import com.edtech.backend.tutor.dto.request.UpdateTutorProfileRequest;
+import com.edtech.backend.tutor.dto.response.TutorProfileResponse;
+import com.edtech.backend.tutor.enums.TutorType;
+import com.edtech.backend.tutor.service.TutorProfileService;
 
 @RestController
 @RequestMapping("/api/v1/tutors/profile")

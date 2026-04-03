@@ -14,7 +14,7 @@ export interface UseUploadReturn extends UseUploadState {
 }
 
 /**
- * Hook upload ảnh trực tiếp lên MinIO qua presigned URL.
+ * Hook upload ảnh trực tiếp lên Server.
  *
  * @example
  * const { upload, uploading, progress, url, error } = useUpload();

@@ -1,12 +1,12 @@
 package com.edtech.backend.cls.dto;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
 
 /**
  * Request body cho GS chỉnh sửa 1 draft session.

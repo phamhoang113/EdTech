@@ -1,17 +1,18 @@
 package com.edtech.backend.auth.controller;
 
-import com.edtech.backend.auth.dto.request.FirebaseAuthRequest;
-import com.edtech.backend.auth.dto.request.LoginRequest;
-import com.edtech.backend.auth.dto.request.TokenRefreshRequest;
-import com.edtech.backend.auth.dto.response.TokenResponse;
-import com.edtech.backend.auth.service.AuthService;
-import com.edtech.backend.core.dto.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.edtech.backend.auth.dto.request.FirebaseAuthRequest;
+import com.edtech.backend.auth.dto.request.LoginRequest;
+import com.edtech.backend.auth.dto.request.TokenRefreshRequest;
+import com.edtech.backend.auth.dto.response.TokenResponse;
+import com.edtech.backend.auth.service.AuthService;
+import com.edtech.backend.core.dto.ApiResponse;
 
 @RestController
 @RequestMapping("/api/v1/auth")

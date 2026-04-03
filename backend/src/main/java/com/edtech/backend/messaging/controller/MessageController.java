@@ -1,11 +1,7 @@
 package com.edtech.backend.messaging.controller;
 
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.messaging.dto.ConversationResponseDTO;
-import com.edtech.backend.messaging.dto.MessageResponseDTO;
-import com.edtech.backend.messaging.dto.SendMessageRequest;
-import com.edtech.backend.messaging.service.MessagingService;
-import com.edtech.backend.notification.dto.UnreadCountDTO;
+import java.util.UUID;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,8 +17,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.UUID;
+import com.edtech.backend.core.dto.ApiResponse;
+import com.edtech.backend.messaging.dto.ConversationResponseDTO;
+import com.edtech.backend.messaging.dto.MessageResponseDTO;
+import com.edtech.backend.messaging.dto.SendMessageRequest;
+import com.edtech.backend.messaging.service.MessagingService;
+import com.edtech.backend.notification.dto.UnreadCountDTO;
 
 @RestController
 @RequestMapping("/api/v1/messages")
@@ -81,7 +83,7 @@ public class MessageController {
 
     @PostMapping("/image")
     public ApiResponse<MessageResponseDTO> sendImageMessage(
-            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam("file") MultipartFile file,
             @RequestParam(value = "conversationId", required = false) UUID conversationId,
             @RequestParam(value = "targetUserId", required = false) UUID targetUserId,
             @AuthenticationPrincipal UserDetails userDetails) {

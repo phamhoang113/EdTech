@@ -1,10 +1,11 @@
 package com.edtech.backend.tutor.dto.response;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
 import lombok.Builder;
 import lombok.Getter;
-
-import java.math.BigDecimal;
-import java.util.UUID;
 
 @Getter
 @Builder
@@ -24,7 +25,7 @@ public class OpenClassResponse {
     private BigDecimal parentFee;
     private BigDecimal minTutorFee;
     private BigDecimal maxTutorFee;
-    private java.util.List<String> tutorLevelRequirement;
+    private List<String> tutorLevelRequirement;
     private String genderRequirement;
     private Integer sessionsPerWeek;
     private Integer sessionDurationMin;

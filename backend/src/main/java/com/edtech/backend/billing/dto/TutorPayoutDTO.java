@@ -1,16 +1,17 @@
 package com.edtech.backend.billing.dto;
 
-import com.edtech.backend.billing.entity.TutorPayoutEntity;
-import com.edtech.backend.billing.enums.TutorPayoutStatus;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.UUID;
+import com.edtech.backend.billing.entity.TutorPayoutEntity;
+import com.edtech.backend.billing.enums.TutorPayoutStatus;
 
 @Getter
 @Setter

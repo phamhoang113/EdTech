@@ -1,12 +1,12 @@
 package com.edtech.backend.core.service;
 
+import java.io.IOException;
+import java.util.Base64;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.Base64;
 
 @Slf4j
 @Service
@@ -47,7 +47,7 @@ public class StorageService {
     }
 
     /**
-     * Xóa file (MinIO cũ, nay ảnh nằm trong DB, khi xóa bản ghi sẽ mất theo URL - ta chỉ cần xoá url ở phía service gọi).
+     * Xóa file (Hệ thống cũ, nay ảnh nằm trong DB, khi xóa bản ghi sẽ mất theo URL - ta chỉ cần xoá url ở phía service gọi).
      * Method này giữ lại dưới dạng no-op (không làm gì) để tương thích interface.
      */
     public void delete(String objectName) {

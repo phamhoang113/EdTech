@@ -1,10 +1,9 @@
 package com.edtech.backend.admin.controller;
 
-import com.edtech.backend.auth.enums.UserRole;
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.admin.dto.AdminUserDetail;
-import com.edtech.backend.admin.dto.AdminUserListItem;
-import com.edtech.backend.admin.service.AdminUserService;
+import java.util.List;
+import java.util.UUID;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,8 +16,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.UUID;
+import com.edtech.backend.admin.dto.AdminUserDetail;
+import com.edtech.backend.admin.dto.AdminUserListItem;
+import com.edtech.backend.admin.dto.CreateUserAdminRequest;
+import com.edtech.backend.admin.service.AdminUserService;
+import com.edtech.backend.auth.enums.UserRole;
+import com.edtech.backend.core.dto.ApiResponse;
 
 @RestController
 @RequestMapping("/api/v1/admin/users")
@@ -29,7 +32,7 @@ public class AdminUserController {
     private final AdminUserService adminUserService;
 
     @PostMapping("/quick-create")
-    public ApiResponse<AdminUserDetail> quickCreateUser(@jakarta.validation.Valid @RequestBody com.edtech.backend.admin.dto.CreateUserAdminRequest req) {
+    public ApiResponse<AdminUserDetail> quickCreateUser(@Valid @RequestBody CreateUserAdminRequest req) {
         return ApiResponse.ok(adminUserService.createUserBypass(req), "Tạo người dùng thành công");
     }
 

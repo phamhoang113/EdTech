@@ -1,11 +1,8 @@
 package com.edtech.backend.student.controller;
 
-import com.edtech.backend.auth.entity.UserEntity;
-import com.edtech.backend.auth.repository.UserRepository;
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.core.exception.EntityNotFoundException;
-import com.edtech.backend.student.dto.ParentLinkResponse;
-import com.edtech.backend.student.service.StudentService;
+import java.util.List;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,8 +14,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.UUID;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.core.dto.ApiResponse;
+import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.student.dto.ParentLinkResponse;
+import com.edtech.backend.student.service.StudentService;
 
 @RestController
 @RequestMapping("/api/v1/student/parent-links")

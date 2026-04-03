@@ -1,16 +1,17 @@
 package com.edtech.backend.cls.repository;
 
-import com.edtech.backend.cls.entity.ClassEntity;
-import com.edtech.backend.cls.enums.ClassStatus;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.data.jpa.repository.Modifying;
+import com.edtech.backend.cls.entity.ClassEntity;
+import com.edtech.backend.cls.enums.ClassStatus;
 
 @Repository
 public interface ClassRepository extends JpaRepository<ClassEntity, UUID> {
@@ -48,7 +49,7 @@ public interface ClassRepository extends JpaRepository<ClassEntity, UUID> {
     List<ClassEntity> findByParentIdAndIsDeletedFalseOrderByCreatedAtDesc(UUID parentId);
 
     /** Tìm lớp OPEN đã hết hạn endDate (dùng cho scheduler auto-close) */
-    List<ClassEntity> findByStatusAndEndDateBeforeAndIsDeletedFalse(ClassStatus status, java.time.LocalDate date);
+    List<ClassEntity> findByStatusAndEndDateBeforeAndIsDeletedFalse(ClassStatus status, LocalDate date);
 
     /** Tìm tất cả lớp của GS theo danh sách trạng thái (chưa xóa) */
     List<ClassEntity> findByTutorIdAndStatusInAndIsDeletedFalse(UUID tutorId, List<ClassStatus> statuses);

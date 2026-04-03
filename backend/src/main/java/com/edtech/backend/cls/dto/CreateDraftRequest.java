@@ -1,11 +1,11 @@
 package com.edtech.backend.cls.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter

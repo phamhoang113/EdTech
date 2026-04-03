@@ -1,9 +1,7 @@
 package com.edtech.backend.notification.controller;
 
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.notification.dto.NotificationResponseDTO;
-import com.edtech.backend.notification.dto.UnreadCountDTO;
-import com.edtech.backend.notification.service.NotificationService;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,7 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
+import com.edtech.backend.core.dto.ApiResponse;
+import com.edtech.backend.notification.dto.NotificationResponseDTO;
+import com.edtech.backend.notification.dto.UnreadCountDTO;
+import com.edtech.backend.notification.service.NotificationService;
 
 @RestController
 @RequestMapping("/api/v1/notifications")

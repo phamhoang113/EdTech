@@ -1,16 +1,26 @@
 package com.edtech.backend.tutor.entity;
 
-import com.edtech.backend.core.entity.BaseEntity;
-import com.edtech.backend.tutor.enums.TutorType;
-import com.edtech.backend.tutor.enums.VerificationStatus;
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import com.edtech.backend.core.entity.BaseEntity;
+import com.edtech.backend.tutor.enums.TutorType;
+import com.edtech.backend.tutor.enums.VerificationStatus;
 
 @Entity
 @Table(name = "tutor_profiles")
@@ -101,5 +111,6 @@ public class TutorProfileEntity extends BaseEntity {
     private String bankOwnerName;
     
     @Column(name = "is_mock")
+    @Builder.Default
     private Boolean isMock = false;
 }

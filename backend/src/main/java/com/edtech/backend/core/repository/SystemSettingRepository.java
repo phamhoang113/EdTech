@@ -1,11 +1,12 @@
 package com.edtech.backend.core.repository;
 
-import com.edtech.backend.core.entity.SystemSettingEntity;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-import java.util.UUID;
+import com.edtech.backend.core.entity.SystemSettingEntity;
 
 @Repository
 public interface SystemSettingRepository extends JpaRepository<SystemSettingEntity, UUID> {

@@ -1,10 +1,10 @@
 package com.edtech.backend.student.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-
 import java.time.Instant;
 import java.util.UUID;
+
+import lombok.Builder;
+import lombok.Getter;
 
 @Getter
 @Builder

@@ -1,16 +1,17 @@
 package com.edtech.backend.cls.scheduler;
 
-import com.edtech.backend.cls.entity.ClassEntity;
-import com.edtech.backend.cls.enums.ClassStatus;
-import com.edtech.backend.cls.repository.ClassRepository;
+import java.time.LocalDate;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.util.List;
+import com.edtech.backend.cls.entity.ClassEntity;
+import com.edtech.backend.cls.enums.ClassStatus;
+import com.edtech.backend.cls.repository.ClassRepository;
 
 /**
  * Scheduler tự động đóng lớp OPEN đã quá hạn endDate mà chưa có gia sư nhận.

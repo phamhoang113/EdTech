@@ -1,19 +1,24 @@
 package com.edtech.backend.admin.service;
 
-import com.edtech.backend.auth.entity.UserEntity;
-import com.edtech.backend.auth.enums.UserRole;
-import com.edtech.backend.auth.repository.UserRepository;
-import com.edtech.backend.admin.dto.AdminUserDetail;
-import com.edtech.backend.admin.dto.AdminUserListItem;
-import com.edtech.backend.tutor.entity.TutorProfileEntity;
-import com.edtech.backend.tutor.repository.TutorProfileRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.edtech.backend.admin.dto.AdminUserDetail;
+import com.edtech.backend.admin.dto.AdminUserListItem;
+import com.edtech.backend.admin.dto.CreateUserAdminRequest;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.enums.UserRole;
+import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.core.exception.BusinessRuleException;
+import com.edtech.backend.tutor.entity.TutorProfileEntity;
+import com.edtech.backend.tutor.enums.VerificationStatus;
+import com.edtech.backend.tutor.repository.TutorProfileRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +27,7 @@ public class AdminUserService {
 
     private final UserRepository userRepository;
     private final TutorProfileRepository tutorProfileRepository;
-    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     /** Lấy danh sách tất cả user (chưa xóa), có thể lọc theo role */
     public List<AdminUserListItem> getAllUsers(UserRole role) {
@@ -92,9 +97,9 @@ public class AdminUserService {
 
     /** Mở lớp hộ: Amin tự do tạo User cho phép login ngay không cần OTP */
     @Transactional
-    public AdminUserDetail createUserBypass(com.edtech.backend.admin.dto.CreateUserAdminRequest req) {
+    public AdminUserDetail createUserBypass(CreateUserAdminRequest req) {
         if (userRepository.findByPhoneAndIsDeletedFalse(req.getPhone()).isPresent()) {
-            throw new com.edtech.backend.core.exception.BusinessRuleException("Số điện thoại " + req.getPhone() + " đã tồn tại trong hệ thống.");
+            throw new BusinessRuleException("Số điện thoại " + req.getPhone() + " đã tồn tại trong hệ thống.");
         }
 
         UserEntity user = UserEntity.builder()
@@ -112,7 +117,7 @@ public class AdminUserService {
         if (req.getRole() == UserRole.TUTOR) {
             TutorProfileEntity tp = TutorProfileEntity.builder()
                     .userId(saved.getId())
-                    .verificationStatus(com.edtech.backend.tutor.enums.VerificationStatus.UNVERIFIED)
+                    .verificationStatus(VerificationStatus.UNVERIFIED)
                     .build();
             tutorProfileRepository.save(tp);
         }

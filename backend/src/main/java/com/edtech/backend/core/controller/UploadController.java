@@ -1,7 +1,8 @@
 package com.edtech.backend.core.controller;
 
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.core.service.StorageService;
+import java.util.List;
+import java.util.Map;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Map;
+import com.edtech.backend.core.dto.ApiResponse;
+import com.edtech.backend.core.service.StorageService;
 
 @RestController
 @RequestMapping("/api/v1/upload")

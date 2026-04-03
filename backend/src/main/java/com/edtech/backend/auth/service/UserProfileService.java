@@ -1,13 +1,16 @@
 package com.edtech.backend.auth.service;
 
+import java.util.function.Consumer;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.edtech.backend.auth.dto.UpdateUserProfileRequest;
 import com.edtech.backend.auth.dto.UserProfileResponse;
 import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.core.exception.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service xử lý profile chung cho mọi role (Parent, Student).
@@ -58,7 +61,7 @@ public class UserProfileService {
                 .build();
     }
 
-    private void updateIfPresent(String value, java.util.function.Consumer<String> setter) {
+    private void updateIfPresent(String value, Consumer<String> setter) {
         if (value != null) {
             setter.accept(value.trim().isEmpty() ? null : value.trim());
         }

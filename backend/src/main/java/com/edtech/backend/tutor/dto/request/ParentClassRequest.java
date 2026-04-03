@@ -1,10 +1,12 @@
 package com.edtech.backend.tutor.dto.request;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-
-import java.math.BigDecimal;
 
 /**
  * Phụ huynh gửi yêu cầu mở lớp.
@@ -27,5 +29,5 @@ public record ParentClassRequest(
         String genderRequirement,         // Nam / Nữ / Không yêu cầu
         String description,              // Ghi chú thêm cho admin
         String levelFees,                // JSON array loại GS + học phí [{level, tutor_fee}]
-        java.util.List<java.util.UUID> studentIds     // Danh sách con (student user_id)
+        List<UUID> studentIds     // Danh sách con (student user_id)
 ) {}

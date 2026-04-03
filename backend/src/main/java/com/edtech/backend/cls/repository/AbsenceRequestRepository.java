@@ -1,15 +1,16 @@
 package com.edtech.backend.cls.repository;
 
-import com.edtech.backend.cls.entity.AbsenceRequestEntity;
-import com.edtech.backend.cls.enums.AbsenceRequestStatus;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import com.edtech.backend.cls.entity.AbsenceRequestEntity;
+import com.edtech.backend.cls.enums.AbsenceRequestStatus;
 
 @Repository
 public interface AbsenceRequestRepository extends JpaRepository<AbsenceRequestEntity, UUID> {

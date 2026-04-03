@@ -1,18 +1,19 @@
 package com.edtech.backend.cls.dto;
 
-import com.edtech.backend.cls.entity.SessionEntity;
-import com.edtech.backend.cls.enums.SessionStatus;
-import com.edtech.backend.cls.enums.SessionType;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import com.edtech.backend.cls.entity.SessionEntity;
+import com.edtech.backend.cls.enums.SessionStatus;
+import com.edtech.backend.cls.enums.SessionType;
 
 @Getter
 @Setter

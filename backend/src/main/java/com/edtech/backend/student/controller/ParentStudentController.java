@@ -1,12 +1,8 @@
 package com.edtech.backend.student.controller;
 
-import com.edtech.backend.auth.entity.UserEntity;
-import com.edtech.backend.auth.repository.UserRepository;
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.core.exception.EntityNotFoundException;
-import com.edtech.backend.student.dto.StudentRequest;
-import com.edtech.backend.student.dto.StudentResponse;
-import com.edtech.backend.student.service.StudentService;
+import java.util.List;
+import java.util.UUID;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,8 +20,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.UUID;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.core.dto.ApiResponse;
+import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.student.dto.StudentRequest;
+import com.edtech.backend.student.dto.StudentResponse;
+import com.edtech.backend.student.service.StudentService;
 
 @RestController
 @RequestMapping("/api/v1/parent/students")

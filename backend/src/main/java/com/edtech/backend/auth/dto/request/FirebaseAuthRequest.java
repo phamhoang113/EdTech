@@ -1,8 +1,9 @@
 package com.edtech.backend.auth.dto.request;
 
-import com.edtech.backend.auth.enums.UserRole;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+
+import com.edtech.backend.auth.enums.UserRole;
 
 @Data
 public class FirebaseAuthRequest {

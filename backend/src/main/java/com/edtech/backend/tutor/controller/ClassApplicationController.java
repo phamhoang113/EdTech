@@ -1,13 +1,9 @@
 package com.edtech.backend.tutor.controller;
 
-import com.edtech.backend.auth.entity.UserEntity;
-import com.edtech.backend.auth.repository.UserRepository;
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.core.exception.EntityNotFoundException;
-import com.edtech.backend.tutor.dto.request.ApplyClassRequest;
-import com.edtech.backend.tutor.dto.response.ClassApplicationResponse;
-import com.edtech.backend.cls.enums.ApplicationStatus;
-import com.edtech.backend.tutor.service.ClassApplicationService;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +17,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.UUID;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.cls.enums.ApplicationStatus;
+import com.edtech.backend.core.dto.ApiResponse;
+import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.tutor.dto.request.ApplyClassRequest;
+import com.edtech.backend.tutor.dto.response.ClassApplicationResponse;
+import com.edtech.backend.tutor.service.ClassApplicationService;
 
 @RestController
 @RequiredArgsConstructor
@@ -84,7 +86,7 @@ public class ClassApplicationController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ClassApplicationResponse>> approve(
             @PathVariable UUID applicationId,
-            @RequestParam(required = false) java.math.BigDecimal actualSalary) {
+            @RequestParam(required = false) BigDecimal actualSalary) {
 
         return ResponseEntity.ok(ApiResponse.ok(
                 classApplicationService.approveApplication(applicationId, actualSalary),

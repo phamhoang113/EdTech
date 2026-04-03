@@ -1,11 +1,12 @@
 package com.edtech.backend.admin.dto;
 
-import com.edtech.backend.auth.enums.UserRole;
+import java.time.Instant;
+import java.util.UUID;
+
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.Instant;
-import java.util.UUID;
+import com.edtech.backend.auth.enums.UserRole;
 
 /** Thông tin user cho trang Quản lý người dùng của Admin */
 @Getter

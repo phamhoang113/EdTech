@@ -1,13 +1,15 @@
 package com.edtech.backend.tutor.dto.response;
 
-import com.edtech.backend.cls.enums.ApplicationStatus;
-import lombok.Builder;
-import lombok.Getter;
-
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+
+import lombok.Builder;
+import lombok.Getter;
+
+import com.edtech.backend.cls.enums.ApplicationStatus;
 
 @Getter
 @Builder
@@ -38,7 +40,7 @@ public class ClassApplicationResponse {
     private String tutorType;
     private LocalDate dateOfBirth;   // Năm sinh
     private String achievements;     // Bằng cấp / kinh nghiệm
-    private java.math.BigDecimal rating;   // Đánh giá sao trung bình
+    private BigDecimal rating;   // Đánh giá sao trung bình
     private Integer ratingCount;           // Tổng lượt đánh giá
     private String[] certBase64s;          // Ảnh bằng cấp base64
     // Tutor stats (thống kê cho admin)
@@ -49,6 +51,6 @@ public class ClassApplicationResponse {
     // Application info
     private ApplicationStatus status;
     private String note;
-    private java.math.BigDecimal proposedSalary;
+    private BigDecimal proposedSalary;
     private Instant appliedAt;       // Đổi tên từ createdAt
 }

@@ -1,13 +1,23 @@
 package com.edtech.backend.cls.entity;
 
-import com.edtech.backend.cls.enums.ApplicationStatus;
-import com.edtech.backend.core.entity.BaseEntity;
-import jakarta.persistence.*;
-import lombok.*;
+import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.util.UUID;
+import com.edtech.backend.cls.enums.ApplicationStatus;
+import com.edtech.backend.core.entity.BaseEntity;
 
 @Entity
 @Table(name = "class_applications")

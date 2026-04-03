@@ -1,11 +1,22 @@
 package com.edtech.backend.student.entity;
 
+import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.core.entity.BaseEntity;
-import jakarta.persistence.*;
-import lombok.*;
-
-import java.util.UUID;
 
 @Entity
 @Table(name = "student_profiles")

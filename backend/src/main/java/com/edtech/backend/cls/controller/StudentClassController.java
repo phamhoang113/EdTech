@@ -1,19 +1,12 @@
 package com.edtech.backend.cls.controller;
 
-import com.edtech.backend.auth.entity.UserEntity;
-import com.edtech.backend.auth.repository.UserRepository;
-import com.edtech.backend.cls.enums.ApplicationStatus;
-import com.edtech.backend.cls.enums.ClassMode;
-import com.edtech.backend.cls.enums.ClassStatus;
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.core.exception.EntityNotFoundException;
-import com.edtech.backend.tutor.dto.request.ParentClassRequest;
-import com.edtech.backend.admin.dto.AdminClassListItem;
-import com.edtech.backend.tutor.dto.response.ClassApplicationResponse;
-import com.edtech.backend.cls.entity.ClassEntity;
-import com.edtech.backend.cls.repository.ClassRepository;
-import com.edtech.backend.cls.repository.ClassApplicationRepository;
-import com.edtech.backend.tutor.service.ClassApplicationService;
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,19 +14,28 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
+import com.edtech.backend.admin.dto.AdminClassListItem;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.cls.entity.ClassEntity;
+import com.edtech.backend.cls.enums.ApplicationStatus;
+import com.edtech.backend.cls.enums.ClassMode;
+import com.edtech.backend.cls.enums.ClassStatus;
+import com.edtech.backend.cls.repository.ClassApplicationRepository;
+import com.edtech.backend.cls.repository.ClassRepository;
+import com.edtech.backend.core.dto.ApiResponse;
+import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.tutor.dto.request.ParentClassRequest;
+import com.edtech.backend.tutor.dto.response.ClassApplicationResponse;
+import com.edtech.backend.tutor.service.ClassApplicationService;
 
 @RestController
 @RequestMapping("/api/v1/student")
@@ -79,7 +81,7 @@ public class StudentClassController {
                 .tutorProposals("[]")
                 .status(ClassStatus.PENDING_APPROVAL)
                 .isDeleted(false)
-                .students(new java.util.HashSet<>(List.of(student))) // add exactly the student
+                .students(new HashSet<>(List.of(student))) // add exactly the student
                 .build();
 
         ClassEntity saved = classRepository.save(cls);

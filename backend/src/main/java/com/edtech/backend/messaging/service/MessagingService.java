@@ -1,19 +1,8 @@
 package com.edtech.backend.messaging.service;
 
-import com.edtech.backend.auth.enums.UserRole;
-import com.edtech.backend.auth.entity.UserEntity;
-import com.edtech.backend.auth.repository.UserRepository;
-import com.edtech.backend.core.exception.EdTechException;
-import com.edtech.backend.messaging.dto.ConversationResponseDTO;
-import com.edtech.backend.messaging.dto.MessageResponseDTO;
-import com.edtech.backend.messaging.dto.SendMessageRequest;
-import com.edtech.backend.messaging.entity.ConversationEntity;
-import com.edtech.backend.messaging.entity.MessageEntity;
-import com.edtech.backend.core.service.StorageService;
-import com.edtech.backend.messaging.repository.ConversationRepository;
-import com.edtech.backend.messaging.repository.MessageRepository;
-import com.edtech.backend.notification.entity.NotificationType;
-import com.edtech.backend.notification.service.NotificationService;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,9 +10,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.enums.UserRole;
+import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.core.exception.EdTechException;
+import com.edtech.backend.core.service.StorageService;
+import com.edtech.backend.messaging.dto.ConversationResponseDTO;
+import com.edtech.backend.messaging.dto.MessageResponseDTO;
+import com.edtech.backend.messaging.dto.SendMessageRequest;
+import com.edtech.backend.messaging.entity.ConversationEntity;
+import com.edtech.backend.messaging.entity.MessageEntity;
+import com.edtech.backend.messaging.repository.ConversationRepository;
+import com.edtech.backend.messaging.repository.MessageRepository;
+import com.edtech.backend.notification.entity.NotificationType;
+import com.edtech.backend.notification.service.NotificationService;
 
 @Service
 @RequiredArgsConstructor
@@ -295,7 +297,7 @@ public class MessagingService {
     }
 
     @Transactional
-    public MessageResponseDTO sendImageMessage(org.springframework.web.multipart.MultipartFile file,
+    public MessageResponseDTO sendImageMessage(MultipartFile file,
                                                 UUID conversationId, UUID targetUserId,
                                                 String currentUsername) {
         String base64DataUri = storageService.upload(file, "chat-images");

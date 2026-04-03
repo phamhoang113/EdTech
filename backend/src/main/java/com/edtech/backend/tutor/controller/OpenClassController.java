@@ -1,16 +1,17 @@
 package com.edtech.backend.tutor.controller;
 
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.tutor.dto.response.ClassFilterResponse;
-import com.edtech.backend.tutor.dto.response.OpenClassResponse;
-import com.edtech.backend.tutor.service.OpenClassService;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.edtech.backend.core.dto.ApiResponse;
+import com.edtech.backend.tutor.dto.response.ClassFilterResponse;
+import com.edtech.backend.tutor.dto.response.OpenClassResponse;
+import com.edtech.backend.tutor.service.OpenClassService;
 
 @RestController
 @RequestMapping("/api/v1/classes")

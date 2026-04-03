@@ -1,13 +1,16 @@
 package com.edtech.backend.admin.controller;
 
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.admin.dto.DashboardStatsResponse;
-import com.edtech.backend.admin.service.AdminDashboardService;
+import java.util.Map;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.edtech.backend.admin.dto.DashboardStatsResponse;
+import com.edtech.backend.admin.service.AdminDashboardService;
+import com.edtech.backend.core.dto.ApiResponse;
 
 @RestController
 @RequestMapping("/api/v1/admin/dashboard")
@@ -25,7 +28,7 @@ public class AdminDashboardController {
 
     /** Lấy badge counts nhẹ cho sidebar admin */
     @GetMapping("/badge-counts")
-    public ApiResponse<java.util.Map<String, Long>> getBadgeCounts() {
+    public ApiResponse<Map<String, Long>> getBadgeCounts() {
         return ApiResponse.ok(adminDashboardService.getBadgeCounts());
     }
 }

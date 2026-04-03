@@ -1,13 +1,23 @@
 package com.edtech.backend.auth.entity;
 
-import com.edtech.backend.auth.enums.UserRole;
-import com.edtech.backend.core.entity.BaseEntity;
-import jakarta.persistence.*;
+import java.time.Instant;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import lombok.*;
 
-import java.time.Instant;
+import com.edtech.backend.auth.enums.UserRole;
+import com.edtech.backend.core.entity.BaseEntity;
 
 @Entity
 @Table(name = "users")
@@ -66,5 +76,6 @@ public class UserEntity extends BaseEntity {
     private Instant lockedUntil;
     
     @Column(name = "is_mock")
+    @Builder.Default
     private Boolean isMock = false;
 }

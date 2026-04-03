@@ -1,26 +1,28 @@
 package com.edtech.backend.billing.controller;
 
-import com.edtech.backend.auth.entity.UserEntity;
-import com.edtech.backend.auth.repository.UserRepository;
-import com.edtech.backend.billing.dto.BillingDTO;
-import com.edtech.backend.billing.dto.LearningReportClassDTO;
-import com.edtech.backend.billing.service.ParentBillingService;
-import com.edtech.backend.core.exception.BusinessRuleException;
-import com.edtech.backend.core.exception.EntityNotFoundException;
-import com.edtech.backend.core.dto.ApiResponse;
+import java.util.List;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.UUID;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.billing.dto.BillingDTO;
+import com.edtech.backend.billing.dto.LearningReportClassDTO;
+import com.edtech.backend.billing.service.ParentBillingService;
+import com.edtech.backend.core.dto.ApiResponse;
+import com.edtech.backend.core.exception.BusinessRuleException;
+import com.edtech.backend.core.exception.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/api/v1/parents")
@@ -52,7 +54,7 @@ public class ParentBillingController {
     @PostMapping("/billings/{id}/confirm")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<ApiResponse<String>> confirmTransfer(
-            @org.springframework.web.bind.annotation.PathVariable UUID id,
+            @PathVariable UUID id,
             @AuthenticationPrincipal UserDetails userDetails) {
         UUID parentId = resolveParentId(userDetails);
         parentBillingService.confirmTransfer(parentId, id);

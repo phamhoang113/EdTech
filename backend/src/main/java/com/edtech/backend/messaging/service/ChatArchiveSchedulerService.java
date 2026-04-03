@@ -1,5 +1,16 @@
 package com.edtech.backend.messaging.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.edtech.backend.messaging.entity.ConversationBackupEntity;
 import com.edtech.backend.messaging.entity.ConversationEntity;
 import com.edtech.backend.messaging.entity.MessageBackupEntity;
@@ -8,16 +19,6 @@ import com.edtech.backend.messaging.repository.ConversationBackupRepository;
 import com.edtech.backend.messaging.repository.ConversationRepository;
 import com.edtech.backend.messaging.repository.MessageBackupRepository;
 import com.edtech.backend.messaging.repository.MessageRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service

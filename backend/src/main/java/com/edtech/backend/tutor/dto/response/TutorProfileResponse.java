@@ -1,12 +1,13 @@
 package com.edtech.backend.tutor.dto.response;
 
-import com.edtech.backend.tutor.enums.TutorType;
-import com.edtech.backend.tutor.enums.VerificationStatus;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import lombok.Builder;
 import lombok.Getter;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import com.edtech.backend.tutor.enums.TutorType;
+import com.edtech.backend.tutor.enums.VerificationStatus;
 
 @Getter
 @Builder

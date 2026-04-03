@@ -40,8 +40,6 @@ Dự án được xây dựng dựa trên nguyên tắc **Clean Architecture**, 
 
 ### 🗄️ Infrastructure & Database
 - **RDBMS**: PostgreSQL 15+ (Quản lý schema bằng Flyway)
-- **Cache / Session**: Redis
-- **Object Storage**: MinIO (Lưu trữ Avatar, File đính kèm, Tài liệu học tập)
 
 ---
 
@@ -50,17 +48,17 @@ Dự án được xây dựng dựa trên nguyên tắc **Clean Architecture**, 
 ### 1. Yêu cầu hệ thống (Prerequisites)
 - [Java 21 JDK](https://adoptium.net/) (Cài đặt và setup `JAVA_HOME`)
 - [Node.js 20+](https://nodejs.org/) & `npm`
-- Chạy các dịch vụ ngầm: PostgreSQL, Redis và MinIO.
+- Chạy các dịch vụ ngầm: PostgreSQL.
 
 ### 2. Cấu hình Môi trường
-Tạo bản sao của file biến môi trường và điều chỉnh thông tin database, Redis, MinIO, JWT Secret:
+Tạo bản sao của file biến môi trường và điều chỉnh thông tin database, JWT Secret:
 ```bash
 cp infrastructure/.env.example infrastructure/.env
 ```
 
 ### 3. Workflow Tự động nhanh (AI & Developer)
 Dự án có sẵn các lệnh workflow tiện ích hỗ trợ trong quá trình phát triển (Khởi chạy qua terminal hoặc Agent prompt):
-- `/start`: Khởi động nhanh Backend, MinIO, Postgres và Frontend.
+- `/start`: Khởi động nhanh Backend, Postgres và Frontend.
 - `/stop`: Tắt tất cả các service đang chạy.
 - `/restart_be`: Khởi động lại Spring Boot backend.
 - `/run_fe`: Chạy Vite React Frontend.

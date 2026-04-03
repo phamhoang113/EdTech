@@ -1,14 +1,15 @@
 package com.edtech.backend.student.repository;
 
-import com.edtech.backend.student.entity.StudentProfileEntity;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.edtech.backend.student.entity.StudentProfileEntity;
 
 @Repository
 public interface StudentProfileRepository extends JpaRepository<StudentProfileEntity, UUID> {

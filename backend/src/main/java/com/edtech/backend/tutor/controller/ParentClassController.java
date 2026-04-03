@@ -1,20 +1,13 @@
 package com.edtech.backend.tutor.controller;
 
-import com.edtech.backend.auth.entity.UserEntity;
-import com.edtech.backend.auth.repository.UserRepository;
-import com.edtech.backend.cls.enums.ApplicationStatus;
-import com.edtech.backend.cls.enums.ClassMode;
-import com.edtech.backend.cls.enums.ClassStatus;
-import com.edtech.backend.core.dto.ApiResponse;
-import com.edtech.backend.core.exception.BusinessRuleException;
-import com.edtech.backend.core.exception.EntityNotFoundException;
-import com.edtech.backend.tutor.dto.request.ParentClassRequest;
-import com.edtech.backend.admin.dto.AdminClassListItem;
-import com.edtech.backend.tutor.dto.response.ClassApplicationResponse;
-import com.edtech.backend.cls.entity.ClassEntity;
-import com.edtech.backend.cls.repository.ClassRepository;
-import com.edtech.backend.cls.repository.ClassApplicationRepository;
-import com.edtech.backend.tutor.service.ClassApplicationService;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,15 +24,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
-
-
-import org.springframework.transaction.annotation.Transactional;
+import com.edtech.backend.admin.dto.AdminClassListItem;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.cls.entity.ClassEntity;
+import com.edtech.backend.cls.enums.ApplicationStatus;
+import com.edtech.backend.cls.enums.ClassMode;
+import com.edtech.backend.cls.enums.ClassStatus;
+import com.edtech.backend.cls.repository.ClassApplicationRepository;
+import com.edtech.backend.cls.repository.ClassRepository;
+import com.edtech.backend.core.dto.ApiResponse;
+import com.edtech.backend.core.exception.BusinessRuleException;
+import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.tutor.dto.request.ParentClassRequest;
+import com.edtech.backend.tutor.dto.response.ClassApplicationResponse;
+import com.edtech.backend.tutor.service.ClassApplicationService;
 
 @RestController
 @RequestMapping("/api/v1/parent")
@@ -87,7 +87,7 @@ public class ParentClassController {
                 .tutorProposals("[]")       // NOT NULL trong DB — khởi tạo rỗng
                 .status(ClassStatus.PENDING_APPROVAL)
                 .isDeleted(false)
-                .students(new java.util.HashSet<>(studentUsers))
+                .students(new HashSet<>(studentUsers))
                 .build();
 
 
@@ -125,11 +125,11 @@ public class ParentClassController {
     }
 
     /** Cập nhật danh sách học sinh cho lớp đã tạo */
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     @PutMapping("/classes/{classId}/students")
     public ResponseEntity<ApiResponse<AdminClassListItem>> updateClassStudents(
-            @PathVariable java.util.UUID classId,
-            @RequestBody java.util.List<java.util.UUID> studentIds,
+            @PathVariable UUID classId,
+            @RequestBody List<UUID> studentIds,
             @AuthenticationPrincipal UserDetails userDetails) {
 
         UUID parentId = resolveUserId(userDetails.getUsername());

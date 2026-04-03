@@ -1,6 +1,9 @@
 package com.edtech.backend.security.config;
 
-import com.edtech.backend.security.jwt.JwtAuthenticationFilter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +24,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import com.edtech.backend.security.jwt.JwtAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity

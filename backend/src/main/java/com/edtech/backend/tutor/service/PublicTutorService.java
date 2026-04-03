@@ -1,13 +1,9 @@
 package com.edtech.backend.tutor.service;
 
-import com.edtech.backend.auth.entity.UserEntity;
-import com.edtech.backend.auth.repository.UserRepository;
-import com.edtech.backend.core.exception.EdTechException;
-import com.edtech.backend.tutor.dto.response.TutorPublicResponse;
-import com.edtech.backend.tutor.entity.TutorProfileEntity;
-import com.edtech.backend.tutor.enums.VerificationStatus;
-import com.edtech.backend.tutor.repository.TutorProfileRepository;
-import com.edtech.backend.core.service.SystemSettingsService;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -15,9 +11,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.core.exception.EdTechException;
+import com.edtech.backend.core.service.SystemSettingsService;
+import com.edtech.backend.tutor.dto.response.TutorPublicResponse;
+import com.edtech.backend.tutor.entity.TutorProfileEntity;
+import com.edtech.backend.tutor.enums.VerificationStatus;
+import com.edtech.backend.tutor.repository.TutorProfileRepository;
 
 @Service
 @RequiredArgsConstructor

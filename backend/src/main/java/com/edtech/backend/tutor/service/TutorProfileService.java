@@ -1,5 +1,14 @@
 package com.edtech.backend.tutor.service;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.core.exception.EntityNotFoundException;
@@ -10,14 +19,6 @@ import com.edtech.backend.tutor.entity.TutorProfileEntity;
 import com.edtech.backend.tutor.enums.TutorType;
 import com.edtech.backend.tutor.enums.VerificationStatus;
 import com.edtech.backend.tutor.repository.TutorProfileRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.time.LocalDate;
-import java.util.List;
 
 @Slf4j
 @Service

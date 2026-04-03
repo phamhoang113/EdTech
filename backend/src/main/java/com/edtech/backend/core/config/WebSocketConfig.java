@@ -1,6 +1,7 @@
 package com.edtech.backend.core.config;
 
-import com.edtech.backend.security.jwt.JwtService;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +23,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import java.util.List;
+import com.edtech.backend.security.jwt.JwtService;
 
 @Configuration
 @EnableWebSocketMessageBroker

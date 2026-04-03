@@ -1,5 +1,24 @@
 package com.edtech.backend.auth.service.impl;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseToken;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.edtech.backend.auth.dto.request.FirebaseAuthRequest;
 import com.edtech.backend.auth.dto.request.LoginRequest;
 import com.edtech.backend.auth.dto.request.TokenRefreshRequest;
@@ -8,8 +27,6 @@ import com.edtech.backend.auth.entity.RefreshTokenEntity;
 import com.edtech.backend.auth.entity.UserDeviceEntity;
 import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.enums.UserRole;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseToken;
 import com.edtech.backend.auth.repository.RefreshTokenRepository;
 import com.edtech.backend.auth.repository.UserDeviceRepository;
 import com.edtech.backend.auth.repository.UserRepository;
@@ -17,20 +34,6 @@ import com.edtech.backend.auth.service.AuthService;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
 import com.edtech.backend.security.jwt.JwtService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Optional;
-import java.util.Random;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -162,11 +165,11 @@ public class AuthServiceImpl implements AuthService {
 
     private TokenResponse generateTokenResponse(UserEntity user) {
         String subject = user.getPhone() != null ? user.getPhone() : user.getUsername();
-        org.springframework.security.core.userdetails.User userDetails =
-                new org.springframework.security.core.userdetails.User(
+        User userDetails =
+                new User(
                         subject,
                         user.getPasswordHash(),
-                        java.util.Collections.emptyList());
+                        Collections.emptyList());
 
         UserRole role = user.getRole();
         String jwt = jwtService.generateTokenForRole(userDetails, role);

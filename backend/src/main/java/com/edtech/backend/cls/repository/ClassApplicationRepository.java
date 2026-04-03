@@ -1,13 +1,14 @@
 package com.edtech.backend.cls.repository;
 
-import com.edtech.backend.cls.entity.ClassApplicationEntity;
-import com.edtech.backend.cls.enums.ApplicationStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.edtech.backend.cls.entity.ClassApplicationEntity;
+import com.edtech.backend.cls.enums.ApplicationStatus;
 
 @Repository
 public interface ClassApplicationRepository extends JpaRepository<ClassApplicationEntity, UUID> {

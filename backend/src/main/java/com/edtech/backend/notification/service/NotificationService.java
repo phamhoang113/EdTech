@@ -1,12 +1,8 @@
 package com.edtech.backend.notification.service;
 
-import com.edtech.backend.auth.entity.UserEntity;
-import com.edtech.backend.auth.repository.UserRepository;
-import com.edtech.backend.core.exception.EdTechException;
-import com.edtech.backend.notification.dto.NotificationResponseDTO;
-import com.edtech.backend.notification.entity.NotificationEntity;
-import com.edtech.backend.notification.entity.NotificationType;
-import com.edtech.backend.notification.repository.NotificationRepository;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -15,8 +11,13 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.core.exception.EdTechException;
+import com.edtech.backend.notification.dto.NotificationResponseDTO;
+import com.edtech.backend.notification.entity.NotificationEntity;
+import com.edtech.backend.notification.entity.NotificationType;
+import com.edtech.backend.notification.repository.NotificationRepository;
 
 @Service
 @RequiredArgsConstructor

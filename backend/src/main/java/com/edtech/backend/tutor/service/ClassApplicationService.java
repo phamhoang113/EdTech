@@ -1,21 +1,13 @@
 package com.edtech.backend.tutor.service;
 
-import com.edtech.backend.auth.entity.UserEntity;
-import com.edtech.backend.auth.repository.UserRepository;
-import com.edtech.backend.cls.enums.ClassMode;
-import com.edtech.backend.cls.enums.ClassStatus;
-import com.edtech.backend.core.exception.BusinessRuleException;
-import com.edtech.backend.core.exception.EntityNotFoundException;
-import com.edtech.backend.tutor.dto.request.ApplyClassRequest;
-import com.edtech.backend.tutor.dto.response.ClassApplicationResponse;
-import com.edtech.backend.cls.entity.ClassApplicationEntity;
-import com.edtech.backend.cls.entity.ClassEntity;
-import com.edtech.backend.cls.enums.ApplicationStatus;
-import com.edtech.backend.cls.repository.ClassApplicationRepository;
-import com.edtech.backend.cls.repository.ClassRepository;
-import com.edtech.backend.core.service.GoogleMeetService;
-import com.edtech.backend.tutor.entity.TutorProfileEntity;
-import com.edtech.backend.tutor.repository.TutorProfileRepository;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,13 +17,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.repository.UserRepository;
+import com.edtech.backend.cls.entity.ClassApplicationEntity;
+import com.edtech.backend.cls.entity.ClassEntity;
+import com.edtech.backend.cls.enums.ApplicationStatus;
+import com.edtech.backend.cls.enums.ClassMode;
+import com.edtech.backend.cls.enums.ClassStatus;
+import com.edtech.backend.cls.repository.ClassApplicationRepository;
+import com.edtech.backend.cls.repository.ClassRepository;
+import com.edtech.backend.core.exception.BusinessRuleException;
+import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.core.service.GoogleMeetService;
+import com.edtech.backend.tutor.dto.request.ApplyClassRequest;
+import com.edtech.backend.tutor.dto.response.ClassApplicationResponse;
+import com.edtech.backend.tutor.entity.TutorProfileEntity;
+import com.edtech.backend.tutor.repository.TutorProfileRepository;
 
 @Slf4j
 @Service

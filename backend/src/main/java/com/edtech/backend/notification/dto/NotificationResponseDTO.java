@@ -1,11 +1,12 @@
 package com.edtech.backend.notification.dto;
 
-import com.edtech.backend.notification.entity.NotificationType;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.edtech.backend.notification.entity.NotificationType;
 
 @Getter
 @Builder

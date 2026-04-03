@@ -1,13 +1,15 @@
 package com.edtech.backend.billing.dto;
 
-import com.edtech.backend.cls.dto.SessionDTO;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-import java.util.UUID;
+import com.edtech.backend.cls.dto.SessionDTO;
 
 @Getter
 @Builder
@@ -30,7 +32,7 @@ public class LearningReportClassDTO {
     private int cancelledSessionsMonth;
 
     // Current unbilled amount (Tam Tinh)
-    private java.math.BigDecimal estimatedFeeMonth;
+    private BigDecimal estimatedFeeMonth;
 
     private List<SessionDTO> sessionsMonth;
 }

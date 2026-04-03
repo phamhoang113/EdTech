@@ -1,16 +1,19 @@
 package com.edtech.backend.billing.dto;
 
-import com.edtech.backend.billing.entity.BillingEntity;
-import com.edtech.backend.billing.enums.BillingStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.billing.entity.BillingEntity;
+import com.edtech.backend.billing.enums.BillingStatus;
 
 @Getter
 @Setter
@@ -58,7 +61,7 @@ public class BillingDTO {
                 .classTitle(entity.getCls() != null ? entity.getCls().getTitle() : null)
                 .parentId(entity.getParent() != null ? entity.getParent().getId() : null)
                 .parentName(entity.getParent() != null ? entity.getParent().getFullName() : null)
-                .studentNames(entity.getCls() != null && entity.getCls().getStudents() != null ? entity.getCls().getStudents().stream().map(com.edtech.backend.auth.entity.UserEntity::getFullName).collect(java.util.stream.Collectors.joining(", ")) : null)
+                .studentNames(entity.getCls() != null && entity.getCls().getStudents() != null ? entity.getCls().getStudents().stream().map(UserEntity::getFullName).collect(Collectors.joining(", ")) : null)
                 .month(entity.getMonth())
                 .year(entity.getYear())
                 .totalSessions(entity.getTotalSessions())

@@ -1,17 +1,34 @@
 package com.edtech.backend.cls.entity;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.cls.enums.ClassMode;
 import com.edtech.backend.cls.enums.ClassStatus;
 import com.edtech.backend.core.entity.BaseEntity;
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.UUID;
 
 @Entity
 @Table(name = "classes")
@@ -88,6 +105,7 @@ public class ClassEntity extends BaseEntity {
     private LocalDate endDate;
 
     @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
     private Boolean isDeleted = false;
 
 
@@ -128,7 +146,7 @@ public class ClassEntity extends BaseEntity {
         inverseJoinColumns = @JoinColumn(name = "student_id")
     )
     @Builder.Default
-    private java.util.Set<UserEntity> students = new java.util.HashSet<>();
+    private Set<UserEntity> students = new HashSet<>();
 
     @Column(name = "is_mock")
     @Builder.Default

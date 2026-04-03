@@ -1,9 +1,5 @@
 package com.edtech.backend.auth.controller;
 
-import com.edtech.backend.auth.dto.UpdateUserProfileRequest;
-import com.edtech.backend.auth.dto.UserProfileResponse;
-import com.edtech.backend.auth.service.UserProfileService;
-import com.edtech.backend.core.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,6 +8,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.edtech.backend.auth.dto.UpdateUserProfileRequest;
+import com.edtech.backend.auth.dto.UserProfileResponse;
+import com.edtech.backend.auth.service.UserProfileService;
+import com.edtech.backend.core.dto.ApiResponse;
 
 /**
  * Controller xử lý profile chung cho mọi role (Parent, Student).
