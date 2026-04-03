@@ -7,15 +7,15 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * Loại (cấp độ) gia sư trong hệ thống.
  * Single Source of Truth: dashboard xác thực, filter lớp học, level_fees JSONB đều dùng enum này.
  *
- * HỆ THỐNG CÓ ĐÚNG 3 CẤP ĐỘ:
- *   STUDENT  → Sinh viên
- *   TEACHER  → Giáo viên
+ * HỆ THỐNG CÓ ĐÚNG 3 CẤP ĐỘ (thứ tự tăng dần theo kinh nghiệm):
+ *   STUDENT   → Sinh viên
  *   GRADUATED → Gia sư Tốt nghiệp
+ *   TEACHER   → Giáo viên
  */
 public enum TutorType {
     STUDENT("Sinh viên"),
-    TEACHER("Giáo viên"),
-    GRADUATED("Gia sư Tốt nghiệp");
+    GRADUATED("Gia sư Tốt nghiệp"),
+    TEACHER("Giáo viên");
 
     private final String displayName;
 

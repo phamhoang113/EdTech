@@ -45,9 +45,11 @@ public class OpenClassService {
                     BigDecimal maxTutorFee = entity.getTutorFee();
                     List<String> requiredLevels = new ArrayList<>();
 
-                    if (entity.getLevelFees() != null && !entity.getLevelFees().isEmpty()) {
+                    // GS thấy lương Admin set → đọc tutor_proposals [{level, fee}]
+                    if (entity.getTutorProposals() != null && !entity.getTutorProposals().isEmpty()
+                            && entity.getTutorProposals().startsWith("[")) {
                         try {
-                            List<Map<String, Object>> feeList = objectMapper.readValue(entity.getLevelFees(), new TypeReference<List<Map<String, Object>>>(){});
+                            List<Map<String, Object>> feeList = objectMapper.readValue(entity.getTutorProposals(), new TypeReference<List<Map<String, Object>>>(){});
                             if (!feeList.isEmpty()) {
                                 minTutorFee = null;
                                 maxTutorFee = null;
@@ -55,16 +57,15 @@ public class OpenClassService {
                                     if (feeObj.containsKey("level")) {
                                         requiredLevels.add((String) feeObj.get("level"));
                                     }
-                                    if (feeObj.containsKey("fee") || feeObj.containsKey("tutor_fee")) {
-                                        Object feeVal = feeObj.containsKey("tutor_fee") ? feeObj.get("tutor_fee") : feeObj.get("fee");
-                                        BigDecimal tFee = new BigDecimal(feeVal.toString());
+                                    if (feeObj.containsKey("fee")) {
+                                        BigDecimal tFee = new BigDecimal(feeObj.get("fee").toString());
                                         if (minTutorFee == null || tFee.compareTo(minTutorFee) < 0) minTutorFee = tFee;
                                         if (maxTutorFee == null || tFee.compareTo(maxTutorFee) > 0) maxTutorFee = tFee;
                                     }
                                 }
                             }
                         } catch (Exception e) {
-                            log.error("Failed to parse levelFees JSON: {}", e.getMessage());
+                            log.error("Failed to parse tutorProposals JSON: {}", e.getMessage());
                         }
                     }
 
@@ -97,7 +98,7 @@ public class OpenClassService {
                             .sessionsPerWeek(entity.getSessionsPerWeek() != null ? entity.getSessionsPerWeek() : 1)
                             .sessionDurationMin(entity.getSessionDurationMin() != null ? entity.getSessionDurationMin() : 90)
                             .studentCount(1) // Placeholder for UI until class_students logic is fully handled
-                            .levelFees(entity.getLevelFees())
+                            .levelFees(entity.getTutorProposals())
                             .build();
                 })
                 .collect(Collectors.toList());
