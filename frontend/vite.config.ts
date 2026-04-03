@@ -4,8 +4,8 @@ import react from '@vitejs/plugin-react'
 // Plugin set header cho local dev và preview để giả lập Vercel Cache
 const localCacheHeaderPlugin = () => ({
   name: 'vite-plugin-local-cache-headers',
-  configureServer(server) {
-    server.middlewares.use((req, res, next) => {
+  configureServer(server: any) {
+    server.middlewares.use((req: any, res: any, next: any) => {
       // Vercel asset paths (Vite assets have hash in filename usually but locally we use cache too to test)
       if (req.url && req.url.includes('/assets/')) {
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
@@ -18,8 +18,8 @@ const localCacheHeaderPlugin = () => ({
       next();
     });
   },
-  configurePreviewServer(server) {
-    server.middlewares.use((req, res, next) => {
+  configurePreviewServer(server: any) {
+    server.middlewares.use((req: any, res: any, next: any) => {
       if (req.url && req.url.includes('/assets/')) {
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       } else if (req.url && req.url.match(/\.(ico|png|svg|jpg|jpeg|gif|webp|woff2?|css|js)$/)) {

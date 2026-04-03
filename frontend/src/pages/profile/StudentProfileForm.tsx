@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { userProfileApi } from '../../services/userProfileApi';
 import type { UpdateUserProfileRequest } from '../../services/userProfileApi';
-import { ArrowLeft, Mail, School, Phone, Save, Camera, Lock, User, GraduationCap } from 'lucide-react';
+import { Mail, School, Save, Lock, User, GraduationCap } from 'lucide-react';
 import './TutorProfilePage.css';
 
 function toBase64(file: File): Promise<string> {
