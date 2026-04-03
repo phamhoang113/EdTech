@@ -4,6 +4,7 @@ import { useOutletContext } from 'react-router-dom';
 
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import type { PublicLayoutContext } from '../components/layout/PublicLayout';
+import { SEO } from '../components/common/SEO';
 import './AboutPage.css';
 
 export const AboutPage = () => {
@@ -13,6 +14,10 @@ export const AboutPage = () => {
 
   return (
     <div className="about-page">
+      <SEO 
+        title="Về Chúng Tôi | Gia Sư Tinh Hoa" 
+        description="Sứ mệnh của Gia Sư Tinh Hoa là nâng tầm tri thức Việt Nam bằng cách kết nối phụ huynh và những gia sư xuất sắc nhất."
+      />
       <main className="about-main">
         {/* PREMIUM HERO */}
         <section className="about-hero-premium">

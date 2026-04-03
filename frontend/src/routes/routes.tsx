@@ -90,6 +90,43 @@ export const router = createBrowserRouter([
               return { Component: CareersPage };
             },
           },
+
+          /* ── Blog / Bài viết SEO ── */
+          {
+            path: '/bai-viet',
+            lazy: async () => {
+              const { BlogListPage } = await import('../pages/blog/BlogListPage');
+              return { Component: BlogListPage };
+            },
+          },
+          {
+            path: '/bai-viet/tai-sao-con-hoc-hoai-khong-vo',
+            lazy: async () => {
+              const { HocHoaiKhongVoPage } = await import('../pages/blog/HocHoaiKhongVoPage');
+              return { Component: HocHoaiKhongVoPage };
+            },
+          },
+          {
+            path: '/bai-viet/phuong-phap-day-con-hoc-tai-nha',
+            lazy: async () => {
+              const { DayConHocTaiNhaPage } = await import('../pages/blog/DayConHocTaiNhaPage');
+              return { Component: DayConHocTaiNhaPage };
+            },
+          },
+          {
+            path: '/bai-viet/cach-chon-gia-su-gioi',
+            lazy: async () => {
+              const { CachChonGiaSuPage } = await import('../pages/blog/CachChonGiaSuPage');
+              return { Component: CachChonGiaSuPage };
+            },
+          },
+          {
+            path: '/bai-viet/loi-ich-hoc-1-kem-1',
+            lazy: async () => {
+              const { LoiIchHoc1Kem1Page } = await import('../pages/blog/LoiIchHoc1Kem1Page');
+              return { Component: LoiIchHoc1Kem1Page };
+            },
+          },
         ]
       },
       {

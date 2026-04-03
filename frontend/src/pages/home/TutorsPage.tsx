@@ -8,9 +8,17 @@ import { tutorPublicApi } from '../../services/tutorPublicApi';
 import type { TutorPublicResponse } from '../../services/tutorPublicApi';
 
 import './TutorsPage.css';
+import { SEO } from '../../components/common/SEO';
 
 export const TutorsPage: React.FC = () => {
   const { openLogin, openRegister } = useOutletContext<PublicLayoutContext>();
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'SearchResultsPage',
+    name: 'Danh Sách Gia Sư Tinh Hoa',
+    description: 'Tìm kiếm gia sư phù hợp nhất với nhu cầu học tập của bạn.',
+  };
 
   const [tutors, setTutors] = useState<TutorPublicResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +58,11 @@ export const TutorsPage: React.FC = () => {
 
   return (
     <div className="tutors-page">
+      <SEO 
+        title="Danh Sách Gia Sư | Gia Sư Tinh Hoa" 
+        description="Tìm kiếm danh sách gia sư chất lượng cao, các sinh viên xuất sắc thủ khoa cho mọi môn học."
+        schema={schema}
+      />
       <main className="tutors-main">
         <div className="container">
           <div className="tutors-header">

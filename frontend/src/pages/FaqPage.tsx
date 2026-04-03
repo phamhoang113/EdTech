@@ -5,7 +5,7 @@ import type { PublicLayoutContext } from '../components/layout/PublicLayout';
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 
-
+import { SEO } from '../components/common/SEO';
 import './FaqPage.css';
 
 const faqs = [
@@ -57,6 +57,10 @@ export const FaqPage = () => {
   };
   return (
     <div className="faq-page">
+      <SEO 
+        title="Câu Hỏi Thường Gặp | Gia Sư Tinh Hoa" 
+        description="Giải đáp các thắc mắc nhanh chóng liên quan đến quy trình quy trình tìm và nhận lớp tại Gia Sư Tinh Hoa."
+      />
       <main className="faq-main">
         <div className="faq-header">
           <div className="container">

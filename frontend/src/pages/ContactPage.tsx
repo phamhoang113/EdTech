@@ -1,15 +1,17 @@
 // @ts-nocheck
 import { useOutletContext } from 'react-router-dom';
 import type { PublicLayoutContext } from '../components/layout/PublicLayout';
-
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
-
-
+import { SEO } from '../components/common/SEO';
 import './ContactPage.css';
 
 export const ContactPage = () => {
   return (
     <div className="contact-page">
+      <SEO 
+        title="Liên Hệ | Gia Sư Tinh Hoa" 
+        description="Liên hệ với đội ngũ Gia Sư Tinh Hoa để được hỗ trợ tư vấn tìm gia sư, đăng ký làm gia sư và giải đáp mọi thắc mắc."
+      />
       <main className="contact-main">
         <div className="contact-header">
           <div className="container">
