@@ -632,7 +632,7 @@ export function RequestClassModal({ onClose, onSuccess }: Props) {
       .catch(() => {});
     // Fetch danh sách con em
     parentApi.getMyChildren()
-      .then(res => { setChildren((res.data ?? []).map(s => ({ id: s.id, fullName: s.fullName, grade: s.grade ?? undefined }))); })
+      .then(res => { setChildren((res.data ?? []).map(s => ({ id: s.userId, fullName: s.fullName, grade: s.grade ?? undefined }))); })
       .catch(() => {})
       .finally(() => setLoadingChildren(false));
   }, []);
