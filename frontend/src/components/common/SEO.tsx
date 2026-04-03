@@ -15,7 +15,7 @@ export const SEO: React.FC<SEOProps> = ({
   title,
   description = 'Nền tảng Gia Sư Tinh Hoa kết nối nhanh chóng, uy tín giữa Phụ huynh, Học sinh và các Gia sư giỏi, sinh viên xuất sắc trên toàn quốc.',
   keywords = 'gia sư, tìm gia sư, gia sư tiếng anh, gia sư toán, học kèm, gia sư tinh hoa, edtech, giáo dục, học thêm, gia sư tại nhà',
-  image = '/logo.png',
+  image = '/logo.webp',
   url = 'https://giasutinhhoa.com',
   type = 'website',
   schema,

@@ -93,7 +93,7 @@ export function AdminLayout() {
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-sidebar__logo">
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
-            <img src="/logo.png" alt="Gia Sư Tinh Hoa" style={{ width: '100%', height: 'auto', maxHeight: '50px', objectFit: 'contain', filter: 'var(--logo-filter, none)' }} />
+            <img src="/logo.webp" alt="Gia Sư Tinh Hoa" style={{ width: '100%', height: 'auto', maxHeight: '50px', objectFit: 'contain', filter: 'var(--logo-filter, none)' }} />
           </Link>
           <button
             className="admin-topbar__hamburger"

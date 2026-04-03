@@ -80,7 +80,7 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
     <header className="header">
       <div className="container header-container">
         <Link to="/" className="logo">
-          <img src="/logo.png" alt="Gia Sư Tinh Hoa Logo" width={120} height={44} fetchPriority="high" style={{ height: '44px', width: 'auto', objectFit: 'contain', filter: 'var(--logo-filter, none)' }} />
+          <img src="/logo.webp" alt="Gia Sư Tinh Hoa Logo" width={120} height={44} fetchPriority="high" style={{ height: '44px', width: 'auto', objectFit: 'contain', filter: 'var(--logo-filter, none)' }} />
         </Link>
 
         <div className={`nav-actions-container ${isMobileMenuOpen ? 'mobile-open' : ''}`}>

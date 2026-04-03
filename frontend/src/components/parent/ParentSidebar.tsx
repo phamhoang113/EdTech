@@ -28,7 +28,7 @@ export function ParentSidebar({ active, onRequestClass }: {
       {isOpen && <div className="dash-sidebar-overlay" onClick={close} />}
       <aside className={`dash-sidebar ${isOpen ? 'mobile-open' : ''}`}>
         <Link to="/" className="dash-sidebar-logo" onClick={close} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src="/logo.png" alt="Gia Sư Tinh Hoa" style={{ width: '100%', height: 'auto', maxHeight: '50px', objectFit: 'contain', filter: 'var(--logo-filter, none)' }} />
+          <img src="/logo.webp" alt="Gia Sư Tinh Hoa" style={{ width: '100%', height: 'auto', maxHeight: '50px', objectFit: 'contain', filter: 'var(--logo-filter, none)' }} />
         </Link>
 
         <div className="dash-sidebar-section">

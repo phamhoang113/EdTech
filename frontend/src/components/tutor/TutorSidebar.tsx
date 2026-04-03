@@ -28,7 +28,7 @@ export function TutorSidebar({ active, showScheduleWarning = false, draftCount =
       {isOpen && <div className="dash-sidebar-overlay" onClick={close} />}
       <aside className={`dash-sidebar ${isOpen ? 'mobile-open' : ''}`}>
         <Link to="/" className="dash-sidebar-logo" onClick={close} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src="/logo.png" alt="Gia Sư Tinh Hoa" className="dash-logo-img" style={{ width: '100%', height: 'auto', maxHeight: '50px', objectFit: 'contain' }} />
+          <img src="/logo.webp" alt="Gia Sư Tinh Hoa" className="dash-logo-img" style={{ width: '100%', height: 'auto', maxHeight: '50px', objectFit: 'contain' }} />
         </Link>
 
         <div className="dash-sidebar-section">
