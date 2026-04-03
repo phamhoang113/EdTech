@@ -5,8 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 
 import { TutorVerificationModal } from './TutorVerificationModal';
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
-import { TutorSidebar } from '../../components/tutor/TutorSidebar';
 import { tutorApi } from '../../services/tutorApi';
 import type { TutorClassDTO, TutorSessionDTO } from '../../services/tutorApi';
 import apiClient from '../../services/apiClient';
@@ -53,8 +51,6 @@ export const TutorDashboard = () => {
   // Real data
   const [classes, setClasses] = useState<TutorClassDTO[]>([]);
   const [upcomingSessions, setUpcomingSessions] = useState<TutorSessionDTO[]>([]);
-  const [scheduleWarning, setScheduleWarning] = useState(false);
-  const [draftCount, setDraftCount] = useState(0);
 
   useEffect(() => {
     fetchProfileStatus();
@@ -90,13 +86,6 @@ export const TutorDashboard = () => {
         .filter(s => getDisplayStatus(s.status, s.sessionDate, s.endTime) === 'SCHEDULED' && new Date(s.sessionDate) >= new Date(now.toDateString()))
         .slice(0, 4);
       setUpcomingSessions(upcoming);
-
-      // Check schedule warning (draft sessions)
-      try {
-        const status = await tutorApi.getScheduleStatus();
-        setScheduleWarning(status.hasDraftSessions);
-        setDraftCount(status.draftCount);
-      } catch { /* ignore */ }
     } catch { /* ignore on dashboard */ }
   };
 
@@ -107,15 +96,7 @@ export const TutorDashboard = () => {
   const totalRevenue = classes.reduce((sum, c) => sum + (c.tutorFee || 0), 0);
 
   return (
-    <div className="dash-page">
-      {/* SIDEBAR */}
-      <TutorSidebar active="overview" showScheduleWarning={scheduleWarning} draftCount={draftCount} />
-
-      {/* MAIN */}
-      <main className="dash-main">
-        <DashboardHeader />
-
-        <div className="dash-body">
+    <>
           {/* Greeting */}
           <div className="dash-greeting">
             <div className="greeting-left">
@@ -267,8 +248,6 @@ export const TutorDashboard = () => {
               })}
             </div>
           </section>
-        </div>
-      </main>
-    </div>
+    </>
   );
 };

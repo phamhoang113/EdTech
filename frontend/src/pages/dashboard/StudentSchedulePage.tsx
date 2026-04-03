@@ -4,9 +4,6 @@ import { getDisplayStatus } from '../../utils/sessionStatus';
 
 import type { SessionDTO } from '../../services/sessionApi';
 import { studentApi } from '../../services/studentApi';
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
-import { StudentSidebar } from '../../components/student/StudentSidebar';
-import '../dashboard/Dashboard.css';
 import './ParentSchedule.css'; // Reusing parent schedule CSS because layout is similar
 
 function getStatusBadge(status: SessionDTO['status'], sessionDate?: string, endTime?: string) {
@@ -107,12 +104,8 @@ export function StudentSchedulePage() {
   };
 
   return (
-    <div className="dash-page">
-      <StudentSidebar active="schedule" />
-      <div className="dash-main">
-        <DashboardHeader />
-        <div className="dash-body" style={{ padding: 0 }}>
-          <div className="psched-container">
+    <>
+      <div className="psched-container">
 
             {toast && (
               <div className={`psched-toast psched-toast--${toast.type}`}>
@@ -302,8 +295,6 @@ export function StudentSchedulePage() {
             )}
 
           </div>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

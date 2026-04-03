@@ -111,98 +111,184 @@ export const router = createBrowserRouter([
               return { Component: DashboardPage };
             },
           },
+          /* ── Parent Layout ── */
           {
-            path: '/profile',
             lazy: async () => {
-              const mod = await import('../pages/profile/UserProfilePage');
-              return { Component: mod.default };
+              const { ParentLayout } = await import('../components/parent/ParentLayout');
+              return { Component: ParentLayout };
             },
+            children: [
+              {
+                path: '/parent/dashboard',
+                lazy: async () => {
+                  const { ParentDashboard } = await import('../pages/dashboard/ParentDashboard');
+                  return { Component: ParentDashboard };
+                },
+              },
+              {
+                path: '/parent/profile',
+                lazy: async () => {
+                  const mod = await import('../pages/profile/UserProfilePage');
+                  return { Component: mod.default };
+                },
+              },
+              {
+                path: '/parent/children',
+                lazy: async () => {
+                  const { MyChildrenPage } = await import('../pages/dashboard/MyChildrenPage');
+                  return { Component: MyChildrenPage };
+                },
+              },
+              {
+                path: '/parent/applicants',
+                lazy: async () => {
+                  const { ApplicantsPage } = await import('../pages/dashboard/ApplicantsPage');
+                  return { Component: ApplicantsPage };
+                },
+              },
+              {
+                path: '/parent/schedule',
+                lazy: async () => {
+                  const { ParentSchedulePage } = await import('../pages/dashboard/ParentSchedulePage');
+                  return { Component: ParentSchedulePage };
+                },
+              },
+              {
+                path: '/parent/messages',
+                lazy: async () => {
+                  const { MessagesPage } = await import('../pages/messages/MessagesPage');
+                  return { Component: MessagesPage };
+                },
+              },
+              {
+                path: '/parent/payment',
+                lazy: async () => {
+                  const { ParentPaymentPage } = await import('../pages/dashboard/ParentPaymentPage');
+                  return { Component: ParentPaymentPage };
+                },
+              },
+              {
+                path: '/parent/report',
+                lazy: async () => {
+                  const { ParentReportPage } = await import('../pages/dashboard/ParentReportPage');
+                  return { Component: ParentReportPage };
+                },
+              },
+            ],
           },
+
+          /* ── Student Layout ── */
           {
-            path: '/my-children',
             lazy: async () => {
-              const { MyChildrenPage } = await import('../pages/dashboard/MyChildrenPage');
-              return { Component: MyChildrenPage };
+              const { StudentLayout } = await import('../components/student/StudentLayout');
+              return { Component: StudentLayout };
             },
+            children: [
+              {
+                path: '/student/dashboard',
+                lazy: async () => {
+                  const { StudentDashboard } = await import('../pages/dashboard/StudentDashboard');
+                  return { Component: StudentDashboard };
+                },
+              },
+              {
+                path: '/student/profile',
+                lazy: async () => {
+                  const mod = await import('../pages/profile/UserProfilePage');
+                  return { Component: mod.default };
+                },
+              },
+              {
+                path: '/student/parents',
+                lazy: async () => {
+                  const { StudentParentsPage } = await import('../pages/dashboard/StudentParentsPage');
+                  return { Component: StudentParentsPage };
+                },
+              },
+              {
+                path: '/student/schedule',
+                lazy: async () => {
+                  const { StudentSchedulePage } = await import('../pages/dashboard/StudentSchedulePage');
+                  return { Component: StudentSchedulePage };
+                },
+              },
+              {
+                path: '/student/requests',
+                lazy: async () => {
+                  const { StudentRequestsPage } = await import('../pages/dashboard/StudentRequestsPage');
+                  return { Component: StudentRequestsPage };
+                },
+              },
+              {
+                path: '/student/payment',
+                lazy: async () => {
+                  const { StudentPaymentPage } = await import('../pages/dashboard/StudentPaymentPage');
+                  return { Component: StudentPaymentPage };
+                },
+              },
+              {
+                path: '/student/messages',
+                lazy: async () => {
+                  const { MessagesPage } = await import('../pages/messages/MessagesPage');
+                  return { Component: MessagesPage };
+                },
+              },
+            ],
           },
+
+          /* ── Tutor Layout (shared sidebar + header) ── */
           {
-            path: '/applicants',
             lazy: async () => {
-              const { ApplicantsPage } = await import('../pages/dashboard/ApplicantsPage');
-              return { Component: ApplicantsPage };
+              const { TutorLayout } = await import('../components/tutor/TutorLayout');
+              return { Component: TutorLayout };
             },
+            children: [
+              {
+                path: '/tutor/dashboard',
+                lazy: async () => {
+                  const { TutorDashboard } = await import('../pages/dashboard/TutorDashboard');
+                  return { Component: TutorDashboard };
+                },
+              },
+              {
+                path: '/tutor/classes',
+                lazy: async () => {
+                  const { TutorClassesPage } = await import('../pages/dashboard/TutorClassesPage');
+                  return { Component: TutorClassesPage };
+                },
+              },
+              {
+                path: '/tutor/schedule',
+                lazy: async () => {
+                  const { TutorSchedulePage } = await import('../pages/dashboard/TutorSchedulePage');
+                  return { Component: TutorSchedulePage };
+                },
+              },
+              {
+                path: '/tutor/revenue',
+                lazy: async () => {
+                  const { default: TutorRevenuePage } = await import('../pages/dashboard/TutorRevenuePage');
+                  return { Component: TutorRevenuePage };
+                },
+              },
+              {
+                path: '/tutor/messages',
+                lazy: async () => {
+                  const { MessagesPage } = await import('../pages/messages/MessagesPage');
+                  return { Component: MessagesPage };
+                },
+              },
+              {
+                path: '/tutor/profile',
+                lazy: async () => {
+                  const mod = await import('../pages/profile/UserProfilePage');
+                  return { Component: mod.default };
+                },
+              },
+            ],
           },
-          // Thêm các route mới vào đây khi phát triển thêm:
-          {
-            path: '/schedule',
-            lazy: async () => {
-              const { ParentSchedulePage } = await import('../pages/dashboard/ParentSchedulePage');
-              return { Component: ParentSchedulePage };
-            },
-          },
-          {
-            path: '/student/schedule',
-            lazy: async () => {
-              const { StudentSchedulePage } = await import('../pages/dashboard/StudentSchedulePage');
-              return { Component: StudentSchedulePage };
-            },
-          },
-          {
-            path: '/student/requests',
-            lazy: async () => {
-              const { StudentRequestsPage } = await import('../pages/dashboard/StudentRequestsPage');
-              return { Component: StudentRequestsPage };
-            },
-          },
-          {
-            path: '/student/payment',
-            lazy: async () => {
-              const { StudentPaymentPage } = await import('../pages/dashboard/StudentPaymentPage');
-              return { Component: StudentPaymentPage };
-            },
-          },
-          {
-            path: '/tutor/classes',
-            lazy: async () => {
-              const { TutorClassesPage } = await import('../pages/dashboard/TutorClassesPage');
-              return { Component: TutorClassesPage };
-            },
-          },
-          {
-            path: '/tutor/schedule',
-            lazy: async () => {
-              const { TutorSchedulePage } = await import('../pages/dashboard/TutorSchedulePage');
-              return { Component: TutorSchedulePage };
-            },
-          },
-          {
-            path: '/tutor/revenue',
-            lazy: async () => {
-              const { default: TutorRevenuePage } = await import('../pages/dashboard/TutorRevenuePage');
-              return { Component: TutorRevenuePage };
-            },
-          },
-          {
-            path: '/messages',
-            lazy: async () => {
-              const { MessagesPage } = await import('../pages/messages/MessagesPage');
-              return { Component: MessagesPage };
-            },
-          },
-          {
-            path: '/payment',
-            lazy: async () => {
-              const { ParentPaymentPage } = await import('../pages/dashboard/ParentPaymentPage');
-              return { Component: ParentPaymentPage };
-            },
-          },
-          {
-            path: '/learning-report',
-            lazy: async () => {
-              const { ParentReportPage } = await import('../pages/dashboard/ParentReportPage');
-              return { Component: ParentReportPage };
-            },
-          },
+
+
         ],
       },
     ],

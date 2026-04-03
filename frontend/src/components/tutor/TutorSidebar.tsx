@@ -35,7 +35,7 @@ export function TutorSidebar({ active, showScheduleWarning = false, draftCount =
           <span className="dash-sidebar-section-label">Dạy học</span>
           <button
             className={`dash-sidebar-item ${active === 'overview' ? 'active' : ''}`}
-            onClick={() => handleNav('/dashboard')}
+            onClick={() => handleNav('/tutor/dashboard')}
           >
             <LayoutDashboard size={18} /> Tổng quan
           </button>
@@ -58,7 +58,7 @@ export function TutorSidebar({ active, showScheduleWarning = false, draftCount =
           </button>
           <button 
             className={`dash-sidebar-item ${active === 'messages' ? 'active' : ''}`}
-            onClick={() => handleNav('/messages')}
+            onClick={() => handleNav('/tutor/messages')}
           >
             <MessageSquare size={18} /> Tin nhắn
             {unreadMessages > 0 && (
@@ -71,7 +71,7 @@ export function TutorSidebar({ active, showScheduleWarning = false, draftCount =
           <span className="dash-sidebar-section-label">Hồ sơ & Tài chính</span>
           <button
             className={`dash-sidebar-item ${active === 'profile' ? 'active' : ''}`}
-            onClick={() => handleNav('/profile')}
+            onClick={() => handleNav('/tutor/profile')}
           >
             <User size={18} /> Hồ sơ gia sư
           </button>

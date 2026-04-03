@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { userProfileApi } from '../../services/userProfileApi';
 import type { UpdateUserProfileRequest } from '../../services/userProfileApi';
-import { ArrowLeft, Mail, GraduationCap, School, Phone, Save, Camera, Lock } from 'lucide-react';
-import './UserProfilePage.css';
+import { ArrowLeft, Mail, School, Phone, Save, Camera, Lock, User, GraduationCap } from 'lucide-react';
+import './TutorProfilePage.css';
 
 function toBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -17,6 +17,7 @@ function toBase64(file: File): Promise<string> {
 
 export function StudentProfileForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { updateUser } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,7 +78,7 @@ export function StudentProfileForm() {
         updateUser({ avatarBase64: updated.avatarBase64 ?? undefined });
       }
       setSuccess('✅ Cập nhật hồ sơ thành công!');
-      setTimeout(() => navigate('/dashboard'), 1500);
+      setTimeout(() => navigate('/student/dashboard'), 1500);
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(message || 'Không thể lưu thay đổi.');
@@ -100,76 +101,105 @@ export function StudentProfileForm() {
 
   if (loading) {
     return (
-      <div className="up-loading">
-        <div className="up-spinner" />
+      <div className="tp-loading">
+        <div className="tp-spinner" />
+        <p>Đang tải thông tin...</p>
       </div>
     );
   }
 
+  const isInsideLayout = location.pathname.startsWith('/student');
+
   return (
-    <div className="up-page">
-      <div className="up-header-nav">
-        <button className="up-back-btn" onClick={() => navigate(-1)}>
-          <ArrowLeft size={18} /> Quay lại
-        </button>
+    <div className="tp-page student-profile-page">
+      {/* Header */}
+      <div className="tp-header">
+        {!isInsideLayout && (
+          <button className="tp-back-btn" onClick={() => navigate(-1)}>← Quay lại</button>
+        )}
+        <div>
+          <h1 className="tp-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <User size={28} className="text-primary" /> Hồ sơ học viên
+          </h1>
+          <p className="tp-subtitle">Cập nhật thông tin học tập của bạn</p>
+        </div>
       </div>
 
-      <div className="up-card">
-        {/* Banner Cover */}
-        <div className="up-cover">
-          <div className="up-cover-overlay"></div>
-        </div>
-
-        {/* Profile Header (Avatar overlap) */}
-        <div className="up-profile-head">
-          <div className="up-avatar-wrap" onClick={() => fileInputRef.current?.click()} title="Đổi ảnh đại diện">
+      <div className="tp-body" style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
+        {/* Left: Avatar + identity */}
+        <div className="tp-sidebar" style={{ flex: '1 1 300px', maxWidth: '350px' }}>
+          <div className="tp-avatar-wrap" onClick={() => fileInputRef.current?.click()} title="Nhấn để đổi ảnh">
             {avatarBase64 ? (
-              <img src={avatarBase64} alt="Avatar" className="up-avatar-img" />
+              <img src={avatarBase64} alt="Avatar" className="tp-avatar-img" />
             ) : (
-              <div className="up-avatar-placeholder">{initial}</div>
+              <div className="tp-avatar-placeholder">{initial}</div>
             )}
+            <div className="tp-avatar-overlay">📷 Đổi ảnh</div>
           </div>
-          
-          <button className="up-avatar-upload-btn" onClick={() => fileInputRef.current?.click()}>
-            <Camera size={14} /> Thay đổi ảnh
-          </button>
-          
-          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
-          
-          <div className="up-head-info">
-            <h1 className="up-name">{fullName}</h1>
-            <p className="up-phone">
-              <Phone size={14} /> {phone}
-            </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleAvatarChange}
+          />
+          <p className="tp-avatar-hint">JPG, PNG · tối đa 2MB</p>
+
+          {/* Readonly identity */}
+          <div className="tp-identity-card">
+            <div className="tp-identity-item">
+              <span className="tp-identity-label">Họ và tên</span>
+              <span className="tp-identity-value" title="Không thể thay đổi">{fullName}</span>
+            </div>
+            <div className="tp-identity-item">
+              <span className="tp-identity-label">Số điện thoại</span>
+              <span className="tp-identity-value" title="Không thể tự do đổi">{phone}</span>
+            </div>
           </div>
+          <p className="tp-readonly-note">
+            <Lock size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
+            Thông tin trên đã xác thực, không thể thay đổi
+          </p>
         </div>
 
-        {/* Body Content */}
-        <div className="up-body-content">
-          <div className="up-readonly-alert">
-            <Lock size={16} /> Thông tin gốc của bạn đã được xác thực, không thể tự ý sửa đổi.
-          </div>
-
-          <div className="up-form-group">
-            <label className="up-label">Email liên hệ</label>
-            <div className="up-input-wrap">
-              <Mail className="up-input-icon" size={18} />
-              <input type="email" className="up-input" value={email} onChange={e => setEmail(e.target.value)} placeholder="Nhập địa chỉ email của bạn" />
+        {/* Right: editable form */}
+        <div className="tp-form" style={{ flex: '2 1 500px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          
+          {/* Email */}
+          <div className="tp-section">
+            <div className="tp-section-title">
+              <Mail size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px' }} /> 
+              Email liên hệ
             </div>
+            <input
+              type="email"
+              className="tp-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Nhập địa chỉ email của bạn"
+            />
           </div>
 
-          <div className="up-form-group">
-            <label className="up-label">Trường học hiện tại</label>
-            <div className="up-input-wrap">
-              <School className="up-input-icon" size={18} />
-              <input type="text" className="up-input" value={school} onChange={e => setSchool(e.target.value)} placeholder="VD: THPT Nguyễn Huệ" />
+          {/* Trường học */}
+          <div className="tp-section">
+            <div className="tp-section-title">
+              <School size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px' }} /> 
+              Trường học hiện tại
             </div>
+            <input
+              type="text"
+              className="tp-input"
+              value={school}
+              onChange={(e) => setSchool(e.target.value)}
+              placeholder="VD: THPT Nguyễn Huệ"
+            />
           </div>
 
-          <div className="up-form-group">
-            <label className="up-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {/* Khối lớp */}
+          <div className="tp-section">
+            <div className="tp-section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <GraduationCap size={16} /> Lớp / Cấp học
-            </label>
+            </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
               {GRADE_OPTIONS.map(g => (
                 <button 
@@ -179,30 +209,46 @@ export function StudentProfileForm() {
                   style={{
                     padding: '8px 16px',
                     borderRadius: '20px',
-                    border: `1.5px solid ${grade === g ? '#6366f1' : 'var(--color-border)'}`,
-                    background: grade === g ? '#6366f1' : 'var(--color-surface)',
-                    color: grade === g ? '#fff' : 'var(--color-text-secondary)',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
+                    border: grade === g ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                    background: grade === g ? 'var(--color-primary-light, #e0e7ff)' : 'var(--color-surface)',
+                    color: grade === g ? 'var(--color-primary)' : 'var(--color-text)',
+                    fontWeight: grade === g ? 600 : 400,
                     cursor: 'pointer',
                     transition: 'all 0.2s',
-                    fontFamily: 'inherit'
-                  }}>
+                    fontSize: '14px'
+                  }}
+                >
                   {g}
                 </button>
               ))}
             </div>
           </div>
 
-          {error && <div className="up-msg error">{error}</div>}
-          {success && <div className="up-msg success">{success}</div>}
+          {/* Messages */}
+          {error && (
+            <div style={{ padding: '12px 16px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '8px', fontSize: '0.85rem' }}>
+              {error}
+            </div>
+          )}
+          {success && (
+            <div style={{ padding: '12px 16px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '8px', fontSize: '0.85rem' }}>
+              {success}
+            </div>
+          )}
 
-          <div className="up-actions">
-            <button className={`up-btn-save ${isDirty ? 'active' : ''}`} onClick={handleSave} disabled={saving || !isDirty}>
-              {saving ? <div className="up-spinner-btn" /> : <Save size={18} />} 
+          {/* Actions */}
+          <div className="tp-form-actions" style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end', paddingTop: '24px', borderTop: '1px solid var(--color-border)' }}>
+            <button
+              className="tp-save-btn"
+              onClick={handleSave}
+              disabled={saving || !isDirty}
+              style={{ padding: '10px 24px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', background: (!saving && isDirty) ? 'var(--color-primary)' : 'var(--color-surface-hover)', outline: 'none', color: (!saving && isDirty) ? '#fff' : 'var(--color-text-muted)', fontWeight: 600, cursor: (!saving && isDirty) ? 'pointer' : 'not-allowed', border: (!saving && isDirty) ? 'none' : '1px solid var(--color-border)' }}
+            >
+              {saving ? <div className="tp-spinner-btn" /> : <Save size={18} />}
               {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
             </button>
           </div>
+
         </div>
       </div>
     </div>

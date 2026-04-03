@@ -21,6 +21,17 @@
   margin: 0; /* Remove gap if any from dash-body */
 }
 
+/* When inside TutorLayout (dash-body > chat-wrapper), fill full height */
+.dash-body > .chat-wrapper {
+  display: flex;
+  flex: 1;
+  padding: 0;
+  background: transparent;
+  min-height: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
 .support-chat {
   width: 100%;
   border-radius: 12px;

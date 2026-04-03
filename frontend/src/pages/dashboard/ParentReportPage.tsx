@@ -2,8 +2,6 @@ import { BarChart3, Award, Calendar, ChevronDown, ChevronLeft, ChevronRight } fr
 import { useState, useEffect } from 'react';
 import type { Student } from '../../services/parentApi';
 import { parentApi } from '../../services/parentApi';
-import { ParentSidebar } from '../../components/parent/ParentSidebar';
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
 
 import './Dashboard.css';
 
@@ -141,13 +139,8 @@ export const ParentReportPage = () => {
   };
 
   return (
-    <div className="dash-page">
-      <ParentSidebar active="report" />
+    <>
 
-      <main className="dash-main">
-        <DashboardHeader />
-
-        <div className="dash-body">
           <div className="dash-section-head">
             <h1 className="dash-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '1.4rem' }}>
               <BarChart3 size={24} className="text-indigo" />
@@ -239,8 +232,6 @@ export const ParentReportPage = () => {
               </div>
             )}
           </div>
-        </div>
-      </main>
 
       {/* Toast */}
       {toast && (
@@ -255,6 +246,6 @@ export const ParentReportPage = () => {
           {toast.type === 'success' ? '✓ ' : '✕ '}{toast.msg}
         </div>
       )}
-    </div>
+    </>
   );
 };

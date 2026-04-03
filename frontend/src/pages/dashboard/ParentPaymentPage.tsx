@@ -1,9 +1,6 @@
 import { CreditCard, QrCode, CheckCircle, Clock, Copy } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { parentApi } from '../../services/parentApi';
-import { ParentSidebar } from '../../components/parent/ParentSidebar';
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
-
 import './Dashboard.css';
 
 interface Billing {
@@ -92,13 +89,8 @@ export const ParentPaymentPage = () => {
   };
 
   return (
-    <div className="dash-page">
-      <ParentSidebar active="payment" />
+    <>
 
-      <main className="dash-main">
-        <DashboardHeader />
-
-        <div className="dash-body">
           <div className="dash-section-head">
             <h1 className="dash-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '1.4rem' }}>
               <CreditCard size={24} className="text-indigo" />
@@ -339,10 +331,7 @@ export const ParentPaymentPage = () => {
               });
             })()}
           </div>
-        </div>
-      </main>
 
-      {/* Toast */}
       {toast && (
         <div style={{
           position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
@@ -355,6 +344,6 @@ export const ParentPaymentPage = () => {
           {toast.type === 'success' ? '✓ ' : '✕ '}{toast.msg}
         </div>
       )}
-    </div>
+    </>
   );
 };

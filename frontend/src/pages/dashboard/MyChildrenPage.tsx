@@ -2,9 +2,7 @@ import { Plus, ArrowLeft, Phone, GraduationCap, School, UserCircle, CheckCircle,
 import { useState, useEffect, useRef } from 'react';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
 import { RequestClassModal } from '../../components/parent/RequestClassModal';
-import { ParentSidebar } from '../../components/parent/ParentSidebar';
 import { parentApi } from '../../services/parentApi';
 import type { Student, StudentRequest } from '../../services/parentApi';
 import apiClient from '../../services/apiClient';
@@ -431,10 +429,8 @@ export function MyChildrenPage() {
 
   if (showAdd) {
     return (
-      <div className="dash-page">
-        <ParentSidebar active="children" onRequestClass={() => setShowRequestClass(true)} />
-        <main className="dash-main">
-          <DashboardHeader/>
+      <>
+        <div className="dash-body">
           <div className="mcp-back-bar">
             <button className="mcp-back-btn" onClick={() => setShowAdd(false)}>
               <ArrowLeft size={16}/> Quay lại
@@ -445,19 +441,14 @@ export function MyChildrenPage() {
             onDone={() => { setShowAdd(false); fetchChildren(); }}
             onCancel={() => setShowAdd(false)}
           />
-        </main>
-      </div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="dash-page">
-      <ParentSidebar active="children" onRequestClass={() => setShowRequestClass(true)} />
-
-      <main className="dash-main">
-        <DashboardHeader/>
-
-        <div className="mcp-page-body">
+    <>
+      <div className="mcp-page-body">
           {/* Page header */}
           <div className="mcp-page-header">
             <div className="mcp-page-header-left">
@@ -500,7 +491,6 @@ export function MyChildrenPage() {
             </div>
           )}
         </div>
-      </main>
 
       {editChild && (
         <EditModal
@@ -522,6 +512,6 @@ export function MyChildrenPage() {
           onSuccess={() => { setShowRequestClass(false); }}
         />
       )}
-    </div>
+    </>
   );
 }

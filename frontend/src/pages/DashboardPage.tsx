@@ -5,10 +5,6 @@
  */
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
-import { StudentDashboard } from './dashboard/StudentDashboard';
-import { ParentDashboard }  from './dashboard/ParentDashboard';
-import { TutorDashboard }   from './dashboard/TutorDashboard';
-
 export const DashboardPage = () => {
   const { user } = useAuthStore();
 
@@ -16,9 +12,9 @@ export const DashboardPage = () => {
 
   switch (user.role) {
     case 'ADMIN':   return <Navigate to="/admin/dashboard" replace />;
-    case 'TUTOR':   return <TutorDashboard />;
-    case 'PARENT':  return <ParentDashboard />;
-    case 'STUDENT': return <StudentDashboard />;
-    default:        return <ParentDashboard />;
+    case 'TUTOR':   return <Navigate to="/tutor/dashboard" replace />;
+    case 'PARENT':  return <Navigate to="/parent/dashboard" replace />;
+    case 'STUDENT': return <Navigate to="/student/dashboard" replace />;
+    default:        return <Navigate to="/parent/dashboard" replace />;
   }
 };

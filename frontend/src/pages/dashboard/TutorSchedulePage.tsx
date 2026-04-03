@@ -6,8 +6,6 @@ import { TimePicker24h } from '../../components/common/TimePicker24h';
 import '../../components/common/TimePicker24h.css';
 import { tutorApi } from '../../services/tutorApi';
 import type { TutorSessionDTO, TutorClassDTO } from '../../services/tutorApi';
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
-import { TutorSidebar } from '../../components/tutor/TutorSidebar';
 import { uploadImage } from '../../services/storageApi';
 import '../dashboard/Dashboard.css';
 import './TutorSchedule.css';
@@ -508,8 +506,6 @@ export function TutorSchedulePage() {
   const [quotas, setQuotas] = useState<import('../../services/tutorApi').ClassQuotaDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [hasDrafts, setHasDrafts] = useState(false);
-  const [draftCount, setDraftCount] = useState(0);
   const [confirming, setConfirming] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [dragOverDate, setDragOverDate] = useState<string | null>(null);
@@ -553,14 +549,11 @@ export function TutorSchedulePage() {
       setLoading(true);
       const weekMonday = getWeekRange(currentDate).start;
       const weekOfStr = toLocalDateString(weekMonday);
-      const [sessionsData, statusData, quotaData] = await Promise.all([
+      const [sessionsData, quotaData] = await Promise.all([
         tutorApi.getMySessions(),
-        tutorApi.getScheduleStatus().catch(() => ({ hasNextWeekSessions: false, hasDraftSessions: false, draftCount: 0 })),
         tutorApi.getWeeklyQuotaStatus(weekOfStr).catch(() => [])
       ]);
       setSessions(sessionsData);
-      setHasDrafts(statusData.hasDraftSessions);
-      setDraftCount(statusData.draftCount);
       setQuotas(quotaData);
     } catch {
       console.error('Failed to load');
@@ -755,12 +748,8 @@ export function TutorSchedulePage() {
   const draftsThisWeek = filteredSessions.filter(s => s.status === 'DRAFT').length;
 
   return (
-    <div className="dash-page">
-      <TutorSidebar active="schedule" showScheduleWarning={hasDrafts} draftCount={draftCount} />
-      <main className="dash-main">
-        <DashboardHeader />
-        <div className="dash-body" style={{ padding: 0 }}>
-          <div className="tsched-container">
+    <>
+      <div className="tsched-container" style={{ padding: 0 }}>
             {/* Draft warning banner */}
             {draftsThisWeek > 0 && (
               <div className="tsched-warning-banner">
@@ -1007,8 +996,6 @@ export function TutorSchedulePage() {
               </div>
             )}
           </div>
-        </div>
-      </main>
 
       {/* Session Detail Popup */}
       {selectedSession && (
@@ -1096,6 +1083,6 @@ export function TutorSchedulePage() {
           }}
         />
       )}
-    </div>
+    </>
   );
 }

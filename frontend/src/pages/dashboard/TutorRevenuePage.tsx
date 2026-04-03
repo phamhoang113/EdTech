@@ -3,8 +3,6 @@ import { useEffect, useState } from 'react';
 import { tutorApi, type TutorPayoutDTO, type TutorProfileResponse } from '../../services/tutorApi';
 import { useNavigate } from 'react-router-dom';
 
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
-import { TutorSidebar } from '../../components/tutor/TutorSidebar';
 import '../dashboard/Dashboard.css';
 import './TutorRevenuePage.css';
 
@@ -76,11 +74,7 @@ export default function TutorRevenuePage() {
   };
 
   return (
-    <div className="dash-page">
-      <TutorSidebar active="revenue" />
-      <main className="dash-main">
-        <DashboardHeader />
-        <div className="dash-body tr-container">
+    <div className="tr-container">
           <div className="tr-header">
             <div className="tr-title-group">
               <div className="tr-icon-wrap">
@@ -196,8 +190,6 @@ export default function TutorRevenuePage() {
           ))
         )}
       </div>
-        </div>
-      </main>
     </div>
   );
 }

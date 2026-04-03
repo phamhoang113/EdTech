@@ -3,8 +3,6 @@ import { useState, useEffect, useMemo } from 'react';
 
 import { tutorApi } from '../../services/tutorApi';
 import type { TutorClassDTO, ScheduleSlot } from '../../services/tutorApi';
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
-import { TutorSidebar } from '../../components/tutor/TutorSidebar';
 import { ScheduleEditor } from '../../components/tutor/ScheduleEditor';
 import '../../components/tutor/ScheduleEditor.css';
 import '../dashboard/Dashboard.css';
@@ -95,8 +93,6 @@ function detectConflicts(classes: TutorClassDTO[]): Map<string, string[]> {
 export function TutorClassesPage() {
   const [classes, setClasses] = useState<TutorClassDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const [scheduleWarning, setScheduleWarning] = useState(false);
-  const [draftCount, setDraftCount] = useState(0);
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -105,13 +101,8 @@ export function TutorClassesPage() {
 
   const fetchAll = async () => {
     try {
-      const [classesData, statusData] = await Promise.all([
-        tutorApi.getMyClasses(),
-        tutorApi.getScheduleStatus().catch(() => ({ hasNextWeekSessions: true, hasDraftSessions: false, draftCount: 0 })),
-      ]);
+      const classesData = await tutorApi.getMyClasses();
       setClasses(classesData);
-      setScheduleWarning(statusData.hasDraftSessions);
-      setDraftCount(statusData.draftCount);
     } catch { /* ignore */ }
     finally { setLoading(false); }
   };
@@ -125,11 +116,7 @@ export function TutorClassesPage() {
   const conflictMap = useMemo(() => detectConflicts(classes), [classes]);
 
   return (
-    <div className="dash-page">
-      <TutorSidebar active="classes" showScheduleWarning={scheduleWarning} draftCount={draftCount} />
-      <main className="dash-main">
-        <DashboardHeader />
-        <div className="dash-body">
+    <>
           <div className="tclass-header">
             <h1 className="tclass-title">📚 Lớp học của tôi</h1>
             <p className="tclass-subtitle">Danh sách các lớp bạn đang phụ trách giảng dạy</p>
@@ -241,8 +228,6 @@ export function TutorClassesPage() {
               })}
             </div>
           )}
-        </div>
-      </main>
-    </div>
+    </>
   );
 }

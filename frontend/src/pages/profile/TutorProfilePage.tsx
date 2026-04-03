@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { User } from 'lucide-react';
 import { tutorApi, type UpdateTutorProfileRequest } from '../../services/tutorApi';
 import { classApi } from '../../services/classApi';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -24,6 +25,8 @@ function toBase64(file: File): Promise<string> {
 
 export default function TutorProfilePage() {
   const navigate = useNavigate();
+  const routeLocation = useLocation();
+  const isInsideTutorLayout = routeLocation.pathname.startsWith('/tutor/');
   const { updateUser } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -149,8 +152,8 @@ export default function TutorProfilePage() {
       if (updated.avatarBase64 !== undefined) {
         updateUser({ avatarBase64: updated.avatarBase64 ?? undefined });
       }
-      setSuccess('✅ Lưu thành công! Đang chuyển về trang chủ...');
-      setTimeout(() => navigate('/dashboard'), 1500);
+      setSuccess('✅ Lưu thành công!');
+      setTimeout(() => navigate(isInsideTutorLayout ? '/tutor/dashboard' : '/dashboard'), 1500);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Lưu thất bại. Vui lòng thử lại.');
     } finally {
@@ -188,9 +191,13 @@ export default function TutorProfilePage() {
     <div className="tp-page">
       {/* Header */}
       <div className="tp-header">
-        <button className="tp-back-btn" onClick={() => navigate(-1)}>← Quay lại</button>
+        {!isInsideTutorLayout && (
+          <button className="tp-back-btn" onClick={() => navigate(-1)}>← Quay lại</button>
+        )}
         <div>
-          <h1 className="tp-title">Hồ sơ cá nhân</h1>
+          <h1 className="tp-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <User size={28} className="text-primary" /> Hồ sơ gia sư
+          </h1>
           <p className="tp-subtitle">Cập nhật thông tin để phụ huynh dễ tìm thấy bạn</p>
         </div>
       </div>

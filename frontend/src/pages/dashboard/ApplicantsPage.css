@@ -4,8 +4,7 @@
    PAGE BODY & HEADER
 ══════════════════════════════════════════════════ */
 .ap-page-body {
-  padding: 32px 36px;
-  min-height: calc(100vh - 60px);
+  padding: 0;
   display: flex;
   flex-direction: column;
 }

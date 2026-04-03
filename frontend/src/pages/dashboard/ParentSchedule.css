@@ -1,7 +1,8 @@
 .psched-container {
+  margin: -32px -36px;
   padding: 32px 40px;
   box-sizing: border-box;
-  width: 100%;
+  width: calc(100% + 72px);
   display: flex;
   flex-direction: column;
 }

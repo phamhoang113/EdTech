@@ -374,7 +374,7 @@
 /* ---------- Body ---------- */
 .dash-body {
   flex: 1;
-  padding: 24px 28px;
+  padding: 32px 36px;
   display: flex;
   flex-direction: column;
   gap: 24px;

@@ -2,10 +2,8 @@ import { ChevronRight, ChevronLeft, Phone, Briefcase, DollarSign, Calendar, Cloc
 import { useState, useEffect } from 'react';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
 import { RequestClassModal } from '../../components/parent/RequestClassModal';
 import { ManageStudentsModal } from '../../components/parent/ManageStudentsModal';
-import { ParentSidebar } from '../../components/parent/ParentSidebar';
 import { parentApi } from '../../services/parentApi';
 import type { ParentClass, TutorApplicant } from '../../services/parentApi';
 import './ApplicantsPage.css';
@@ -465,13 +463,8 @@ export function ApplicantsPage() {
   };
 
   return (
-    <div className="dash-page">
-      <ParentSidebar active="applicants" onRequestClass={() => setShowRequestClass(true)} />
-
-      <main className="dash-main">
-        <DashboardHeader/>
-
-        <div className="ap-page-body">
+    <>
+      <div className="ap-page-body">
           {/* Page header */}
           <div className="ap-page-header">
             <div className="ap-page-header-left">
@@ -550,10 +543,8 @@ export function ApplicantsPage() {
               )}
             </div>
           </div>
-        </div>
-      </main>
+      </div>
 
-      {/* Tutor Detail Modal */}
       {selectedTutor && (
         <TutorDetailModal
           tutor={selectedTutor}
@@ -589,6 +580,6 @@ export function ApplicantsPage() {
           }}
         />
       )}
-    </div>
+    </>
   );
 }

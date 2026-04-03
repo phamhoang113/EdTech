@@ -4,8 +4,7 @@ import { getDisplayStatus } from '../../utils/sessionStatus';
 
 import { sessionApi } from '../../services/sessionApi';
 import type { SessionDTO } from '../../services/sessionApi';
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
-import { ParentSidebar } from '../../components/parent/ParentSidebar';
+
 import { RequestClassModal } from '../../components/parent/RequestClassModal';
 import '../dashboard/Dashboard.css';
 import './ParentSchedule.css';
@@ -112,12 +111,8 @@ export function ParentSchedulePage() {
   };
 
   return (
-    <div className="dash-page">
-      <ParentSidebar active="schedule" onRequestClass={() => setShowRequestModal(true)} />
-      <div className="dash-main">
-        <DashboardHeader />
-        <div className="dash-body" style={{ padding: 0 }}>
-          <div className="psched-container">
+    <>
+      <div className="psched-container">
             {/* Toast */}
             {toast && (
               <div className={`psched-toast psched-toast--${toast.type}`}>
@@ -305,15 +300,13 @@ export function ParentSchedulePage() {
                 </div>
               </div>
             )}
-          </div>
         </div>
-      </div>
       {showRequestModal && (
         <RequestClassModal 
           onClose={() => setShowRequestModal(false)} 
           onSuccess={() => setShowRequestModal(false)}
         />
       )}
-    </div>
+    </>
   );
 }

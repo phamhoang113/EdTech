@@ -1,8 +1,6 @@
 import { CreditCard, QrCode, CheckCircle, Clock, Copy } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { studentApi } from '../../services/studentApi';
-import { StudentSidebar } from '../../components/student/StudentSidebar';
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
 
 import './Dashboard.css';
 
@@ -92,13 +90,8 @@ export const StudentPaymentPage = () => {
   };
 
   return (
-    <div className="dash-page">
-      <StudentSidebar active="payments" />
+    <>
 
-      <main className="dash-main">
-        <DashboardHeader />
-
-        <div className="dash-body">
           <div className="dash-section-head">
             <h1 className="dash-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '1.4rem' }}>
               <CreditCard size={24} className="text-indigo" />
@@ -338,11 +331,7 @@ export const StudentPaymentPage = () => {
                 );
               });
             })()}
-          </div>
-        </div>
-      </main>
-
-      {/* Toast */}
+        </div>      {/* Toast */}
       {toast && (
         <div style={{
           position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
@@ -355,6 +344,6 @@ export const StudentPaymentPage = () => {
           {toast.type === 'success' ? '✓ ' : '✕ '}{toast.msg}
         </div>
       )}
-    </div>
+    </>
   );
 };

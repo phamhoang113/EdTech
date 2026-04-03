@@ -44,19 +44,19 @@ export function ParentSidebar({ active, onRequestClass }: {
           <span className="dash-sidebar-section-label">Quản lý lớp học</span>
           <button 
             className={`dash-sidebar-item ${active === 'overview' ? 'active' : ''}`} 
-            onClick={() => handleNav('/dashboard')}
+            onClick={() => handleNav('/parent/dashboard')}
           >
             <LayoutDashboard size={18}/> Tổng quan
           </button>
           <button 
             className={`dash-sidebar-item ${active === 'children' ? 'active' : ''}`} 
-            onClick={() => handleNav('/my-children')}
+            onClick={() => handleNav('/parent/children')}
           >
             <Users size={18}/> Con em của tôi
           </button>
           <button 
             className={`dash-sidebar-item ${active === 'applicants' ? 'active' : ''}`} 
-            onClick={() => handleNav('/applicants')}
+            onClick={() => handleNav('/parent/applicants')}
           >
             <UserCheck size={18}/> Gia sư ứng tuyển
             {proposedCount > 0 && (
@@ -65,13 +65,13 @@ export function ParentSidebar({ active, onRequestClass }: {
           </button>
           <button 
             className={`dash-sidebar-item ${active === 'schedule' ? 'active' : ''}`} 
-            onClick={() => handleNav('/schedule')}
+            onClick={() => handleNav('/parent/schedule')}
           >
             <Calendar size={18}/> Lịch học
           </button>
           <button 
             className={`dash-sidebar-item ${active === 'messages' ? 'active' : ''}`}
-            onClick={() => handleNav('/messages')}
+            onClick={() => handleNav('/parent/messages')}
           >
             <MessageSquare size={18} /> Tin nhắn
             {unreadMessages > 0 && (
@@ -84,13 +84,13 @@ export function ParentSidebar({ active, onRequestClass }: {
           <span className="dash-sidebar-section-label">Tiện ích & Tài chính</span>
           <button 
             className={`dash-sidebar-item ${active === 'profile' ? 'active' : ''}`}
-            onClick={() => handleNav('/profile')}
+            onClick={() => handleNav('/parent/profile')}
           >
             <User size={18}/> Hồ sơ cá nhân
           </button>
           <button 
             className={`dash-sidebar-item ${active === 'payment' ? 'active' : ''}`}
-            onClick={() => handleNav('/payment')}
+            onClick={() => handleNav('/parent/payment')}
           >
             <CreditCard size={18}/> Thanh toán
             {unpaidCount > 0 && (
@@ -101,7 +101,7 @@ export function ParentSidebar({ active, onRequestClass }: {
           </button>
           <button 
             className={`dash-sidebar-item ${active === 'report' ? 'active' : ''}`}
-            onClick={() => handleNav('/learning-report')}
+            onClick={() => handleNav('/parent/report')}
           >
             <BarChart3 size={18}/> Báo cáo học tập
           </button>

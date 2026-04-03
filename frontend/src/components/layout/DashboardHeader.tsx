@@ -103,7 +103,12 @@ export const DashboardHeader = () => {
               
               <button 
                 className="profile-dropdown-item" 
-                onClick={() => { setShowDropdown(false); navigate('/profile'); }}
+                onClick={() => { 
+                  setShowDropdown(false); 
+                  if (user?.role === 'TUTOR') navigate('/tutor/profile');
+                  else if (user?.role === 'STUDENT') navigate('/student/profile');
+                  else navigate('/parent/profile');
+                }}
               >
                 <UserIcon size={16} /> Hồ sơ cá nhân
               </button>

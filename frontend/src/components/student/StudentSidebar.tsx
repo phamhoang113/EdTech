@@ -9,10 +9,9 @@ import { studentApi } from '../../services/studentApi';
 interface StudentSidebarProps {
   active?: 'overview' | 'schedule' | 'messages' | 'achievements' | 'parents' | 'payments' | 'profile' | 'requests';
   hasParent?: boolean;
-  onAddParent?: () => void;
 }
 
-export function StudentSidebar({ active = 'overview', hasParent: initialHasParent = false, onAddParent }: StudentSidebarProps) {
+export function StudentSidebar({ active = 'overview', hasParent: initialHasParent = false }: StudentSidebarProps) {
   const { logout } = useAuthStore();
   const navigate = useNavigate();
   const { unreadMessages } = useNotificationStore();
@@ -50,8 +49,7 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
   };
 
   const handleAddParent = () => {
-    if (onAddParent) onAddParent();
-    else navigate('/dashboard');
+    navigate('/student/parents');
     close();
   };
 
@@ -67,7 +65,7 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
           <span className="dash-sidebar-section-label">Học tập</span>
           <button 
             className={`dash-sidebar-item ${active === 'overview' ? 'active' : ''}`}
-            onClick={() => handleNav('/dashboard')}
+            onClick={() => handleNav('/student/dashboard')}
           >
             <LayoutDashboard size={18} /> Tổng quan
           </button>
@@ -87,7 +85,7 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
           )}
           <button 
             className={`dash-sidebar-item ${active === 'messages' ? 'active' : ''}`}
-            onClick={() => handleNav('/messages')}
+            onClick={() => handleNav('/student/messages')}
           >
             <MessageSquare size={18} /> Tin nhắn
             {unreadMessages > 0 && (
@@ -100,7 +98,7 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
           <span className="dash-sidebar-section-label">Tài khoản</span>
           <button 
             className={`dash-sidebar-item ${active === 'profile' ? 'active' : ''}`}
-            onClick={() => handleNav('/profile')}
+            onClick={() => handleNav('/student/profile')}
           >
             <User size={18} /> Hồ sơ cá nhân
           </button>

@@ -3,7 +3,7 @@
    ============================================= */
 
 .tsched-container {
-  padding: 24px 28px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 20px;

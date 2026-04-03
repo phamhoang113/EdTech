@@ -5,10 +5,8 @@ import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
 import { RequestClassModal } from '../../components/parent/RequestClassModal';
 import { ManageStudentsModal } from '../../components/parent/ManageStudentsModal';
-import { ParentSidebar } from '../../components/parent/ParentSidebar';
 import { SharedTutorDetailModal } from '../../components/shared/TutorDetailModal';
 
 import { parentApi } from '../../services/parentApi';
@@ -288,170 +286,136 @@ export const ParentDashboard = () => {
   const totalFeeFormatted = formatShortCurrency(totalFeeRaw);
 
   return (
-    <div className="dash-page">
-      {/* ===== SIDEBAR ===== */}
-      <ParentSidebar active="overview" onRequestClass={() => setShowRequestClass(true)} />
+    <>
+      {/* Greeting */}
+      <div className="dash-greeting">
+        <div className="greeting-left">
+          <p className="greeting-hi">{greeting} 👋</p>
+          <h1 className="greeting-name">{name}</h1>
+          <span className="greeting-tag">👨‍👩‍👧 Phụ huynh</span>
+        </div>
+        <div className="greeting-emoji" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button onClick={() => setShowRequestClass(true)} style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px',
+            borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+            color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', fontFamily: 'inherit',
+            boxShadow: '0 4px 12px rgba(99,102,241,0.35)',
+          }}>
+            <Plus size={16}/> Yêu cầu mở lớp
+          </button>
+          <span>🏠</span>
+        </div>
+      </div>
 
-      {/* ===== MAIN ===== */}
-      <main className="dash-main">
-        <DashboardHeader />
-
-        <div className="dash-body">
-          {/* Greeting */}
-          <div className="dash-greeting">
-            <div className="greeting-left">
-              <p className="greeting-hi">{greeting} 👋</p>
-              <h1 className="greeting-name">{name}</h1>
-              <span className="greeting-tag">👨‍👩‍👧 Phụ huynh</span>
-            </div>
-            <div className="greeting-emoji" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <button onClick={() => setShowRequestClass(true)} style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px',
-                borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-                color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', fontFamily: 'inherit',
-                boxShadow: '0 4px 12px rgba(99,102,241,0.35)',
-              }}>
-                <Plus size={16}/> Yêu cầu mở lớp
-              </button>
-              <span>🏠</span>
-            </div>
-          </div>
-
-          {/* Onboarding banners */}
-          {(!hasLinkedStudent || !hasTutor) && (
-            <div className="onboard-banners">
-              {!hasLinkedStudent && (
-                <div className="onboard-card onboard-student" onClick={() => navigate('/my-children')}>
-                  <div className="onboard-card-glow" />
-                  <div className="onboard-icon-wrap"><Link2 size={26} /></div>
-                  <div className="onboard-content">
-                    <p className="onboard-step">Bước 1 · Bắt đầu ngay</p>
-                    <h3 className="onboard-title">Liên kết học sinh</h3>
-                    <p className="onboard-desc">Thêm con em để theo dõi lịch học, tiến độ và thanh toán tập trung.</p>
-                  </div>
-                  <div className="onboard-arrow"><ChevronRight size={22} /></div>
-                </div>
-              )}
-              {!hasTutor && (
-                <div className="onboard-card onboard-tutor" onClick={() => setShowRequestClass(true)}>
-                  <div className="onboard-card-glow" />
-                  <div className="onboard-icon-wrap"><Sparkles size={26} /></div>
-                  <div className="onboard-content">
-                    <p className="onboard-step">{hasLinkedStudent ? 'Bước 2 · Tiếp theo' : 'Bước 2'} · Quan trọng</p>
-                    <h3 className="onboard-title">Yêu cầu mở lớp</h3>
-                    <p className="onboard-desc">Gửi yêu cầu mở lớp để admin xét duyệt và gia sư đăng ký nhận lớp.</p>
-                  </div>
-                  <div className="onboard-arrow"><ChevronRight size={22} /></div>
-                </div>
-              )}
+      {/* Onboarding banners */}
+      {(!hasLinkedStudent || !hasTutor) && (
+        <div className="onboard-banners">
+          {!hasLinkedStudent && (
+            <div className="onboard-card onboard-student" onClick={() => navigate('/parent/children')}>
+              <div className="onboard-card-glow" />
+              <div className="onboard-icon-wrap"><Link2 size={26} /></div>
+              <div className="onboard-content">
+                <p className="onboard-step">Bước 1 · Bắt đầu ngay</p>
+                <h3 className="onboard-title">Liên kết học sinh</h3>
+                <p className="onboard-desc">Thêm con em để theo dõi lịch học, tiến độ và thanh toán tập trung.</p>
+              </div>
+              <div className="onboard-arrow"><ChevronRight size={22} /></div>
             </div>
           )}
-
-          {/* Stats */}
-          <section>
-            <div className="dash-stats-grid">
-              {[
-                { val: `${studentsCount}`, lbl: 'Con em đang học', icon: <Users size={20}/>,      cls: 'color-indigo'  },
-                { val: `${activeClasses.length}`, lbl: 'Lớp học',  icon: <Calendar size={20}/>,   cls: 'color-violet'  },
-                { val: totalFeeFormatted,     lbl: 'Chi phí tháng',  icon: <TrendingUp size={20}/>, cls: 'color-amber'   },
-                { val: `${upcomingSessions.length}`, lbl: 'Buổi sắp tới', icon: <Award size={20}/>,      cls: 'color-emerald' },
-              ].map((s, i) => (
-                <div key={i} className={`dash-stat-card ${s.cls}`}>
-                  <div className="stat-icon-box">{s.icon}</div>
-                  <div className="stat-info">
-                    <span className="stat-val">{s.val}</span>
-                    <span className="stat-lbl">{s.lbl}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* My Classes panel */}
-          <div className="dash-panel">
-            <div className="dash-section-head">
-              <h2 className="dash-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <BookOpen size={16} className="text-secondary"/> Lớp học của tôi
-              </h2>
-              <button className="dash-see-all" onClick={() => setShowRequestClass(true)}>
-                <Plus size={14}/> Yêu cầu mới
-              </button>
-            </div>
-            <MyClassesPanel classes={myClasses} loading={loadingClasses} onViewTutors={setTutorsModal} onManageStudents={setManageStudentsModal} />
-          </div>
-
-          {/* Two cols */}
-          <div className="dash-cols">
-            <div className="dash-panel">
-              <div className="dash-section-head">
-                <span className="dash-section-title">📅 Lịch học sắp tới</span>
-                <button className="dash-see-all" onClick={() => navigate('/schedule')}>Xem tất cả <ChevronRight size={14}/></button>
+          {!hasTutor && (
+            <div className="onboard-card onboard-tutor" onClick={() => setShowRequestClass(true)}>
+              <div className="onboard-card-glow" />
+              <div className="onboard-icon-wrap"><Sparkles size={26} /></div>
+              <div className="onboard-content">
+                <p className="onboard-step">{hasLinkedStudent ? 'Bước 2 · Tiếp theo' : 'Bước 2'} · Quan trọng</p>
+                <h3 className="onboard-title">Yêu cầu mở lớp</h3>
+                <p className="onboard-desc">Gửi yêu cầu mở lớp để admin xét duyệt và gia sư đăng ký nhận lớp.</p>
               </div>
-              <div className="upcoming-list">
-                {upcomingSessions.length === 0 ? (
-                  <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Không có buổi học nào sắp tới.</p>
-                ) : (
-                  upcomingSessions.map(s => (
-                    <div key={s.id} className="upcoming-item">
-                      <span className="upcoming-avatar">📚</span>
-                      <div className="upcoming-info">
-                        <p className="upcoming-subj">{s.classTitle}</p>
-                        <p className="upcoming-who">{s.tutorName} · {s.subject}</p>
-                      </div>
-                      <div className="upcoming-time"><Clock size={12}/><span>{s.startTime?.substring(0, 5) ?? '--:--'}</span></div>
-                    </div>
-                  ))
-                )}
-              </div>
+              <div className="onboard-arrow"><ChevronRight size={22} /></div>
             </div>
-
-            {/* 
-            <div className="dash-panel">
-              <div className="dash-section-head">
-                <span className="dash-section-title">⚡ Hoạt động</span>
-              </div>
-              <div className="activity-list">
-                {activities.map((a, i) => (
-                  <div key={i} className={`activity-item ${a.type}`}>
-                    <div className="activity-icon-box">
-                      {a.type === 'act-lesson'  && <BookOpen size={14}/>}
-                      {a.type === 'act-payment' && <TrendingUp size={14}/>}
-                      {a.type === 'act-review'  && <Award size={14}/>}
-                      {a.type === 'act-booking' && <Calendar size={14}/>}
-                    </div>
-                    <div className="activity-body">
-                      <p className="activity-text">{a.text}</p>
-                      <span className="activity-time">{a.time}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            */}
-          </div>
-
-          {/* Quick actions */}
-          <section>
-            <div className="dash-section-head">
-              <span className="dash-section-title">⚡ Thao tác nhanh</span>
-            </div>
-            <div className="dash-qa-grid">
-              {[
-                { emoji: '📋', label: 'Yêu cầu mở lớp', onClick: () => setShowRequestClass(true) },
-                { emoji: '👶', label: 'Quản lý con',     onClick: () => navigate('/my-children') },
-                { emoji: '📊', label: 'Báo cáo học tập', onClick: () => navigate('/learning-report') },
-                { emoji: '💳', label: 'Thanh toán',      onClick: () => navigate('/payment')  },
-              ].map((a, i) => (
-                <button key={i} className="dash-qa-card" onClick={a.onClick}>
-                  <span className="qa-emoji">{a.emoji}</span>
-                  <span className="qa-label">{a.label}</span>
-                  <ChevronRight size={15} className="qa-arr"/>
-                </button>
-              ))}
-            </div>
-          </section>
+          )}
         </div>
-      </main>
+      )}
+
+      {/* Stats */}
+      <section>
+        <div className="dash-stats-grid">
+          {[
+            { val: `${studentsCount}`, lbl: 'Con em đang học', icon: <Users size={20}/>,      cls: 'color-indigo'  },
+            { val: `${activeClasses.length}`, lbl: 'Lớp học',  icon: <Calendar size={20}/>,   cls: 'color-violet'  },
+            { val: totalFeeFormatted,     lbl: 'Chi phí tháng',  icon: <TrendingUp size={20}/>, cls: 'color-amber'   },
+            { val: `${upcomingSessions.length}`, lbl: 'Buổi sắp tới', icon: <Award size={20}/>,      cls: 'color-emerald' },
+          ].map((s, i) => (
+            <div key={i} className={`dash-stat-card ${s.cls}`}>
+              <div className="stat-icon-box">{s.icon}</div>
+              <div className="stat-info">
+                <span className="stat-val">{s.val}</span>
+                <span className="stat-lbl">{s.lbl}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* My Classes panel */}
+      <div className="dash-panel">
+        <div className="dash-section-head">
+          <h2 className="dash-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <BookOpen size={16} className="text-secondary"/> Lớp học của tôi
+          </h2>
+          <button className="dash-see-all" onClick={() => setShowRequestClass(true)}>
+            <Plus size={14}/> Yêu cầu mới
+          </button>
+        </div>
+        <MyClassesPanel classes={myClasses} loading={loadingClasses} onViewTutors={setTutorsModal} onManageStudents={setManageStudentsModal} />
+      </div>
+
+      {/* Two cols */}
+      <div className="dash-cols">
+        <div className="dash-panel">
+          <div className="dash-section-head">
+            <span className="dash-section-title">📅 Lịch học sắp tới</span>
+            <button className="dash-see-all" onClick={() => navigate('/parent/schedule')}>Xem tất cả <ChevronRight size={14}/></button>
+          </div>
+          <div className="upcoming-list">
+            {upcomingSessions.length === 0 ? (
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Không có buổi học nào sắp tới.</p>
+            ) : (
+              upcomingSessions.map(s => (
+                <div key={s.id} className="upcoming-item">
+                  <span className="upcoming-avatar">📚</span>
+                  <div className="upcoming-info">
+                    <p className="upcoming-subj">{s.classTitle}</p>
+                    <p className="upcoming-who">{s.tutorName} · {s.subject}</p>
+                  </div>
+                  <div className="upcoming-time"><Clock size={12}/><span>{s.startTime?.substring(0, 5) ?? '--:--'}</span></div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick actions */}
+      <section>
+        <div className="dash-section-head">
+          <span className="dash-section-title">⚡ Thao tác nhanh</span>
+        </div>
+        <div className="dash-qa-grid">
+          {[
+            { emoji: '📋', label: 'Yêu cầu mở lớp', onClick: () => setShowRequestClass(true) },
+            { emoji: '👶', label: 'Quản lý con',     onClick: () => navigate('/parent/children') },
+            { emoji: '📊', label: 'Báo cáo học tập', onClick: () => navigate('/parent/report') },
+            { emoji: '💳', label: 'Thanh toán',      onClick: () => navigate('/parent/payment')  },
+          ].map((a, i) => (
+            <button key={i} className="dash-qa-card" onClick={a.onClick}>
+              <span className="qa-emoji">{a.emoji}</span>
+              <span className="qa-label">{a.label}</span>
+              <ChevronRight size={15} className="qa-arr"/>
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* Toast */}
       {toast && (
@@ -485,6 +449,6 @@ export const ParentDashboard = () => {
           showToast('success', 'Đã cập nhật danh sách học sinh cho lớp');
         }}/>
       )}
-    </div>
+    </>
   );
 };

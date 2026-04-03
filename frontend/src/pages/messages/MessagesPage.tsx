@@ -7,10 +7,6 @@ import type { ConversationResponseDTO, MessageResponseDTO } from '../../services
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
-import { TutorSidebar } from '../../components/tutor/TutorSidebar';
-import { ParentSidebar } from '../../components/parent/ParentSidebar';
-import { StudentSidebar } from '../../components/student/StudentSidebar';
 import { useAuthStore } from '../../store/useAuthStore';
 import './MessagesPage.css';
 
@@ -175,23 +171,8 @@ export function MessagesPage() {
     }
   };
 
-  const renderSidebar = () => {
-    switch (user?.role) {
-      case 'TUTOR': return <TutorSidebar active="messages" />;
-      case 'PARENT': return <ParentSidebar active="messages" />;
-      case 'STUDENT': return <StudentSidebar active="messages" />;
-      default: return null;
-    }
-  };
-
-  return (
-    <div className="dash-page user-msg-page">
-      {renderSidebar()}
-      
-      <main className="dash-main">
-        <DashboardHeader />
-        
-        <div className="dash-body chat-wrapper">
+  // When inside TutorLayout, render only the chat content (no wrapper)
+  const chatContent = (
           <div className="msg-chat-panel support-chat">
             {/* Chat Header */}
             <div className="chat-header">
@@ -284,8 +265,11 @@ export function MessagesPage() {
               </button>
             </form>
           </div>
-        </div>
-      </main>
+  );
+
+  return (
+    <div className="chat-wrapper">
+      {chatContent}
 
       {/* Image Lightbox — portal to body */}
       {previewImage && createPortal(

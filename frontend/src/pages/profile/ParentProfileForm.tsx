@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { userProfileApi } from '../../services/userProfileApi';
 import type { UpdateUserProfileRequest } from '../../services/userProfileApi';
-import { ArrowLeft, Mail, MapPin, Phone, Save, Camera, Lock } from 'lucide-react';
-import './UserProfilePage.css';
+import { ArrowLeft, Mail, MapPin, Phone, Save, Camera, Lock, User } from 'lucide-react';
+import './TutorProfilePage.css';
 
 function toBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -17,6 +17,7 @@ function toBase64(file: File): Promise<string> {
 
 export function ParentProfileForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { updateUser } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -73,7 +74,7 @@ export function ParentProfileForm() {
         updateUser({ avatarBase64: updated.avatarBase64 ?? undefined });
       }
       setSuccess('✅ Cập nhật hồ sơ thành công!');
-      setTimeout(() => navigate('/dashboard'), 1500);
+      setTimeout(() => navigate('/parent/dashboard'), 1500);
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(message || 'Lỗi hệ thống. Vui lòng thử lại.');
@@ -89,82 +90,129 @@ export function ParentProfileForm() {
 
   if (loading) {
     return (
-      <div className="up-loading">
-        <div className="up-spinner" />
+      <div className="tp-loading">
+        <div className="tp-spinner" />
+        <p>Đang tải thông tin...</p>
       </div>
     );
   }
 
+  const isInsideLayout = location.pathname.startsWith('/parent');
+
   return (
-    <div className="up-page">
-      <div className="up-header-nav">
-        <button className="up-back-btn" onClick={() => navigate(-1)}>
-          <ArrowLeft size={18} /> Quay lại
-        </button>
+    <div className="tp-page parent-profile-page">
+      {/* Header */}
+      <div className="tp-header">
+        {!isInsideLayout && (
+          <button className="tp-back-btn" onClick={() => navigate(-1)}>← Quay lại</button>
+        )}
+        <div>
+          <h1 className="tp-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <User size={28} className="text-primary" /> Hồ sơ phụ huynh
+          </h1>
+          <p className="tp-subtitle">Cập nhật thông tin tài khoản của bạn</p>
+        </div>
       </div>
 
-      <div className="up-card">
-        {/* Banner Cover */}
-        <div className="up-cover">
-          <div className="up-cover-overlay"></div>
-        </div>
-
-        {/* Profile Header (Avatar overlap) */}
-        <div className="up-profile-head">
-          <div className="up-avatar-wrap" onClick={() => fileInputRef.current?.click()} title="Đổi ảnh đại diện">
+      <div className="tp-body" style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
+        {/* Left: Avatar + identity */}
+        <div className="tp-sidebar" style={{ flex: '1 1 300px', maxWidth: '350px' }}>
+          <div className="tp-avatar-wrap" onClick={() => fileInputRef.current?.click()} title="Nhấn để đổi ảnh">
             {avatarBase64 ? (
-              <img src={avatarBase64} alt="Avatar" className="up-avatar-img" />
+              <img src={avatarBase64} alt="Avatar" className="tp-avatar-img" />
             ) : (
-              <div className="up-avatar-placeholder">{initial}</div>
+              <div className="tp-avatar-placeholder">{initial}</div>
             )}
+            <div className="tp-avatar-overlay">📷 Đổi ảnh</div>
           </div>
-          
-          <button className="up-avatar-upload-btn" onClick={() => fileInputRef.current?.click()}>
-            <Camera size={14} /> Thay đổi ảnh
-          </button>
-          
-          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
-          
-          <div className="up-head-info">
-            <h1 className="up-name">{fullName}</h1>
-            <p className="up-phone">
-              <Phone size={14} /> {phone}
-            </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleAvatarChange}
+          />
+          <p className="tp-avatar-hint">JPG, PNG · tối đa 2MB</p>
+
+          {/* Readonly identity */}
+          <div className="tp-identity-card">
+            <div className="tp-identity-item">
+              <span className="tp-identity-label">Họ và tên</span>
+              <span className="tp-identity-value" title="Không thể thay đổi">{fullName}</span>
+            </div>
+            <div className="tp-identity-item">
+              <span className="tp-identity-label">Số điện thoại</span>
+              <span className="tp-identity-value" title="Không thể tự do đổi">{phone}</span>
+            </div>
           </div>
+          <p className="tp-readonly-note">
+            <Lock size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
+            Thông tin trên đã xác thực, không thể thay đổi
+          </p>
         </div>
 
-        {/* Body Content */}
-        <div className="up-body-content">
-          <div className="up-readonly-alert">
-            <Lock size={16} /> Thông tin gốc của bạn đã được xác thực, không thể tự ý sửa đổi.
+        {/* Right: editable form */}
+        <div className="tp-form" style={{ flex: '2 1 500px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          
+          {/* Email */}
+          <div className="tp-section">
+            <div className="tp-section-title">
+              <Mail size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px' }} /> 
+              Email liên hệ
+            </div>
+            <input
+              type="email"
+              className="tp-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Nhập địa chỉ email của bạn"
+            />
           </div>
 
-          <div className="up-form-group">
-            <label className="up-label">Email liên lạc</label>
-            <div className="up-input-wrap">
-              <Mail className="up-input-icon" size={18} />
-              <input type="email" className="up-input" value={email} onChange={e => setEmail(e.target.value)} placeholder="Nhập địa chỉ email của bạn" />
+          {/* Địa chỉ */}
+          <div className="tp-section">
+            <div className="tp-section-title">
+              <MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px' }} /> 
+              Địa chỉ hiện tại
+            </div>
+            <textarea
+              className="tp-input"
+              style={{ minHeight: '100px', resize: 'vertical' }}
+              value={address}
+              onChange={(e) => setAddress(e.target.value.slice(0, 500))}
+              placeholder="VD: số 123 đường ABC, phường X, quận Y..."
+              rows={4}
+            />
+            <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+              {address.length}/500
             </div>
           </div>
 
-          <div className="up-form-group">
-            <label className="up-label">Địa chỉ hiện tại</label>
-            <div className="up-input-wrap up-input-wrap--textarea">
-              <MapPin className="up-input-icon" size={18} />
-              <textarea className="up-textarea" value={address} onChange={e => setAddress(e.target.value.slice(0, 500))} maxLength={500} rows={3} placeholder="VD: 123 Đường A, Quận B, TP HCM..." />
+          {/* Messages */}
+          {error && (
+            <div style={{ padding: '12px 16px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '8px', fontSize: '0.85rem' }}>
+              {error}
             </div>
-            <div className="up-char-limit">{address.length}/500</div>
-          </div>
+          )}
+          {success && (
+            <div style={{ padding: '12px 16px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '8px', fontSize: '0.85rem' }}>
+              {success}
+            </div>
+          )}
 
-          {error && <div className="up-msg error">{error}</div>}
-          {success && <div className="up-msg success">{success}</div>}
-
-          <div className="up-actions">
-            <button className={`up-btn-save ${isDirty ? 'active' : ''}`} onClick={handleSave} disabled={saving || !isDirty}>
-              {saving ? <div className="up-spinner-btn" /> : <Save size={18} />} 
+          {/* Actions */}
+          <div className="tp-form-actions" style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end', paddingTop: '24px', borderTop: '1px solid var(--color-border)' }}>
+            <button
+              className="tp-save-btn"
+              onClick={handleSave}
+              disabled={saving || !isDirty}
+              style={{ padding: '10px 24px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', background: (!saving && isDirty) ? 'var(--color-primary)' : 'var(--color-surface-hover)', outline: 'none', color: (!saving && isDirty) ? '#fff' : 'var(--color-text-muted)', fontWeight: 600, cursor: (!saving && isDirty) ? 'pointer' : 'not-allowed', border: (!saving && isDirty) ? 'none' : '1px solid var(--color-border)' }}
+            >
+              {saving ? <div className="tp-spinner-btn" /> : <Save size={18} />}
               {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
             </button>
           </div>
+
         </div>
       </div>
     </div>

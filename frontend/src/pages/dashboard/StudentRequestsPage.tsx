@@ -1,9 +1,6 @@
 import { BookOpen, GraduationCap, X, Phone, CheckCircle, Activity, UserCheck, Clock, XCircle, Plus, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
-import { DashboardHeader } from '../../components/layout/DashboardHeader';
-import { StudentSidebar } from '../../components/student/StudentSidebar';
-
 import { studentApi } from '../../services/studentApi';
 import type { ParentClass, TutorApplicant } from '../../services/parentApi';
 import { StudentRequestClassModal } from '../../components/student/StudentRequestClassModal';
@@ -164,13 +161,8 @@ export const StudentRequestsPage = () => {
   };
 
   return (
-    <div className="dash-page">
-      <StudentSidebar active="requests" />
+    <>
 
-      <main className="dash-main">
-        <DashboardHeader />
-        
-        <div className="dash-body">
           <div className="dash-section-head" style={{ marginBottom: 20 }}>
             <div>
               <h2 className="dash-section-title" style={{ fontSize: '1.4rem' }}>Yêu cầu học tập</h2>
@@ -247,8 +239,7 @@ export const StudentRequestsPage = () => {
               </div>
             )}
           </div>
-        </div>
-      </main>
+
 
       {/* Toasts & Modals */}
       {toast && (
@@ -271,6 +262,6 @@ export const StudentRequestsPage = () => {
       {tutorsModal && (
         <TutorsModal cls={tutorsModal} onClose={() => setTutorsModal(null)} onSelect={handleSelectTutor}/>
       )}
-    </div>
+    </>
   );
 };
