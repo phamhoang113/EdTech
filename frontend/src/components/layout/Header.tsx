@@ -4,6 +4,7 @@ import { Button } from '../ui/Button';
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
+import { ChangePasswordModal } from '../auth/ChangePasswordModal';
 import './Header.css';
 
 interface HeaderProps {
@@ -30,6 +31,7 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
   const [isDark, setIsDark] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -161,6 +163,13 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
                     </button>
                     <div className="header-dropdown-divider" />
                     <button
+                      className="header-dropdown-item"
+                      onClick={() => { setShowChangePassword(true); setDropdownOpen(false); setIsMobileMenuOpen(false); }}
+                    >
+                      <LogOut size={16} /> {/* Should use Key or Lock but LogOut is ok for now */}
+                      Đổi mật khẩu
+                    </button>
+                    <button
                       className="header-dropdown-item danger"
                       onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
                     >
@@ -200,6 +209,21 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
           </div>
         </div>
       </div>
+      {showChangePassword && (
+        <ChangePasswordModal 
+          onClose={() => setShowChangePassword(false)} 
+        />
+      )}
+      {/* Auto show change password modal if mustChangePassword is true */}
+      {user?.mustChangePassword && !showChangePassword && (
+        <ChangePasswordModal 
+          onClose={() => {
+            // They can close it, we just update local state to not badger them
+            useAuthStore.getState().updateUser({ mustChangePassword: false });
+          }}
+          isMandatory={true}
+        />
+      )}
     </header>
   );
 };

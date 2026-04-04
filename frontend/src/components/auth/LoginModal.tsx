@@ -5,6 +5,7 @@ import { Button } from '../ui/Button';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { RoleSelectionModal } from './RoleSelectionModal';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { loginApi } from '../../services/authApi';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import './LoginModal.css';
@@ -21,6 +22,7 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showRoleSelection, setShowRoleSelection] = useState(initialMode === 'register');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const { login, redirectUrl, setRedirectUrl } = useAuthStore();
   const navigate = useNavigate();
@@ -62,6 +64,15 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
       <RoleSelectionModal
         onClose={onClose}
         onBack={() => setShowRoleSelection(false)}
+      />
+    );
+  }
+
+  if (showForgotPassword) {
+    return (
+      <ForgotPasswordModal
+        onClose={onClose}
+        onBackToLogin={() => setShowForgotPassword(false)}
       />
     );
   }
@@ -121,7 +132,7 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
               </button>
             </div>
             <div className="forgot-password">
-              <a href="#forgot">Quên mật khẩu?</a>
+              <button type="button" className="text-btn" onClick={() => setShowForgotPassword(true)}>Quên mật khẩu?</button>
             </div>
           </div>
 

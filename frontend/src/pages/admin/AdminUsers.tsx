@@ -50,9 +50,10 @@ interface UserDetailDrawerProps {
 function UserDetailDrawer({ userId, onClose, onRefresh }: UserDetailDrawerProps) {
   const [detail, setDetail] = useState<AdminUserDetail | null>(null);
   const [loading, setLoading] = useState(false);
-  const [confirm, setConfirm] = useState<'delete' | null>(null);
+  const [confirm, setConfirm] = useState<'delete' | 'reset' | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState<string | null>(null);
 
   function showToast(msg: string) {
     setToast(msg);
@@ -60,9 +61,16 @@ function UserDetailDrawer({ userId, onClose, onRefresh }: UserDetailDrawerProps)
   }
 
   useEffect(() => {
-    if (!userId) { setDetail(null); return; }
+    if (!userId) { 
+      setDetail(null); 
+      setNewPassword(null);
+      setConfirm(null);
+      return; 
+    }
     setLoading(true);
     setDetail(null);
+    setNewPassword(null);
+    setConfirm(null);
     adminApi.getUserDetail(userId)
       .then(res => setDetail(res.data))
       .catch(() => showToast('Không thể tải thông tin người dùng'))
@@ -93,6 +101,17 @@ function UserDetailDrawer({ userId, onClose, onRefresh }: UserDetailDrawerProps)
       onRefresh();
       onClose();
     } catch { showToast('Không thể xóa người dùng'); }
+    finally { setBusy(false); setConfirm(null); }
+  };
+
+  const handleResetPassword = async () => {
+    if (!detail) return;
+    setBusy(true);
+    try {
+      const res = await adminApi.resetUserPassword(detail.id);
+      setNewPassword(res.data.newPassword);
+      showToast('Đã tạo mật khẩu mới thành công');
+    } catch { showToast('Không thể tạo mật khẩu mới'); }
     finally { setBusy(false); setConfirm(null); }
   };
 
@@ -269,7 +288,25 @@ function UserDetailDrawer({ userId, onClose, onRefresh }: UserDetailDrawerProps)
             )}
 
             <div className="admin-drawer__actions">
-              {confirm === 'delete' ? (
+              {newPassword ? (
+                <div className="admin-drawer__confirm-box" style={{ width: '100%', borderColor: '#10b981', background: '#ecfdf5' }}>
+                  <div className="admin-drawer__confirm-title" style={{ color: '#059669' }}>
+                    <CheckCircle size={16}/> Mật khẩu mới đã được tạo
+                  </div>
+                  <div className="admin-drawer__confirm-desc" style={{ color: '#047857' }}>
+                    Hãy copy mật khẩu dưới đây và gửi cho khách hàng. Mật khẩu này sẽ có hiệu lực ngay lập tức.
+                  </div>
+                  <div style={{ padding: '12px', background: '#fff', border: '1px dashed #10b981', borderRadius: '8px', fontSize: '1.25rem', fontFamily: 'monospace', textAlign: 'center', fontWeight: 'bold', color: '#000', marginBottom: '8px' }}>
+                    {newPassword}
+                  </div>
+                  <button onClick={() => {
+                    navigator.clipboard.writeText(newPassword);
+                    showToast('Đã copy mật khẩu!');
+                  }} className="admin-drawer__btn admin-drawer__btn--secondary" style={{ width: '100%' }}>
+                    Copy Mật Khẩu
+                  </button>
+                </div>
+              ) : confirm === 'delete' ? (
                 <div className="admin-drawer__confirm-box" style={{ width: '100%' }}>
                   <div className="admin-drawer__confirm-title"><ShieldAlert size={16}/> Xác nhận xóa người dùng?</div>
                   <div className="admin-drawer__confirm-desc">Hành động này không thể hoàn tác. Người dùng sẽ bị xóa khỏi hệ thống.</div>
@@ -282,11 +319,27 @@ function UserDetailDrawer({ userId, onClose, onRefresh }: UserDetailDrawerProps)
                     </button>
                   </div>
                 </div>
+              ) : confirm === 'reset' ? (
+                <div className="admin-drawer__confirm-box" style={{ width: '100%' }}>
+                  <div className="admin-drawer__confirm-title" style={{ color: '#f59e0b' }}><Lock size={16}/> Cấp lại mật khẩu ngẫu nhiên?</div>
+                  <div className="admin-drawer__confirm-desc">Hành động này sẽ thay đổi mật khẩu hiện tại của khách hàng thành một chuỗi tự động ngẫu nhiên và bắt buộc khách hàng phải đổi lại mật khẩu trong lần Đăng nhập tới. Bạn có chắc không?</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={handleResetPassword} disabled={busy} className="admin-drawer__btn" style={{ background: '#f59e0b', color: '#fff', border: 'none' }}>
+                      {busy ? 'Đang xử lý...' : 'Xác nhận Cấp lại'}
+                    </button>
+                    <button onClick={() => setConfirm(null)} className="admin-drawer__btn admin-drawer__btn--secondary">
+                      Hủy
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <>
                   <button onClick={handleLock} disabled={busy} className={`admin-drawer__btn ${detail.isActive ? 'admin-drawer__btn--lock' : 'admin-drawer__btn--unlock'}`}>
                     {detail.isActive ? <Lock size={15}/> : <Unlock size={15}/>}
                     {detail.isActive ? 'Khóa tài khoản' : 'Mở khóa'}
+                  </button>
+                  <button onClick={() => setConfirm('reset')} className="admin-drawer__btn admin-drawer__btn--secondary">
+                    <Lock size={15}/> Cấp mật khẩu
                   </button>
                   <button onClick={() => setConfirm('delete')} className="admin-drawer__btn admin-drawer__btn--danger">
                     <Trash2 size={15}/> Xóa

@@ -14,4 +14,5 @@ public class TokenResponse {
     private String fullName;
     private String avatarBase64;
     private Boolean isActive;
+    private Boolean mustChangePassword;
 }

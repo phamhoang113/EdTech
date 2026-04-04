@@ -78,4 +78,8 @@ public class UserEntity extends BaseEntity {
     @Column(name = "is_mock")
     @Builder.Default
     private Boolean isMock = false;
+
+    @Column(name = "must_change_password", nullable = false)
+    @Builder.Default
+    private Boolean mustChangePassword = false;
 }

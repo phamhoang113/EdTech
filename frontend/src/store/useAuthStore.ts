@@ -7,6 +7,7 @@ export interface User {
   role: UserRole;
   fullName: string;
   avatarBase64?: string;
+  mustChangePassword?: boolean;
 }
 
 interface AuthState {

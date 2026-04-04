@@ -22,6 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.edtech.backend.auth.dto.request.FirebaseAuthRequest;
 import com.edtech.backend.auth.dto.request.LoginRequest;
 import com.edtech.backend.auth.dto.request.TokenRefreshRequest;
+import com.edtech.backend.auth.dto.request.ChangePasswordRequest;
+import com.edtech.backend.auth.dto.request.ForgotPasswordInitRequest;
+import com.edtech.backend.auth.dto.request.ForgotPasswordResetRequest;
+import com.edtech.backend.auth.dto.response.ForgotPasswordInitResponse;
+import com.edtech.backend.auth.dto.response.ForgotPasswordResetResponse;
 import com.edtech.backend.auth.dto.response.TokenResponse;
 import com.edtech.backend.auth.entity.RefreshTokenEntity;
 import com.edtech.backend.auth.entity.UserDeviceEntity;
@@ -169,6 +174,94 @@ public class AuthServiceImpl implements AuthService {
         return generateTokenResponse(token.getUser());
     }
 
+    @Override
+    public ForgotPasswordInitResponse initForgotPassword(ForgotPasswordInitRequest request) {
+        String identifier = request.getIdentifier();
+        if (identifier.startsWith("+84")) {
+            identifier = "0" + identifier.substring(3);
+        }
+
+        UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(identifier)
+                .orElseThrow(() -> new BusinessRuleException("Không tìm thấy tài khoản."));
+
+        if (user.getPhone() == null || user.getPhone().isBlank()) {
+            throw new BusinessRuleException("NO_PHONE_ASSOCIATED: Tài khoản không có số điện thoại liên kết. Vui lòng liên hệ Admin để cấp lại mật khẩu.");
+        }
+
+        String phone = user.getPhone();
+        String masked = phone.substring(0, phone.length() - 3).replaceAll(".", "*") + phone.substring(phone.length() - 3);
+
+        return ForgotPasswordInitResponse.builder()
+                .maskedPhone(masked)
+                .fullPhone(phone)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ForgotPasswordResetResponse resetPassword(ForgotPasswordResetRequest request) {
+        String phone;
+        if (!isProduction() && request.getIdToken() != null && request.getIdToken().startsWith("MOCK_TOKEN_")) {
+            phone = request.getIdToken().substring("MOCK_TOKEN_".length());
+            log.info("Bypassing Firebase Auth (Reset Password) for mock token with phone: {}", phone);
+        } else {
+            try {
+                FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(request.getIdToken());
+                Object phoneObj = decodedToken.getClaims().get("phone_number");
+                if (phoneObj == null) {
+                    throw new BusinessRuleException("Không tìm thấy số điện thoại trong chứng chỉ Firebase.");
+                }
+                phone = phoneObj.toString();
+            } catch (Exception e) {
+                log.error("Failed to verify Firebase token for reset", e);
+                throw new BusinessRuleException("Xác thực OTP thất bại: " + e.getMessage());
+            }
+        }
+
+        if (phone.startsWith("+84")) {
+            phone = "0" + phone.substring(3);
+        }
+
+        String identifier = request.getIdentifier();
+        if (identifier.startsWith("+84")) {
+            identifier = "0" + identifier.substring(3);
+        }
+
+        UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(identifier)
+                .orElseThrow(() -> new BusinessRuleException("Không tìm thấy tài khoản."));
+
+        if (!phone.equals(user.getPhone())) {
+            throw new BusinessRuleException("Số điện thoại xác thực không khớp với số điện thoại của tài khoản.");
+        }
+
+        // Tạo mật khẩu ngẫu nhiên: 8 ký tự
+        String newRandomPassword = generateRandomPassword(8);
+        user.setPasswordHash(passwordEncoder.encode(newRandomPassword));
+        user.setMustChangePassword(true);
+        user.setFailedAttempts(0);
+        user.setLockedUntil(null);
+        userRepository.save(user);
+
+        return ForgotPasswordResetResponse.builder()
+                .newPassword(newRandomPassword)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(ChangePasswordRequest request, String identifier) {
+        UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(identifier)
+                .orElseThrow(() -> new BusinessRuleException("User not found"));
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())) {
+            throw new BusinessRuleException("Mật khẩu cũ không chính xác.");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setMustChangePassword(false);
+        userRepository.save(user);
+    }
+
     // ─────────── Private Helpers ───────────
 
     private TokenResponse generateTokenResponse(UserEntity user) {
@@ -201,6 +294,7 @@ public class AuthServiceImpl implements AuthService {
                 .fullName(user.getFullName())
                 .avatarBase64(user.getAvatarBase64())
                 .isActive(user.getIsActive())
+                .mustChangePassword(user.getMustChangePassword())
                 .build();
     }
 
@@ -217,5 +311,15 @@ public class AuthServiceImpl implements AuthService {
 
     private boolean isProduction() {
         return PROD_ENV.equalsIgnoreCase(appEnvironment);
+    }
+    
+    private String generateRandomPassword(int length) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder sb = new StringBuilder();
+        Random rnd = new Random();
+        for (int i = 0; i < length; i++) {
+            sb.append(chars.charAt(rnd.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 }

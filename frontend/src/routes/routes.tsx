@@ -363,6 +363,13 @@ export const router = createBrowserRouter([
         },
       },
       {
+        path: 'leads',
+        lazy: async () => {
+          const { AdminLeads } = await import('../pages/admin/AdminLeads');
+          return { Component: AdminLeads };
+        },
+      },
+      {
         path: 'verification',
         lazy: async () => {
           const { AdminVerification } = await import('../pages/admin/AdminVerification');

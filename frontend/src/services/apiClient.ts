@@ -15,6 +15,8 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+import { useAuthStore } from '../store/useAuthStore';
+
 // Response interceptor: auto-refresh khi 401
 apiClient.interceptors.response.use(
   (response) => response,
@@ -34,8 +36,16 @@ apiClient.interceptors.response.use(
           original.headers.Authorization = `Bearer ${newToken}`;
           return apiClient(original);
         } catch {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
+          useAuthStore.getState().logout();
+          const currentPath = window.location.pathname;
+          if (currentPath.startsWith('/admin') || currentPath.startsWith('/dashboard')) {
+            window.location.href = '/';
+          }
+        }
+      } else {
+        useAuthStore.getState().logout();
+        const currentPath = window.location.pathname;
+        if (currentPath.startsWith('/admin') || currentPath.startsWith('/dashboard')) {
           window.location.href = '/';
         }
       }

@@ -135,6 +135,11 @@ export const adminApi = {
     return response.data;
   },
 
+  resetUserPassword: async (userId: string): Promise<ApiResponse<{ newPassword: string }>> => {
+    const response = await apiClient.post(`/api/v1/admin/users/${userId}/reset-password`);
+    return response.data;
+  },
+
   getUserDetail: async (userId: string): Promise<ApiResponse<AdminUserDetail>> => {
     const response = await apiClient.get(`/api/v1/admin/users/${userId}`);
     return response.data;

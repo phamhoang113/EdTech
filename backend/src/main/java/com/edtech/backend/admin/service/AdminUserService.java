@@ -125,6 +125,31 @@ public class AdminUserService {
         return getUserDetail(saved.getId());
     }
 
+    @Transactional
+    public com.edtech.backend.admin.dto.AdminResetPasswordResponse resetPassword(UUID userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        // Generate random password (8 chars)
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder sb = new StringBuilder();
+        java.util.Random rnd = new java.util.Random();
+        for (int i = 0; i < 8; i++) {
+            sb.append(chars.charAt(rnd.nextInt(chars.length())));
+        }
+        String newRandomPassword = sb.toString();
+
+        user.setPasswordHash(passwordEncoder.encode(newRandomPassword));
+        user.setMustChangePassword(true);
+        user.setFailedAttempts(0);
+        user.setLockedUntil(null);
+        userRepository.save(user);
+
+        return com.edtech.backend.admin.dto.AdminResetPasswordResponse.builder()
+                .newPassword(newRandomPassword)
+                .build();
+    }
+
     private AdminUserListItem toListItem(UserEntity u) {
         return AdminUserListItem.builder()
                 .id(u.getId())

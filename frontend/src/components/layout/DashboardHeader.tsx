@@ -1,10 +1,11 @@
-import { Search, Sun, Moon, UserIcon, LogOut, Menu, Home } from 'lucide-react';
+import { Search, Sun, Moon, UserIcon, LogOut, Menu, Home, Key } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSidebarStore } from '../../store/useSidebarStore';
 
 import { NotificationDropdown } from '../common/NotificationDropdown';
+import { ChangePasswordModal } from '../auth/ChangePasswordModal';
 import '../../pages/dashboard/Dashboard.css';
 
 export const DashboardHeader = () => {
@@ -12,6 +13,7 @@ export const DashboardHeader = () => {
   const navigate = useNavigate();
   const [isDark, setIsDark] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { toggle: toggleSidebar } = useSidebarStore();
 
@@ -114,6 +116,16 @@ export const DashboardHeader = () => {
               </button>
               
               <button 
+                className="profile-dropdown-item" 
+                onClick={() => { 
+                  setShowDropdown(false); 
+                  setShowChangePassword(true);
+                }}
+              >
+                <Key size={16} /> Đổi mật khẩu
+              </button>
+              
+              <button 
                 className="profile-dropdown-item text-danger" 
                 onClick={handleLogout}
               >
@@ -123,6 +135,20 @@ export const DashboardHeader = () => {
           )}
         </div>
       </div>
+
+      {showChangePassword && (
+        <ChangePasswordModal 
+          onClose={() => setShowChangePassword(false)} 
+        />
+      )}
+      {user?.mustChangePassword && !showChangePassword && (
+        <ChangePasswordModal 
+          onClose={() => {
+            useAuthStore.getState().updateUser({ mustChangePassword: false });
+          }}
+          isMandatory={true}
+        />
+      )}
     </header>
   );
 };

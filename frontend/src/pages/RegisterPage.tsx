@@ -65,6 +65,12 @@ export const RegisterPage = () => {
       setError('Vui lòng nhập số điện thoại');
       return;
     }
+
+    const phoneRegex = /^(\+84|84|0)(3|5|7|8|9)([0-9]{8})$/;
+    if (!phoneRegex.test(formattedPhone)) {
+      setError('Số điện thoại không hợp lệ định dạng Việt Nam.');
+      return;
+    }
     
     // Normalize to +84 format for Firebase
     if (formattedPhone.startsWith('0')) {

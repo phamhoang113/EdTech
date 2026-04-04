@@ -50,6 +50,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/classes/open").permitAll()
                 .requestMatchers("/api/v1/classes/filters").permitAll()
                 .requestMatchers("/api/v1/locations/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/leads").permitAll()
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()

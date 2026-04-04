@@ -63,6 +63,12 @@ public class AdminUserController {
         return ApiResponse.ok(null, "Đã mở khóa tài khoản");
     }
 
+    /** Reset mật khẩu của người dùng thành random password */
+    @PostMapping("/{userId}/reset-password")
+    public ApiResponse<com.edtech.backend.admin.dto.AdminResetPasswordResponse> resetPassword(@PathVariable UUID userId) {
+        return ApiResponse.ok(adminUserService.resetPassword(userId), "Tạo mật khẩu tự động thành công (Force Change Password)");
+    }
+
     /** Xóa mềm user */
     @DeleteMapping("/{userId}")
     public ApiResponse<Void> deleteUser(@PathVariable UUID userId) {

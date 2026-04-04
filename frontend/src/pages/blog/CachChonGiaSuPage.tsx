@@ -1,7 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { Calendar, Clock, ArrowRight, ChevronRight } from 'lucide-react';
 
 import { SEO } from '../../components/common/SEO';
+import { ArticleLeadMagnet } from '../../components/blog/ArticleLeadMagnet';
+import { ArticleStickyBanner } from '../../components/blog/ArticleStickyBanner';
 import './ArticleDetail.css';
 
 const TABLE_OF_CONTENTS = [
@@ -24,6 +26,7 @@ const ARTICLE_SCHEMA = {
 };
 
 export const CachChonGiaSuPage = () => {
+  const { openRegister } = useOutletContext<{ openRegister: () => void }>();
   return (
     <div className="article-page">
       <SEO
@@ -87,6 +90,7 @@ export const CachChonGiaSuPage = () => {
             <h3>2.6. Truyền cảm hứng</h3>
             <p>Gia sư tốt nhất là người khiến con <strong>yêu thích môn học</strong> và chủ động hỏi bài trước khi gia sư đến.</p>
 
+            <ArticleLeadMagnet />
             <h2 id="quy-trinh">3. Quy trình 4 bước tìm gia sư</h2>
             <div className="article-step">
               <div className="article-step-number">1</div>
@@ -144,12 +148,19 @@ export const CachChonGiaSuPage = () => {
             </div>
 
             <div className="article-cta">
-              <h3>Tìm gia sư đã xác thực 100% tại Gia Sư Tinh Hoa</h3>
-              <p>Mọi gia sư đều đã xác minh CCCD, bằng cấp và được đánh giá bởi phụ huynh thực tế.</p>
-              <Link to="/tutors" className="article-cta-btn">Xem Hồ Sơ Gia Sư <ArrowRight size={18} /></Link>
+              <h3>Đăng ký ngay để nhận tư vấn lộ trình 1 kèm 1</h3>
+              <p>Hãy để chuyên gia của Gia Sư Tinh Hoa giúp bạn phân tích năng lực và lựa chọn gia sư phù hợp nhất cho con hoàn toàn miễn phí.</p>
+              <button 
+                onClick={openRegister} 
+                className="article-cta-btn"
+                style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+              >
+                Đăng Ký Ngay <ArrowRight size={18} />
+              </button>
             </div>
           </article>
         </div>
+        <ArticleStickyBanner />
       </main>
     </div>
   );

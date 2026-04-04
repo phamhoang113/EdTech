@@ -7,6 +7,7 @@ export interface TokenResponse {
   fullName: string;
   avatarBase64: string | null;
   isActive: boolean;
+  mustChangePassword?: boolean;
 }
 
 /** Payload for registering or authenticating via Firebase */
@@ -34,4 +35,18 @@ export const loginApi = async (payload: LoginPayload): Promise<TokenResponse> =>
 export const firebaseAuthApi = async (payload: FirebaseAuthPayload): Promise<TokenResponse> => {
   const res = await apiClient.post('/api/v1/auth/firebase', payload);
   return unwrap(res);
+};
+
+export const initForgotPasswordApi = async (identifier: string): Promise<{ maskedPhone: string; fullPhone: string }> => {
+  const res = await apiClient.post('/api/v1/auth/forgot-password/init', { identifier });
+  return unwrap(res);
+};
+
+export const resetPasswordApi = async (payload: { identifier: string; idToken: string }): Promise<{ newPassword: string }> => {
+  const res = await apiClient.post('/api/v1/auth/forgot-password/reset', payload);
+  return unwrap(res);
+};
+
+export const changePasswordApi = async (payload: { oldPassword: string; newPassword: string }): Promise<void> => {
+  await apiClient.put('/api/v1/auth/password', payload);
 };

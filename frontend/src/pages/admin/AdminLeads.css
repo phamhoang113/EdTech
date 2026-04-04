@@ -1,0 +1,74 @@
+.admin-leads-page {
+  padding: 1.5rem;
+}
+
+.admin-leads-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.admin-leads-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.admin-leads-card {
+  background: var(--color-surface);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.admin-leads-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-leads-table th,
+.admin-leads-table td {
+  padding: 1rem 1.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-leads-table th {
+  background: var(--color-surface-hover);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.admin-leads-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-leads-table tr:hover {
+  background: var(--color-surface-hover);
+}
+
+.lead-name {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.lead-contacted {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.contact-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}

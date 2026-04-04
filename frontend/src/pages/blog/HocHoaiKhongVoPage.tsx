@@ -1,7 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { Calendar, Clock, ArrowRight, ChevronRight } from 'lucide-react';
 
 import { SEO } from '../../components/common/SEO';
+import { ArticleLeadMagnet } from '../../components/blog/ArticleLeadMagnet';
+import { ArticleStickyBanner } from '../../components/blog/ArticleStickyBanner';
 import './ArticleDetail.css';
 
 const TABLE_OF_CONTENTS = [
@@ -24,6 +26,8 @@ const ARTICLE_SCHEMA = {
 };
 
 export const HocHoaiKhongVoPage = () => {
+  const { openRegister } = useOutletContext<{ openRegister: () => void }>();
+
   return (
     <div className="article-page">
       <SEO
@@ -121,6 +125,7 @@ export const HocHoaiKhongVoPage = () => {
             </p>
 
             {/* Section 3 */}
+            <ArticleLeadMagnet />
             <h2 id="giai-phap">3. Bốn giải pháp khoa học giúp con học "vào" ngay</h2>
 
             <div className="article-step">
@@ -184,14 +189,19 @@ export const HocHoaiKhongVoPage = () => {
 
             {/* CTA */}
             <div className="article-cta">
-              <h3>Tìm gia sư phù hợp cho con ngay hôm nay!</h3>
-              <p>Gia Sư Tinh Hoa giúp bạn kết nối với các gia sư giỏi, đã được xác thực 100%, sẵn sàng kèm con 1-1 tại nhà hoặc online.</p>
-              <Link to="/tutors" className="article-cta-btn">
-                Xem danh sách Gia Sư <ArrowRight size={18} />
-              </Link>
+              <h3>Đăng ký ngay để nhận tư vấn lộ trình 1 kèm 1</h3>
+              <p>Hãy để chuyên gia của Gia Sư Tinh Hoa giúp bạn phân tích năng lực và lựa chọn gia sư phù hợp nhất cho con hoàn toàn miễn phí.</p>
+              <button 
+                onClick={openRegister} 
+                className="article-cta-btn"
+                style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+              >
+                Đăng Ký Ngay <ArrowRight size={18} />
+              </button>
             </div>
           </article>
         </div>
+        <ArticleStickyBanner />
       </main>
     </div>
   );
