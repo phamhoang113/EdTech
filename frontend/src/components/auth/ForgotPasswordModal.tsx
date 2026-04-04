@@ -19,6 +19,7 @@ export const ForgotPasswordModal = ({ onClose, onBackToLogin }: ForgotPasswordMo
   const [step, setStep] = useState<'INIT' | 'OTP' | 'SUCCESS'>('INIT');
   const [identifier, setIdentifier] = useState('');
   const [maskedPhone, setMaskedPhone] = useState('');
+  const [fullPhone, setFullPhone] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
@@ -69,6 +70,7 @@ export const ForgotPasswordModal = ({ onClose, onBackToLogin }: ForgotPasswordMo
       // 1. Call Backend to check if user exists and has a phone number
       const data = await initForgotPasswordApi(identifier);
       setMaskedPhone(data.maskedPhone);
+      setFullPhone(data.fullPhone);
 
       // 2. Call Firebase
       let formattedPhone = data.fullPhone.trim();

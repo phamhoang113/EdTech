@@ -35,4 +35,15 @@ const localCacheHeaderPlugin = () => ({
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), localCacheHeaderPlugin()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/lucide-react')) return 'ui-icons';
+          if (id.includes('node_modules/firebase')) return 'firebase';
+          if (id.includes('node_modules/react') || id.includes('node_modules/axios')) return 'vendor';
+        }
+      }
+    }
+  }
 })

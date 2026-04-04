@@ -2,10 +2,11 @@ import { Sun, Moon, LayoutDashboard, LogOut, ChevronDown, Menu, X } from 'lucide
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../ui/Button';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
-import { ChangePasswordModal } from '../auth/ChangePasswordModal';
 import './Header.css';
+
+const ChangePasswordModal = lazy(() => import('../auth/ChangePasswordModal').then(module => ({ default: module.ChangePasswordModal })));
 
 interface HeaderProps {
   onLoginClick: () => void;
@@ -210,19 +211,23 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
         </div>
       </div>
       {showChangePassword && (
-        <ChangePasswordModal 
-          onClose={() => setShowChangePassword(false)} 
-        />
+        <Suspense fallback={null}>
+          <ChangePasswordModal 
+            onClose={() => setShowChangePassword(false)} 
+          />
+        </Suspense>
       )}
       {/* Auto show change password modal if mustChangePassword is true */}
       {user?.mustChangePassword && !showChangePassword && (
-        <ChangePasswordModal 
-          onClose={() => {
-            // They can close it, we just update local state to not badger them
-            useAuthStore.getState().updateUser({ mustChangePassword: false });
-          }}
-          isMandatory={true}
-        />
+        <Suspense fallback={null}>
+          <ChangePasswordModal 
+            onClose={() => {
+              // They can close it, we just update local state to not badger them
+              useAuthStore.getState().updateUser({ mustChangePassword: false });
+            }}
+            isMandatory={true}
+          />
+        </Suspense>
       )}
     </header>
   );

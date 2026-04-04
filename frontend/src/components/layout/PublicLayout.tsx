@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
-import { LoginModal } from '../auth/LoginModal';
 import { FloatingContact } from './FloatingContact';
+
+const LoginModal = lazy(() => import('../auth/LoginModal').then(module => ({ default: module.LoginModal })));
 
 export type PublicLayoutContext = {
   openLogin: () => void;
@@ -27,7 +28,11 @@ export const PublicLayout = () => {
         <Outlet context={{ openLogin, openRegister }} />
       </div>
       <Footer />
-      {authModalState.isOpen && <LoginModal onClose={closeAuth} initialMode={authModalState.mode} />}
+      {authModalState.isOpen && (
+        <Suspense fallback={null}>
+          <LoginModal onClose={closeAuth} initialMode={authModalState.mode} />
+        </Suspense>
+      )}
       <FloatingContact />
     </div>
   );
