@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Send } from 'lucide-react';
 import { submitLead } from '../../services/leadApi';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import './ConsultationModal.css';
 
 interface Props {
@@ -13,6 +14,8 @@ export function ConsultationModal({ isOpen, onClose }: Props) {
   const [name, setName] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEscapeKey(onClose, isOpen);
 
   if (!isOpen) return null;
 

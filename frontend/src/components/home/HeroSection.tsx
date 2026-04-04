@@ -41,7 +41,7 @@ export const HeroSection = ({}: HeroSectionProps) => {
             <span className="mobile-hidden">Học trực tuyến hay tại nhà, tất cả đều trong tầm tay.</span>
           </p>
           <div className="hero-mobile-illustration animate-fade-up delay-200">
-            <img src="/hero_mobile.webp" alt="Gia sư dạy học trực tuyến" width={612} height={612} fetchPriority="high" />
+            <img src="/animated-logo.svg" alt="Gia sư Tinh Hoa Logo Vẽ" style={{ width: '100%', height: 'auto', maxWidth: 400 }} fetchPriority="high" />
           </div>
           <div className="hero-trust-badge animate-fade-up delay-300">
             <span className="trust-item">

@@ -12,6 +12,7 @@ import {
   toHHMM
 } from '../../components/parent/RequestClassModal';
 import type { CaSchedule, LevelFeeRow } from '../../components/parent/RequestClassModal';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface AdminCreateClassModalProps {
   onClose: () => void;
@@ -27,6 +28,7 @@ interface Filters {
 }
 
 export function AdminCreateClassModal({ onClose, onSuccess, showToast }: AdminCreateClassModalProps) {
+  useEscapeKey(onClose);
   // Tabs: search | create
   const [parentMode, setParentMode] = useState<'search' | 'create'>('search');
 
