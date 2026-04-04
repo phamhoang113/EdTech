@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../domain/entities/user_entity.dart';
+
 abstract class AuthState extends Equatable {
   const AuthState();
 
@@ -24,18 +26,14 @@ class AuthOtpSent extends AuthState {
 
 /// Đã xác thực — lưu thông tin user
 class AuthAuthenticated extends AuthState {
-  final String phone;
-  final String role;
-  final String fullName;
+  final UserEntity user;
 
-  const AuthAuthenticated({
-    required this.phone,
-    required this.role,
-    required this.fullName,
-  });
+  const AuthAuthenticated(this.user);
+
+  bool get mustChangePassword => user.mustChangePassword;
 
   @override
-  List<Object> get props => [phone, role, fullName];
+  List<Object> get props => [user];
 }
 
 class AuthUnauthenticated extends AuthState {}

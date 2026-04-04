@@ -98,7 +98,7 @@ public class OpenClassService {
                             .sessionsPerWeek(entity.getSessionsPerWeek() != null ? entity.getSessionsPerWeek() : 1)
                             .sessionDurationMin(entity.getSessionDurationMin() != null ? entity.getSessionDurationMin() : 90)
                             .studentCount(1) // Placeholder for UI until class_students logic is fully handled
-                            .levelFees(entity.getTutorProposals())
+                            .levelFees(TutorType.sortLevelFeesJson(entity.getTutorProposals()))
                             .build();
                 })
                 .collect(Collectors.toList());

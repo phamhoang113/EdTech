@@ -19,6 +19,6 @@ public interface TutorProfileRepository extends JpaRepository<TutorProfileEntity
     long countByVerificationStatus(VerificationStatus status);
     Page<TutorProfileEntity> findByVerificationStatus(VerificationStatus status, Pageable pageable);
 
-    @Query("SELECT p FROM TutorProfileEntity p WHERE p.verificationStatus = :status AND (:includeMock = true OR p.isMock = false) ORDER BY p.rating DESC, p.ratingCount DESC")
+    @Query("SELECT p FROM TutorProfileEntity p JOIN UserEntity u ON p.userId = u.id WHERE p.verificationStatus = :status AND u.isDeleted = false AND u.isActive = true AND (:includeMock = true OR p.isMock = false) ORDER BY p.rating DESC, p.ratingCount DESC")
     Page<TutorProfileEntity> findPublicProfiles(@Param("status") VerificationStatus status, @Param("includeMock") boolean includeMock, Pageable pageable);
 }

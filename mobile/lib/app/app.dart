@@ -7,6 +7,7 @@ import '../features/auth/presentation/bloc/auth_bloc.dart';
 import '../features/auth/presentation/bloc/auth_event.dart';
 import 'router.dart';
 import 'theme.dart';
+import 'theme_cubit.dart';
 
 class EdTechApp extends StatelessWidget {
   const EdTechApp({super.key});
@@ -18,14 +19,19 @@ class EdTechApp extends StatelessWidget {
         BlocProvider<AuthBloc>(
           create: (context) => getIt<AuthBloc>()..add(AuthStarted()),
         ),
+        BlocProvider<ThemeCubit>(
+          create: (context) => ThemeCubit(),
+        ),
       ],
-      child: MaterialApp.router(
-        title: 'EdTech App',
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
-        themeMode: ThemeMode.light, // Enforce light-first per rules
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (context, themeMode) {
+          return MaterialApp.router(
+            title: 'EdTech App',
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: themeMode,
         routerConfig: appRouter,
-        localizationsDelegates: const [
+        localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
@@ -33,7 +39,9 @@ class EdTechApp extends StatelessWidget {
         supportedLocales: const [
           Locale('vi', 'VN'),
         ],
-      ),
-    );
+      );
+    },
+  ),
+);
   }
 }

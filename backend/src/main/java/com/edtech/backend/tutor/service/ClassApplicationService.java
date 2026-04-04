@@ -401,7 +401,7 @@ public class ClassApplicationService {
                 .sessionDurationMin(cls != null ? cls.getSessionDurationMin() : null)
                 .studentCount(1) // Placeholder cho đến khi có danh sách học sinh
                 .genderRequirement(cls != null ? cls.getGenderRequirement() : null)
-                .levelFees(cls != null ? cls.getLevelFees() : null)
+                .levelFees(cls != null ? com.edtech.backend.tutor.enums.TutorType.sortLevelFeesJson(cls.getLevelFees()) : null)
                 .tutorProposals(cls != null ? cls.getTutorProposals() : null)
                 .feePercentage(cls != null ? cls.getFeePercentage() : null)
                 .tutorLevelRequirement(levelReqs)

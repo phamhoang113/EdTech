@@ -1,125 +1,143 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../../../app/router.dart';
+import '../../../../core/di/injection.dart';
+import '../../../classes/presentation/bloc/open_class_bloc.dart';
+import '../../../classes/presentation/bloc/open_class_event.dart';
+import '../../../classes/presentation/bloc/open_class_state.dart';
+import '../../../classes/presentation/widgets/class_details_dialog.dart';
 import 'open_class_card.dart';
-
-// Mock Data
-const _mockClasses = [
-  OpenClass(
-    id: 'c1',
-    title: 'Tìm Gia Sư Dạy Toán Lớp 10 Bồi Dưỡng Học Sinh Giỏi',
-    subject: 'Toán',
-    grade: 'Lớp 10',
-    location: 'Quận Cầu Giấy, Hà Nội (Học online)',
-    schedule: '2 buổi / tuần (Tối T3, T5)',
-    fee: 2000000,
-    timeFrame: 'Bắt đầu tuần tới',
-  ),
-  OpenClass(
-    id: 'c2',
-    title: 'Giao Tiếp Tiếng Anh Cơ Bản Luyện Speaking',
-    subject: 'Tiếng Anh',
-    grade: 'Sinh Viên',
-    location: 'Quận 1, TP. HCM (Tại nhà)',
-    schedule: '3 buổi / tuần (Linh hoạt)',
-    fee: 3500000,
-    timeFrame: 'Gấp',
-  ),
-  OpenClass(
-    id: 'c3',
-    title: 'Ôn Thi Đại Học Môn Vật Lý Khối A',
-    subject: 'Vật Lý',
-    grade: 'Lớp 12',
-    location: 'Học Trực Tuyến',
-    schedule: '2 buổi / tuần',
-    fee: 2500000,
-    timeFrame: 'Trong tháng này',
-  ),
-];
 
 class OpenClassesSection extends StatelessWidget {
   const OpenClassesSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Section Header
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return BlocProvider(
+      create: (context) => getIt<OpenClassBloc>()..add(FetchOpenClassesRequested()),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                          children: [
+                            const TextSpan(text: 'Lớp Học '),
+                            TextSpan(
+                              text: 'Mới Nhất',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Các lớp học đang tìm kiếm gia sư phù hợp ngay hôm nay.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          BlocBuilder<OpenClassBloc, OpenClassState>(
+            builder: (context, state) {
+              if (state is OpenClassLoading || state is OpenClassInitial) {
+                return const Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              } else if (state is OpenClassError) {
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(child: Text(state.message, style: const TextStyle(color: Colors.red))),
+                );
+              } else if (state is OpenClassLoaded) {
+                if (state.classes.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Center(child: Text('Hiện tại chưa có lớp học nào trống.')),
+                  );
+                }
+                
+                return Column(
                   children: [
-                    RichText(
-                      text: TextSpan(
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                        children: [
-                          const TextSpan(text: 'Lớp Học '),
-                          TextSpan(
-                            text: 'Mới Nhất',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary, // Using primary as highlight
-                            ),
-                          ),
-                        ],
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          mainAxisExtent: 240, // Tăng chiều cao để không bị overflow 4 dòng thông tin
+                        ),
+                        itemCount: state.classes.length > 6 ? 6 : state.classes.length,
+                        itemBuilder: (context, index) {
+                          final classItem = state.classes[index];
+                          return OpenClassCard(
+                            classItem: classItem,
+                            onTap: () {
+                              ClassDetailsDialog.show(context, classItem);
+                            },
+                          );
+                        },
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Các lớp học đang tìm kiếm gia sư phù hợp ngay hôm nay.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    const SizedBox(height: 24),
+                    // Button Xem tất cả nằm ở dưới cùng
+                    Center(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          context.go('/classes');
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                          side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                        ),
+                        child: Text(
+                          'Xem Tất Cả Lớp Học',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  // Navigate to full list
-                },
-                child: const Text('Xem tất cả'),
-              ),
-            ],
-          ),
-        ),
-        
-        const SizedBox(height: 16),
-        
-        // Horizontal List View
-        SizedBox(
-          height: 320, // Give fixed height for cards
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            itemCount: _mockClasses.length,
-            itemBuilder: (context, index) {
-              final classItem = _mockClasses[index];
-              return OpenClassCard(
-                classItem: classItem,
-                onApplyClass: () {
-                  showAuthGuard(
-                    context,
-                    onSuccess: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Đã nhận lớp thành công!')),
-                      );
-                    },
-                  );
-                },
-              );
+                );
+              }
+              return const SizedBox.shrink();
             },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

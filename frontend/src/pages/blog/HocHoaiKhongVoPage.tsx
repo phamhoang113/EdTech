@@ -33,7 +33,7 @@ export const HocHoaiKhongVoPage = () => {
       <SEO
         title="Tại Sao Con Học Hoài Không Vô? Nguyên Nhân Khoa Học & Giải Pháp | Gia Sư Tinh Hoa"
         description="Phân tích 5 nguyên nhân khoa học khiến não bộ trẻ khó tiếp thu bài học và giải pháp cụ thể, hiệu quả giúp con học giỏi hơn."
-        keywords="con học hoài không vô, tại sao con học không giỏi, não bộ trẻ, phương pháp học tập, spaced repetition, active recall, gia sư 1 kèm 1"
+        keywords="con học hoài không vô, tại sao con học kém, trẻ mất gốc, phương pháp giúp trẻ tập trung, kỹ năng ghi nhớ, spaced repetition, active recall, vượt qua áp lực học tập, gia sư 1 kèm 1 lấy lại căn bản"
         url="https://giasutinhhoa.com/bai-viet/tai-sao-con-hoc-hoai-khong-vo"
         type="article"
         schema={ARTICLE_SCHEMA}

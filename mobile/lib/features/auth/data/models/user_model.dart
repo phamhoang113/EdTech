@@ -10,6 +10,7 @@ class UserModel extends UserEntity {
     required super.phoneNumber,
     required super.role,
     super.name,
+    super.mustChangePassword,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);

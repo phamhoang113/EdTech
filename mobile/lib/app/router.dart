@@ -8,37 +8,63 @@ import '../features/auth/presentation/screens/register_form_screen.dart';
 import '../features/auth/presentation/screens/otp_verify_screen.dart';
 import '../features/auth/presentation/screens/dashboard_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
+import '../features/home/presentation/screens/main_shell.dart';
+import '../features/classes/presentation/screens/class_list_screen.dart';
 import '../features/auth/presentation/bloc/auth_bloc.dart';
 import '../features/auth/presentation/bloc/auth_state.dart';
 import '../features/tutor_profile/presentation/screens/tutor_verification_screen.dart';
+import '../features/auth/presentation/screens/change_password_screen.dart';
+import '../features/auth/presentation/screens/forgot_password_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> _homeNavKey = GlobalKey<NavigatorState>(debugLabel: 'home');
+final GlobalKey<NavigatorState> _classesNavKey = GlobalKey<NavigatorState>(debugLabel: 'classes');
+final GlobalKey<NavigatorState> _dashboardNavKey = GlobalKey<NavigatorState>(debugLabel: 'dashboard');
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: '/home',
-  // ── Auth guard redirect ──────────────────────────────────────
-  redirect: (context, state) {
-    final isAuthenticated = context.read<AuthBloc>().state is AuthAuthenticated;
-    final protectedPaths = ['/dashboard'];
-    final going = state.uri.path;
-
-    // Chưa đăng nhập → không được vào protected routes
-    if (!isAuthenticated && protectedPaths.any((p) => going.startsWith(p))) {
-      return '/home';
-    }
-    // Đã đăng nhập cố vào /home → đi thẳng dashboard
-    if (isAuthenticated && going == '/home') {
-      return '/dashboard';
-    }
-    return null;
-  },
   routes: [
-    /* ── Public ── */
-    GoRoute(
-      path: '/home',
-      builder: (context, state) => const HomeScreen(),
+    // ── Main Shell with Bottom Navigation ──
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return MainShell(navigationShell: navigationShell);
+      },
+      branches: [
+        // Tab 0: Home
+        StatefulShellBranch(
+          navigatorKey: _homeNavKey,
+          routes: [
+            GoRoute(
+              path: '/home',
+              builder: (context, state) => const HomeScreen(),
+            ),
+          ],
+        ),
+        // Tab 1: Class List
+        StatefulShellBranch(
+          navigatorKey: _classesNavKey,
+          routes: [
+            GoRoute(
+              path: '/classes',
+              builder: (context, state) => const ClassListScreen(),
+            ),
+          ],
+        ),
+        // Tab 2: Dashboard
+        StatefulShellBranch(
+          navigatorKey: _dashboardNavKey,
+          routes: [
+            GoRoute(
+              path: '/dashboard',
+              builder: (context, state) => const DashboardScreen(),
+            ),
+          ],
+        ),
+      ],
     ),
+
+    // ── Non-shell routes (full screen, no bottom nav) ──
     GoRoute(
       path: '/register/role',
       builder: (context, state) => const RegisterRoleScreen(),
@@ -60,11 +86,17 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-
-    /* ── Protected ── */
     GoRoute(
-      path: '/dashboard',
-      builder: (context, state) => const DashboardScreen(),
+      path: '/forgot-password',
+      builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: '/change-password',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        final isForced = extra?['isForced'] as bool? ?? false;
+        return ChangePasswordScreen(isForced: isForced);
+      },
     ),
     GoRoute(
       path: '/tutor/verify',

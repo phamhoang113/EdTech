@@ -1,13 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../data/repositories/auth_repository_impl.dart';
+import '../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
 @injectable
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthRepositoryImpl _authRepository;
+  final AuthRepository _authRepository;
 
   AuthBloc(this._authRepository) : super(AuthInitial()) {
     on<AuthStarted>(_onAuthStarted);
@@ -20,7 +20,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onAuthStarted(AuthStarted event, Emitter<AuthState> emit) async {
     final user = await _authRepository.getAuthenticatedUser();
     if (user != null) {
-      emit(user);
+      emit(AuthAuthenticated(user));
     } else {
       emit(AuthUnauthenticated());
     }
@@ -31,7 +31,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await _authRepository.login(event.phone, event.password);
     result.fold(
       (failure) => emit(AuthError(failure.message)),
-      (authState) => emit(authState),
+      (user) => emit(AuthAuthenticated(user)),
     );
   }
 
@@ -60,7 +60,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await _authRepository.verifyOtp(event.otpToken, event.code);
     result.fold(
       (failure) => emit(AuthError(failure.message)),
-      (authState) => emit(authState),
+      (user) => emit(AuthAuthenticated(user)),
     );
   }
 

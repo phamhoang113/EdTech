@@ -3,15 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../../app/theme.dart';
-import '../../bloc/auth_bloc.dart';
-import '../../bloc/auth_event.dart';
-import '../../bloc/auth_state.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
+import '../widgets/dash_stat_card.dart';
 import '../widgets/dash_section_header.dart';
 import '../../../../app/theme.dart';
 import '../../../../core/di/injection.dart';
-import '../../tutor_profile/presentation/bloc/tutor_profile_bloc.dart';
-import '../../tutor_profile/presentation/bloc/tutor_profile_event.dart';
-import '../../tutor_profile/presentation/bloc/tutor_profile_state.dart';
+import '../../../tutor_profile/presentation/bloc/tutor_profile_bloc.dart';
+import '../../../tutor_profile/presentation/bloc/tutor_profile_event.dart';
+import '../../../tutor_profile/presentation/bloc/tutor_profile_state.dart';
 
 class TutorDashboardScreen extends StatefulWidget {
   const TutorDashboardScreen({super.key});
@@ -42,7 +43,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocListener<AuthBloc, AuthState>(
-      listener: (ctx, state) { if (state is! AuthAuthenticated) ctx.go('/home'); },
+      listener: (ctx, state) { if (state is! AuthAuthenticated && state is! AuthLoading) ctx.go('/home'); },
       child: BlocProvider.value(
         value: _profileBloc,
         child: BlocBuilder<TutorProfileBloc, TutorProfileState>(
@@ -54,10 +55,33 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
               verificationStatus = profileState.profile.verificationStatus;
             }
 
-            return Scaffold(
-              appBar: _appBar(context, cs, isDark),
-              body: Column(
+            return Column(
                 children: [
+                  // Inline action row
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
+                        PopupMenuButton(
+                          icon: CircleAvatar(
+                            radius: 16,
+                            backgroundColor: const Color(0xFF10B981),
+                            child: BlocBuilder<AuthBloc, AuthState>(builder: (_, state) {
+                              final name = state is AuthAuthenticated ? (state.user.name ?? '?') : '?';
+                              return Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13));
+                            }),
+                          ),
+                          itemBuilder: (_) => [PopupMenuItem(
+                            child: const Text('Đăng xuất'),
+                            onTap: () => context.read<AuthBloc>().add(AuthLogoutRequested()),
+                          )],
+                        ),
+                      ],
+                    ),
+                  ),
                   if (verificationStatus == 'UNVERIFIED')
                     Container(
                       width: double.infinity,
@@ -89,12 +113,24 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
                         style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
                       ),
                     ),
+                  // Inline tab selector
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppTheme.surface.withAlpha(120) : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        _tabButton('Tổng quan', Icons.home_outlined, 0, cs),
+                        _tabButton('Học sinh', Icons.people_outline, 1, cs),
+                      ],
+                    ),
+                  ),
                   Expanded(
                     child: _navIndex == 0 ? _buildHome(isDark, verificationStatus) : _buildStudentsTab(isDark),
                   ),
                 ],
-              ),
-              bottomNavigationBar: _navBar(cs, isDark),
             );
           }
         ),
@@ -102,44 +138,39 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
     );
   }
 
-  AppBar _appBar(BuildContext context, ColorScheme cs, bool isDark) => AppBar(
-    backgroundColor: isDark ? AppTheme.surface : Colors.white,
-    elevation: 0,
-    title: Row(children: [
-      const Text('🎓', style: TextStyle(fontSize: 20)),
-      const SizedBox(width: 6),
-      Text('EdTech', style: TextStyle(
-        fontWeight: FontWeight.w800,
-        foreground: Paint()..shader = const LinearGradient(colors: [AppTheme.primary, AppTheme.accent])
-            .createShader(const Rect.fromLTWH(0, 0, 80, 20)),
-      )),
-    ]),
-    actions: [
-      IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
-      PopupMenuButton(
-        icon: CircleAvatar(
-          radius: 16,
-          backgroundColor: const Color(0xFF10B981),
-          child: BlocBuilder<AuthBloc, AuthState>(builder: (_, state) {
-            final name = state is AuthAuthenticated ? state.user.fullName : '?';
-            return Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13));
-          }),
+  Widget _tabButton(String label, IconData icon, int index, ColorScheme cs) {
+    final isActive = _navIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _navIndex = index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isActive ? cs.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 18, color: isActive ? Colors.white : cs.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Text(label, style: TextStyle(
+                fontSize: 13,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                color: isActive ? Colors.white : cs.onSurfaceVariant,
+              )),
+            ],
+          ),
         ),
-        itemBuilder: (_) => [PopupMenuItem(
-          child: const Text('Đăng xuất'),
-          onTap: () => context.read<AuthBloc>().add(const AuthLogoutRequested()),
-        )],
       ),
-      const SizedBox(width: 8),
-    ],
-  );
+    );
+  }
 
   Widget _buildHome(bool isDark, String status) => SingleChildScrollView(
     padding: const EdgeInsets.all(16),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       BlocBuilder<AuthBloc, AuthState>(builder: (_, state) {
-        final name = state is AuthAuthenticated ? state.user.fullName : 'Gia sư';
+        final name = state is AuthAuthenticated ? (state.user.name ?? 'Gia sư') : 'Gia sư';
         return _TutorGreeting(name: name, isDark: isDark);
       }),
       const SizedBox(height: 16),
@@ -151,7 +182,7 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 10, mainAxisSpacing: 10,
         childAspectRatio: 1.8,
-        children: const [
+        children: const <Widget>[
           DashStatCard(value: '12',    label: 'Học sinh',       emoji: '👥', accent: AppTheme.primary),
           DashStatCard(value: '4',     label: 'Lớp đang dạy',  emoji: '📖', accent: AppTheme.accent),
           DashStatCard(value: '4.9★',  label: 'Đánh giá',      emoji: '⭐', accent: Color(0xFFF59E0B)),
@@ -221,21 +252,6 @@ class _TutorDashboardScreenState extends State<TutorDashboardScreen> {
       ],
     );
   }
-
-  BottomNavigationBar _navBar(ColorScheme cs, bool isDark) => BottomNavigationBar(
-    currentIndex: _navIndex,
-    onTap: (i) => setState(() => _navIndex = i),
-    backgroundColor: isDark ? AppTheme.surface : Colors.white,
-    selectedItemColor: cs.primary,
-    unselectedItemColor: Colors.grey,
-    type: BottomNavigationBarType.fixed,
-    items: const [
-      BottomNavigationBarItem(icon: Icon(Icons.home_outlined),            label: 'Tổng quan'),
-      BottomNavigationBarItem(icon: Icon(Icons.people_outline),           label: 'Học sinh'),
-      BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined),  label: 'Lịch dạy'),
-      BottomNavigationBarItem(icon: Icon(Icons.bar_chart),                label: 'Báo cáo'),
-    ],
-  );
 }
 
 // ─── Widgets ───────────────────────────────────────────────────

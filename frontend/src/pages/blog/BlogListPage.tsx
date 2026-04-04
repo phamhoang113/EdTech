@@ -62,7 +62,7 @@ export const BlogListPage = () => {
       <SEO
         title="Blog Chia Sẻ Kiến Thức Giáo Dục | Gia Sư Tinh Hoa"
         description="Tổng hợp bài viết chất lượng về phương pháp học tập khoa học, cách dạy con hiệu quả, hướng dẫn chọn gia sư và các mẹo giáo dục thực tế."
-        keywords="blog gia sư, kiến thức giáo dục, phương pháp học tập, cách dạy con, chọn gia sư"
+        keywords="blog gia sư, kiến thức giáo dục, phương pháp học tập, cách dạy con, kinh nghiệm chọn gia sư, tìm gia sư cho con, giáo dục gia đình, trung tâm gia sư uy tín"
         url="https://giasutinhhoa.com/bai-viet"
         schema={PAGE_SCHEMA}
       />

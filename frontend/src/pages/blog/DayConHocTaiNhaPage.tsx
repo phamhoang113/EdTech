@@ -33,7 +33,7 @@ export const DayConHocTaiNhaPage = () => {
       <SEO
         title="7 Phương Pháp Dạy Con Học Hiệu Quả Tại Nhà | Gia Sư Tinh Hoa"
         description="Hướng dẫn chi tiết cách dạy con học tại nhà hiệu quả: thiết lập không gian, đồng hành tâm lý, rèn kỹ năng tự học. Áp dụng ngay hôm nay!"
-        keywords="dạy con học tại nhà, phương pháp dạy con hiệu quả, cách kèm con học, gia sư tại nhà, phụ huynh dạy con, giáo dục tại gia"
+        keywords="dạy con học tại nhà, phương pháp dạy con hiệu quả, cách kèm con học cấp 1, sai lầm khi dạy con học bài, bồi dưỡng con học giỏi, tâm lý giáo dục, gia sư tại nhà, kết nối cha mẹ và con cái"
         url="https://giasutinhhoa.com/bai-viet/phuong-phap-day-con-hoc-tai-nha"
         type="article"
         schema={ARTICLE_SCHEMA}

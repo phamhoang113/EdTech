@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../../app/theme.dart';
-import '../../bloc/auth_bloc.dart';
-import '../../bloc/auth_event.dart';
-import '../../bloc/auth_state.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 import '../widgets/dash_stat_card.dart';
 import '../widgets/dash_section_header.dart';
 import '../widgets/add_person_sheet.dart';
@@ -50,54 +50,63 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
     return BlocListener<AuthBloc, AuthState>(
       listener: (ctx, state) { if (state is! AuthAuthenticated) ctx.go('/home'); },
-      child: Scaffold(
-        appBar: _appBar(context, cs, isDark),
-        body: _navIndex == 0 ? _buildHome(isDark) : _buildStudentsTab(isDark),
-        bottomNavigationBar: _navBar(cs, isDark),
+      child: Column(
+        children: [
+          // Inline tab selector
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark ? AppTheme.surface.withAlpha(120) : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                _tabButton('Tổng quan', Icons.home_outlined, 0, cs),
+                _tabButton('Con em', Icons.child_care, 1, cs),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _navIndex == 0 ? _buildHome(isDark) : _buildStudentsTab(isDark),
+          ),
+        ],
       ),
     );
   }
 
-  AppBar _appBar(BuildContext context, ColorScheme cs, bool isDark) => AppBar(
-    backgroundColor: isDark ? AppTheme.surface : Colors.white,
-    elevation: 0,
-    title: Row(children: [
-      const Text('🎓', style: TextStyle(fontSize: 20)),
-      const SizedBox(width: 6),
-      Text('EdTech', style: TextStyle(
-        fontWeight: FontWeight.w800,
-        foreground: Paint()..shader = const LinearGradient(colors: [AppTheme.primary, AppTheme.accent])
-            .createShader(const Rect.fromLTWH(0, 0, 80, 20)),
-      )),
-    ]),
-    actions: [
-      IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
-      PopupMenuButton(
-        icon: CircleAvatar(
-          radius: 16,
-          backgroundColor: AppTheme.accent,
-          child: BlocBuilder<AuthBloc, AuthState>(
-            builder: (_, state) {
-              final name = state is AuthAuthenticated ? state.user.fullName : '?';
-              return Text(name.isNotEmpty ? name[0].toUpperCase() : '?',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13));
-            },
+  Widget _tabButton(String label, IconData icon, int index, ColorScheme cs) {
+    final isActive = _navIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _navIndex = index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isActive ? cs.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 18, color: isActive ? Colors.white : cs.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Text(label, style: TextStyle(
+                fontSize: 13,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                color: isActive ? Colors.white : cs.onSurfaceVariant,
+              )),
+            ],
           ),
         ),
-        itemBuilder: (_) => [PopupMenuItem(
-          child: const Text('Đăng xuất'),
-          onTap: () => context.read<AuthBloc>().add(const AuthLogoutRequested()),
-        )],
       ),
-      const SizedBox(width: 8),
-    ],
-  );
+    );
+  }
 
   Widget _buildHome(bool isDark) => SingleChildScrollView(
     padding: const EdgeInsets.all(16),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       BlocBuilder<AuthBloc, AuthState>(builder: (_, state) {
-        final name = state is AuthAuthenticated ? state.user.fullName : 'Phụ huynh';
+        final name = state is AuthAuthenticated ? (state.user.name ?? 'Phụ huynh') : 'Phụ huynh';
         return _GreetingBanner(name: name, tag: '👨‍👩‍👧 Phụ huynh', emoji: '🏠', isDark: isDark);
       }),
       const SizedBox(height: 16),
@@ -150,21 +159,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
-    ],
-  );
-
-  BottomNavigationBar _navBar(ColorScheme cs, bool isDark) => BottomNavigationBar(
-    currentIndex: _navIndex,
-    onTap: (i) => setState(() => _navIndex = i),
-    backgroundColor: isDark ? AppTheme.surface : Colors.white,
-    selectedItemColor: cs.primary,
-    unselectedItemColor: Colors.grey,
-    type: BottomNavigationBarType.fixed,
-    items: const [
-      BottomNavigationBarItem(icon: Icon(Icons.home_outlined),          label: 'Tổng quan'),
-      BottomNavigationBarItem(icon: Icon(Icons.child_care),             label: 'Con em'),
-      BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: 'Lịch học'),
-      BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline),    label: 'Tin nhắn'),
     ],
   );
 }

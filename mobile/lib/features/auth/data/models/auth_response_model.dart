@@ -11,6 +11,7 @@ class AuthResponseModel {
   final String role;
   final String fullName;
   final bool? isActive;
+  final bool? mustChangePassword;
 
   const AuthResponseModel({
     required this.accessToken,
@@ -18,6 +19,7 @@ class AuthResponseModel {
     required this.role,
     required this.fullName,
     this.isActive,
+    this.mustChangePassword,
   });
 
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) =>

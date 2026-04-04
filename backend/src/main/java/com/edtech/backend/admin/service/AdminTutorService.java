@@ -65,7 +65,7 @@ public class AdminTutorService {
         List<AdminTutorListItem> result = new ArrayList<>();
         for (TutorProfileEntity p : profiles) {
             UserEntity u = userMap.get(p.getUserId());
-            if (u == null) continue;
+            if (u == null || Boolean.TRUE.equals(u.getIsDeleted())) continue;
 
             // Lớp đang phụ trách = ASSIGNED + ACTIVE
             List<ClassStatus> teachingStatuses = List.of(ClassStatus.ASSIGNED, ClassStatus.ACTIVE);

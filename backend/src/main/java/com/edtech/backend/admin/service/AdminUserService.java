@@ -28,6 +28,7 @@ public class AdminUserService {
     private final UserRepository userRepository;
     private final TutorProfileRepository tutorProfileRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AdminTutorService adminTutorService;
 
     /** Lấy danh sách tất cả user (chưa xóa), có thể lọc theo role */
     public List<AdminUserListItem> getAllUsers(UserRole role) {
@@ -91,8 +92,14 @@ public class AdminUserService {
     public void deleteUser(UUID userId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
-        user.setIsDeleted(true);
-        userRepository.save(user);
+                
+        if (user.getRole() == UserRole.TUTOR) {
+            adminTutorService.deleteTutor(userId);
+        } else {
+            user.setIsDeleted(true);
+            user.setIsActive(false);
+            userRepository.save(user);
+        }
     }
 
     /** Mở lớp hộ: Amin tự do tạo User cho phép login ngay không cần OTP */

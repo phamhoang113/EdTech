@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
-import '../../presentation/bloc/auth_state.dart';
+import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_datasource.dart';
 import '../datasources/auth_remote_datasource.dart';
@@ -22,7 +22,7 @@ class AuthRepositoryImpl implements AuthRepository {
   );
 
   @override
-  Future<Either<Failure, AuthAuthenticated>> login(String phone, String password) async {
+  Future<Either<Failure, UserEntity>> login(String phone, String password) async {
     try {
       final response = await _remoteDataSource.login(phone, password);
       await _saveSession(
@@ -31,8 +31,15 @@ class AuthRepositoryImpl implements AuthRepository {
         fullName: response.fullName,
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
+        mustChangePassword: response.mustChangePassword,
       );
-      return Right(AuthAuthenticated(phone: phone, role: response.role, fullName: response.fullName));
+      return Right(UserEntity(
+        id: phone, 
+        phoneNumber: phone,
+        role: response.role, 
+        name: response.fullName,
+        mustChangePassword: response.mustChangePassword ?? false,
+      ));
     } on DioException catch (e) {
       return Left(ServerFailure(_extractMessage(e, 'Đăng nhập thất bại')));
     } catch (e) {
@@ -59,7 +66,8 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   /// Verify OTP bằng otpToken UUID + code (không cần phone)
-  Future<Either<Failure, AuthAuthenticated>> verifyOtp(String otpToken, String code) async {
+  @override
+  Future<Either<Failure, UserEntity>> verifyOtp(String otpToken, String code) async {
     try {
       final response = await _remoteDataSource.verifyOtp(otpToken, code);
       // phone không có trong TokenResponse, lấy từ secure storage nếu có
@@ -70,11 +78,14 @@ class AuthRepositoryImpl implements AuthRepository {
         fullName: response.fullName,
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
+        mustChangePassword: response.mustChangePassword,
       );
-      return Right(AuthAuthenticated(
-        phone: savedPhone,
+      return Right(UserEntity(
+        id: savedPhone,
+        phoneNumber: savedPhone,
         role: response.role,
-        fullName: response.fullName,
+        name: response.fullName,
+        mustChangePassword: response.mustChangePassword ?? false,
       ));
     } on DioException catch (e) {
       return Left(ServerFailure(_extractMessage(e, 'OTP không hợp lệ')));
@@ -90,15 +101,23 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AuthAuthenticated?> getAuthenticatedUser() async {
+  Future<UserEntity?> getAuthenticatedUser() async {
     final token = await _secureStorage.read(key: 'accessToken');
     if (token == null) return null;
 
     final phone = await _secureStorage.read(key: 'userPhone') ?? '';
     final role = await _secureStorage.read(key: 'userRole') ?? '';
     final fullName = await _secureStorage.read(key: 'userFullName') ?? '';
+    final mustChangePwdStr = await _secureStorage.read(key: 'mustChangePassword');
+    final mustChangePassword = mustChangePwdStr == 'true';
 
-    return AuthAuthenticated(phone: phone, role: role, fullName: fullName);
+    return UserEntity(
+      id: phone,
+      phoneNumber: phone, 
+      role: role, 
+      name: fullName,
+      mustChangePassword: mustChangePassword,
+    );
   }
 
   // ─── Helpers ───
@@ -109,6 +128,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String fullName,
     required String accessToken,
     required String refreshToken,
+    bool? mustChangePassword,
   }) async {
     await Future.wait([
       _secureStorage.write(key: 'accessToken', value: accessToken),
@@ -116,6 +136,8 @@ class AuthRepositoryImpl implements AuthRepository {
       _secureStorage.write(key: 'userPhone', value: phone),
       _secureStorage.write(key: 'userRole', value: role),
       _secureStorage.write(key: 'userFullName', value: fullName),
+      if (mustChangePassword != null)
+        _secureStorage.write(key: 'mustChangePassword', value: mustChangePassword.toString()),
     ]);
   }
 

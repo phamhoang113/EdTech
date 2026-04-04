@@ -11,8 +11,8 @@ class RegisterUseCase {
 
   RegisterUseCase(this.repository);
 
-  Future<Either<Failure, UserEntity>> call(RegisterParams params) {
-    return repository.register(params.phone, params.password, params.role);
+  Future<Either<Failure, String>> call(RegisterParams params) {
+    return repository.register(params.phone, params.password, params.role, fullName: params.fullName);
   }
 }
 
@@ -20,6 +20,12 @@ class RegisterParams {
   final String phone;
   final String password;
   final String role;
+  final String fullName;
 
-  RegisterParams({required this.phone, required this.password, required this.role});
+  RegisterParams({
+    required this.phone,
+    required this.password,
+    required this.role,
+    this.fullName = '',
+  });
 }

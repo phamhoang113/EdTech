@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../../app/theme.dart';
-import '../../bloc/auth_bloc.dart';
-import '../../bloc/auth_event.dart';
-import '../../bloc/auth_state.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 import '../widgets/dash_stat_card.dart';
 import '../widgets/dash_section_header.dart';
 import '../widgets/add_person_sheet.dart';
@@ -55,63 +55,57 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       listener: (ctx, state) {
         if (state is! AuthAuthenticated) ctx.go('/home');
       },
-      child: Scaffold(
-        appBar: _buildAppBar(context, cs, isDark),
-        body: _navIndex == 0
-            ? _buildHome(cs, isDark)
-            : _buildParentsTab(isDark),
-        bottomNavigationBar: _buildNavBar(cs, isDark),
+      child: Column(
+        children: [
+          // Inline tab selector
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark ? AppTheme.surface.withAlpha(120) : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                _tabButton('Tổng quan', Icons.home_outlined, 0, cs),
+                _tabButton('Phụ huynh', Icons.family_restroom, 1, cs),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _navIndex == 0
+                ? _buildHome(cs, isDark)
+                : _buildParentsTab(isDark),
+          ),
+        ],
       ),
     );
   }
 
-  AppBar _buildAppBar(BuildContext context, ColorScheme cs, bool isDark) {
-    return AppBar(
-      backgroundColor: isDark ? AppTheme.surface : Colors.white,
-      elevation: 0,
-      title: Row(
-        children: [
-          Text('🎓', style: const TextStyle(fontSize: 20)),
-          const SizedBox(width: 6),
-          Text(
-            'EdTech',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              foreground: Paint()
-                ..shader = const LinearGradient(colors: [AppTheme.primary, AppTheme.accent])
-                    .createShader(const Rect.fromLTWH(0, 0, 80, 20)),
-            ),
+  Widget _tabButton(String label, IconData icon, int index, ColorScheme cs) {
+    final isActive = _navIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _navIndex = index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isActive ? cs.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
           ),
-        ],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 18, color: isActive ? Colors.white : cs.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Text(label, style: TextStyle(
+                fontSize: 13,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                color: isActive ? Colors.white : cs.onSurfaceVariant,
+              )),
+            ],
+          ),
+        ),
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {},
-        ),
-        PopupMenuButton(
-          icon: CircleAvatar(
-            radius: 16,
-            backgroundColor: AppTheme.primary,
-            child: BlocBuilder<AuthBloc, AuthState>(
-              builder: (_, state) {
-                final name = state is AuthAuthenticated ? state.user.fullName : '?';
-                return Text(
-                  name.isNotEmpty ? name[0].toUpperCase() : '?',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
-                );
-              },
-            ),
-          ),
-          itemBuilder: (_) => [
-            PopupMenuItem(
-              child: const Text('Đăng xuất'),
-              onTap: () => context.read<AuthBloc>().add(const AuthLogoutRequested()),
-            ),
-          ],
-        ),
-        const SizedBox(width: 8),
-      ],
     );
   }
 
@@ -124,7 +118,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           // Greeting banner
           BlocBuilder<AuthBloc, AuthState>(
             builder: (_, state) {
-              final name = state is AuthAuthenticated ? state.user.fullName : 'Học sinh';
+              final name = state is AuthAuthenticated ? (state.user.name ?? 'Học sinh') : 'Học sinh';
               return _GreetingBanner(name: name, tag: '📚 Học sinh', emoji: '🎒', isDark: isDark);
             },
           ),
@@ -163,10 +157,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           // Quick actions
           DashSectionHeader(title: '⚡ Thao tác nhanh', onTap: null),
           const SizedBox(height: 10),
-          _QuickActions(actions: const [
-            {'emoji': '🔍', 'label': 'Tìm gia sư'},
+          _QuickActions(actions: [
+            if (_parents.isEmpty) ...[
+              {'emoji': '🔍', 'label': 'Tìm gia sư'},
+              {'emoji': '💳', 'label': 'Thanh toán'},
+            ],
             {'emoji': '💬', 'label': 'Tin nhắn'},
-            {'emoji': '💳', 'label': 'Thanh toán'},
             {'emoji': '📊', 'label': 'Thành tích'},
           ]),
         ],
@@ -199,22 +195,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     );
   }
 
-  BottomNavigationBar _buildNavBar(ColorScheme cs, bool isDark) {
-    return BottomNavigationBar(
-      currentIndex: _navIndex,
-      onTap: (i) => setState(() => _navIndex = i),
-      backgroundColor: isDark ? AppTheme.surface : Colors.white,
-      selectedItemColor: cs.primary,
-      unselectedItemColor: Colors.grey,
-      type: BottomNavigationBarType.fixed,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined),        label: 'Tổng quan'),
-        BottomNavigationBarItem(icon: Icon(Icons.family_restroom),      label: 'Phụ huynh'),
-        BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined),label: 'Lịch học'),
-        BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline),  label: 'Tin nhắn'),
-      ],
-    );
-  }
 }
 
 // ─────────────────────── Shared local widgets ───────────────────────

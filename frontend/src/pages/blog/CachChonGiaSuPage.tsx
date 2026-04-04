@@ -32,7 +32,7 @@ export const CachChonGiaSuPage = () => {
       <SEO
         title="Cách Chọn Gia Sư Giỏi Cho Con: 6 Tiêu Chí Vàng | Gia Sư Tinh Hoa"
         description="Hướng dẫn phụ huynh cách chọn gia sư phù hợp: 6 tiêu chí đánh giá, quy trình sàng lọc 4 bước và checklist thực tế."
-        keywords="cách chọn gia sư, tiêu chí chọn gia sư, tìm gia sư giỏi, gia sư uy tín, đánh giá gia sư"
+        keywords="cách chọn gia sư, tiêu chí chọn gia sư, kinh nghiệm tìm gia sư giỏi, nên thuê gia sư sinh viên hay giáo viên, gia sư uy tín, cách kiểm tra trình độ gia sư, trung tâm gia sư chất lượng"
         url="https://giasutinhhoa.com/bai-viet/cach-chon-gia-su-gioi"
         type="article"
         schema={ARTICLE_SCHEMA}

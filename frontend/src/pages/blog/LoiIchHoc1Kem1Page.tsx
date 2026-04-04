@@ -31,7 +31,7 @@ export const LoiIchHoc1Kem1Page = () => {
       <SEO
         title="Lợi Ích Vượt Trội Của Học 1 Kèm 1 Với Gia Sư | Gia Sư Tinh Hoa"
         description="So sánh chi tiết học 1 kèm 1 với gia sư vs học nhóm. Phân tích khoa học giúp phụ huynh chọn hình thức phù hợp nhất cho con."
-        keywords="học 1 kèm 1, gia sư 1 kèm 1, so sánh học nhóm, lợi ích gia sư riêng, cá nhân hóa học tập"
+        keywords="học 1 kèm 1, gia sư 1 kèm 1 tại nhà, học kèm online, so sánh học nhóm và học kèm, lợi ích gia sư riêng, cá nhân hóa học tập, lộ trình học tập chuyên biệt cho học sinh"
         url="https://giasutinhhoa.com/bai-viet/loi-ich-hoc-1-kem-1"
         type="article"
         schema={ARTICLE_SCHEMA}

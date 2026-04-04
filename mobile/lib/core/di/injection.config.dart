@@ -26,6 +26,13 @@ import '../../features/auth/domain/usecases/login_usecase.dart' as _i188;
 import '../../features/auth/domain/usecases/logout_usecase.dart' as _i48;
 import '../../features/auth/domain/usecases/register_usecase.dart' as _i941;
 import '../../features/auth/presentation/bloc/auth_bloc.dart' as _i797;
+import '../../features/classes/data/datasources/class_remote_data_source.dart'
+    as _i702;
+import '../../features/classes/data/repositories/class_repository_impl.dart'
+    as _i972;
+import '../../features/classes/domain/repositories/class_repository.dart'
+    as _i367;
+import '../../features/classes/presentation/bloc/open_class_bloc.dart' as _i169;
 import '../../features/tutor_profile/data/datasources/tutor_profile_remote_datasource.dart'
     as _i734;
 import '../../features/tutor_profile/data/repositories/tutor_profile_repository_impl.dart'
@@ -58,14 +65,20 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i667.DioClient>(
       () => _i667.DioClient(gh<_i908.AuthInterceptor>()),
     );
-    gh.factory<_i797.AuthBloc>(
-      () => _i797.AuthBloc(gh<_i153.AuthRepositoryImpl>()),
-    );
     gh.factory<_i161.AuthRemoteDataSource>(
       () => _i161.AuthRemoteDataSourceImpl(gh<_i667.DioClient>()),
     );
+    gh.lazySingleton<_i702.ClassRemoteDataSource>(
+      () => _i702.ClassRemoteDataSourceImpl(gh<_i667.DioClient>()),
+    );
+    gh.lazySingleton<_i367.ClassRepository>(
+      () => _i972.ClassRepositoryImpl(gh<_i702.ClassRemoteDataSource>()),
+    );
     gh.factory<_i734.TutorProfileRemoteDataSource>(
       () => _i734.TutorProfileRemoteDataSourceImpl(gh<_i667.DioClient>()),
+    );
+    gh.factory<_i169.OpenClassBloc>(
+      () => _i169.OpenClassBloc(gh<_i367.ClassRepository>()),
     );
     gh.factory<_i255.TutorProfileRepository>(
       () => _i618.TutorProfileRepositoryImpl(
@@ -78,6 +91,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i992.AuthLocalDataSource>(),
         gh<_i558.FlutterSecureStorage>(),
       ),
+    );
+    gh.factory<_i797.AuthBloc>(
+      () => _i797.AuthBloc(gh<_i787.AuthRepository>()),
     );
     gh.factory<_i411.GetAuthUserUseCase>(
       () => _i411.GetAuthUserUseCase(gh<_i787.AuthRepository>()),
