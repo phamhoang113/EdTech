@@ -97,7 +97,7 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
                     <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>{roleEmoji[user.role]} {roleLabel[user.role]}</span>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', fontWeight: 600, fontSize: '0.9rem' }}
                 >
@@ -105,14 +105,14 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
                 </button>
               </div>
             )}
-            
+
             <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Trang Chủ</Link>
             <Link to="/pricing" className={`nav-link ${isActive('/pricing') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Học Phí</Link>
             <Link to="/classes" className={`nav-link ${isActive('/classes') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Lớp Học Hiện Có</Link>
             <Link to="/tutors" className={`nav-link ${isActive('/tutors') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Tìm Gia Sư</Link>
             <Link to="/about" className={`nav-link ${isActive('/about') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>Về Chúng Tôi</Link>
           </nav>
-          
+
           <div className="nav-theme-toggle mobile-only">
             <button className="mobile-theme-btn" onClick={toggleTheme} aria-label="Toggle theme">
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
@@ -200,8 +200,8 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            <button 
-              className="mobile-menu-btn" 
+            <button
+              className="mobile-menu-btn"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label="Toggle mobile menu"
             >
@@ -212,15 +212,15 @@ export const Header = ({ onLoginClick, onRegisterClick }: HeaderProps) => {
       </div>
       {showChangePassword && (
         <Suspense fallback={null}>
-          <ChangePasswordModal 
-            onClose={() => setShowChangePassword(false)} 
+          <ChangePasswordModal
+            onClose={() => setShowChangePassword(false)}
           />
         </Suspense>
       )}
       {/* Auto show change password modal if mustChangePassword is true */}
       {user?.mustChangePassword && !showChangePassword && (
         <Suspense fallback={null}>
-          <ChangePasswordModal 
+          <ChangePasswordModal
             onClose={() => {
               // They can close it, we just update local state to not badger them
               useAuthStore.getState().updateUser({ mustChangePassword: false });

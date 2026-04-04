@@ -1,5 +1,6 @@
 import { Link, useOutletContext } from 'react-router-dom';
 import { Calendar, Clock, ArrowRight, ChevronRight } from 'lucide-react';
+import { useScrollSpy } from '../../hooks/useScrollSpy';
 
 import { SEO } from '../../components/common/SEO';
 import { ArticleLeadMagnet } from '../../components/blog/ArticleLeadMagnet';
@@ -27,6 +28,7 @@ const ARTICLE_SCHEMA = {
 
 export const CachChonGiaSuPage = () => {
   const { openRegister } = useOutletContext<{ openRegister: () => void }>();
+  const activeId = useScrollSpy(TABLE_OF_CONTENTS.map(item => item.id), '-20% 0px -60% 0px');
   return (
     <div className="article-page">
       <SEO
@@ -61,7 +63,11 @@ export const CachChonGiaSuPage = () => {
               <p className="article-toc-title">Mục lục</p>
               <ul className="article-toc-list">
                 {TABLE_OF_CONTENTS.map(({ id, label }) => (
-                  <li key={id}><a href={`#${id}`}>{label}</a></li>
+                  <li key={id}>
+                    <a href={`#${id}`} className={activeId === id ? 'active' : ''}>
+                      {label}
+                    </a>
+                  </li>
                 ))}
               </ul>
             </nav>

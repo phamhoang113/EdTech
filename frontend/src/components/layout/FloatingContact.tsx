@@ -5,9 +5,10 @@ import './FloatingContact.css';
 export const FloatingContact = () => {
   const location = useLocation();
   const isHomeOrAbout = location.pathname === '/' || location.pathname === '/about';
+  const isArticlePage = location.pathname.startsWith('/bai-viet');
   
   return (
-    <div className={`floating-contact ${!isHomeOrAbout ? 'hide-on-mobile' : ''}`}>
+    <div className={`floating-contact ${!isHomeOrAbout ? 'hide-on-mobile' : ''} ${isArticlePage ? 'hide-on-desktop' : ''}`}>
       <a href="tel:0336652085" className="float-btn phone-btn" aria-label="Call us">
         <div className="btn-icon">
           <Phone fill="currentColor" size={20} />
