@@ -34,6 +34,8 @@ import com.edtech.backend.cls.repository.ClassRepository;
 import com.edtech.backend.cls.repository.SessionRepository;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.notification.entity.NotificationType;
+import com.edtech.backend.notification.service.NotificationService;
 import com.edtech.backend.tutor.entity.TutorProfileEntity;
 import com.edtech.backend.tutor.repository.TutorProfileRepository;
 
@@ -57,6 +59,7 @@ public class AdminClassService {
     private final TutorProfileRepository tutorProfileRepository;
     private final ClassApplicationRepository applicationRepository;
     private final SessionRepository sessionRepository;
+    private final NotificationService notificationService;
 
     // ─── Statistics ───────────────────────────────────────────────────────────
 
@@ -399,6 +402,12 @@ public class AdminClassService {
 
         classRepository.save(cls);
         log.info("[APPROVE_CLASS] classId={}", classId);
+
+        // Thông báo phụ huynh: lớp được duyệt
+        notificationService.sendNotification(cls.getParentId(), NotificationType.CLASS_OPENED,
+                "Lớp được duyệt",
+                String.format("Yêu cầu mở lớp %s của bạn đã được phê duyệt. Đang tìm gia sư phù hợp.", cls.getTitle()),
+                "CLASS", classId);
     }
 
     /** Admin từ chối yêu cầu mở lớp từ PH: PENDING_APPROVAL → CANCELLED */
@@ -418,6 +427,13 @@ public class AdminClassService {
         }
         classRepository.save(cls);
         log.info("[REJECT_CLASS] classId={}, reason={}", classId, reason);
+
+        // Thông báo phụ huynh: lớp bị từ chối
+        String rejectMsg = (reason != null && !reason.isBlank())
+                ? String.format("Yêu cầu mở lớp %s bị từ chối. Lý do: %s", cls.getTitle(), reason)
+                : String.format("Yêu cầu mở lớp %s bị từ chối.", cls.getTitle());
+        notificationService.sendNotification(cls.getParentId(), NotificationType.CLASS_CANCELLED,
+                "Lớp bị từ chối", rejectMsg, "CLASS", classId);
     }
 
     // ─── Schedule Stats ───────────────────────────────────────────────────────

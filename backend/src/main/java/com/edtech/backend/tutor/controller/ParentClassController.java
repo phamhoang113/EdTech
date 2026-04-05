@@ -36,6 +36,9 @@ import com.edtech.backend.cls.repository.ClassRepository;
 import com.edtech.backend.core.dto.ApiResponse;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.auth.enums.UserRole;
+import com.edtech.backend.notification.entity.NotificationType;
+import com.edtech.backend.notification.service.NotificationService;
 import com.edtech.backend.tutor.dto.request.ParentClassRequest;
 import com.edtech.backend.tutor.dto.response.ClassApplicationResponse;
 import com.edtech.backend.tutor.service.ClassApplicationService;
@@ -51,6 +54,7 @@ public class ParentClassController {
     private final UserRepository userRepository;
     private final ClassApplicationService classApplicationService;
     private final ClassApplicationRepository classApplicationRepository;
+    private final NotificationService notificationService;
 
     /** PH gửi yêu cầu mở lớp → status = PENDING_APPROVAL */
     @PostMapping("/classes")
@@ -92,6 +96,17 @@ public class ParentClassController {
 
 
         ClassEntity saved = classRepository.save(cls);
+
+        // Thông báo admin: có yêu cầu mở lớp mới
+        UserEntity parent = userRepository.findById(parentId).orElse(null);
+        String parentName = parent != null ? parent.getFullName() : "Phụ huynh";
+        userRepository.findByRoleAndIsDeletedFalseOrderByCreatedAtDesc(UserRole.ADMIN)
+                .forEach(admin -> notificationService.sendNotification(
+                        admin.getId(), NotificationType.CLASS_OPENED,
+                        "Yêu cầu mở lớp mới",
+                        String.format("%s yêu cầu mở lớp %s. Vui lòng duyệt.", parentName, saved.getTitle()),
+                        "CLASS", saved.getId()));
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(toItem(saved, null), "Đã gửi yêu cầu mở lớp! Admin sẽ xem xét sớm."));
     }

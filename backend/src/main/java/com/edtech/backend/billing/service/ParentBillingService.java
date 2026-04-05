@@ -33,6 +33,8 @@ import com.edtech.backend.core.entity.SystemSettingEntity;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
 import com.edtech.backend.core.repository.SystemSettingRepository;
+import com.edtech.backend.notification.entity.NotificationType;
+import com.edtech.backend.notification.service.NotificationService;
 import com.edtech.backend.student.entity.StudentProfileEntity;
 import com.edtech.backend.student.repository.StudentProfileRepository;
 
@@ -48,6 +50,7 @@ public class ParentBillingService {
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
     private final SystemSettingRepository systemSettingRepository;
+    private final NotificationService notificationService;
 
 
 
@@ -92,6 +95,15 @@ public class ParentBillingService {
         }
         billing.setStatus(BillingStatus.VERIFYING);
         billingRepository.save(billing);
+
+        // Thông báo admin: có biên lai cần duyệt
+        com.edtech.backend.auth.enums.UserRole adminRole = com.edtech.backend.auth.enums.UserRole.ADMIN;
+        userRepository.findByRoleAndIsDeletedFalseOrderByCreatedAtDesc(adminRole)
+                .forEach(admin -> notificationService.sendNotification(
+                        admin.getId(), NotificationType.INVOICE_RECEIPT_UPLOADED,
+                        "Biên lai mới",
+                        String.format("Phụ huynh đã xác nhận chuyển khoản cho hóa đơn kỳ %d/%d. Vui lòng kiểm tra.", billing.getMonth(), billing.getYear()),
+                        "INVOICE", billing.getId()));
     }
 
     @Transactional(readOnly = true)

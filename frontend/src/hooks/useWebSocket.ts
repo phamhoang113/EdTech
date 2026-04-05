@@ -4,6 +4,8 @@ import type { IMessage, StompSubscription } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { useAuthStore } from '../store/useAuthStore';
 import { useNotificationStore } from '../store/useNotificationStore';
+import { showBrowserNotification, registerPushToken, isPushSupported } from '../services/pushNotificationService';
+import { requestNotificationPermission, onForegroundMessage } from '../firebase';
 
 // ============================================================
 // MODULE-LEVEL SINGLETON (Observer Pattern)
@@ -53,6 +55,31 @@ function ensureStompSubscription(destination: string) {
   activeStompSubs.set(destination, sub);
 }
 
+let fcmInitDone = false;
+
+/**
+ * Auto-request FCM permission ngay sau login.
+ * Chạy 1 lần duy nhất per session.
+ */
+async function initFcmAfterLogin() {
+  if (fcmInitDone) return;
+  fcmInitDone = true;
+
+  if (!isPushSupported()) return;
+
+  // Request quyền + lấy FCM token
+  const token = await requestNotificationPermission();
+  if (token) {
+    await registerPushToken(token);
+
+    // Lắng nghe foreground messages từ FCM
+    onForegroundMessage(() => {
+      // Khi nhận FCM ở foreground → refresh notification count
+      // (notification list sẽ tự update qua WebSocket)
+    });
+  }
+}
+
 /** Kết nối singleton socket. Chỉ gọi khi đã có token hợp lệ */
 export function connectGlobalSocket(token: string) {
   // Dùng `active` thay `connected` — active = đang kết nối HOẶC đã kết nối
@@ -86,6 +113,15 @@ export function connectGlobalSocket(token: string) {
     client.subscribe('/user/queue/notifications/unread', (msg: IMessage) => {
       if (msg.body) useNotificationStore.getState().setUnreadNotifs(Number(msg.body));
     });
+
+    // Fallback Cấp 1: Khi nhận notification qua WebSocket + tab không foreground → show OS notification
+    client.subscribe('/user/queue/notifications', (msg: IMessage) => {
+      if (!msg.body) return;
+      try {
+        const data = JSON.parse(msg.body);
+        showBrowserNotification(data.title || 'Thông báo mới', data.body || '', data.entityType);
+      } catch { /* ignore parse error */ }
+    });
     client.subscribe('/user/queue/messages/unread', (msg: IMessage) => {
       if (msg.body) useNotificationStore.getState().setUnreadMessages(Number(msg.body));
     });
@@ -96,6 +132,9 @@ export function connectGlobalSocket(token: string) {
         if (msg.body) useNotificationStore.getState().setUnreadMessages(Number(msg.body));
       });
     }
+
+    // Auto-request FCM push permission ngay sau khi login (không cần click chuông)
+    initFcmAfterLogin();
   };
 
   client.onWebSocketClose = () => broadcastConnectionState(false);

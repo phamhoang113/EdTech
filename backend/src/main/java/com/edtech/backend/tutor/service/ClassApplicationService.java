@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.enums.UserRole;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.cls.entity.ClassApplicationEntity;
 import com.edtech.backend.cls.entity.ClassEntity;
@@ -29,6 +30,8 @@ import com.edtech.backend.cls.repository.ClassRepository;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
 import com.edtech.backend.core.service.GoogleMeetService;
+import com.edtech.backend.notification.entity.NotificationType;
+import com.edtech.backend.notification.service.NotificationService;
 import com.edtech.backend.tutor.dto.request.ApplyClassRequest;
 import com.edtech.backend.tutor.dto.response.ClassApplicationResponse;
 import com.edtech.backend.tutor.entity.TutorProfileEntity;
@@ -45,6 +48,7 @@ public class ClassApplicationService {
     private final UserRepository userRepository;
     private final TutorProfileRepository tutorProfileRepository;
     private final GoogleMeetService googleMeetService;
+    private final NotificationService notificationService;
 
     /** Gia sư nộp đơn nhận lớp */
     @Transactional
@@ -67,6 +71,12 @@ public class ClassApplicationService {
 
         UserEntity tutor = userRepository.findById(tutorId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy gia sư."));
+
+        // Thông báo admin có đơn đăng ký mới
+        notifyAdmins(NotificationType.APPLICATION_RECEIVED,
+                "Đơn nhận lớp mới",
+                String.format("Gia sư %s đã đăng ký nhận lớp %s.", tutor.getFullName(), classEntity.getTitle()),
+                "APPLICATION", saved.getId());
 
         return buildResponse(saved, classEntity, tutor);
     }
@@ -148,6 +158,18 @@ public class ClassApplicationService {
 
         UserEntity tutor = userRepository.findById(application.getTutorId())
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy gia sư."));
+
+        // Thông báo gia sư: admin đã duyệt đơn
+        notificationService.sendNotification(application.getTutorId(), NotificationType.APPLICATION_ACCEPTED,
+                "Đơn được duyệt",
+                String.format("Đơn đăng ký nhận lớp %s của bạn đã được admin phê duyệt.", classEntity.getTitle()),
+                "APPLICATION", application.getId());
+
+        // Thông báo phụ huynh: có gia sư được đề xuất
+        notificationService.sendNotification(classEntity.getParentId(), NotificationType.APPLICATION_RECEIVED,
+                "Gia sư được đề xuất",
+                String.format("Admin đã đề xuất gia sư %s cho lớp %s. Vui lòng xem và chọn.", tutor.getFullName(), classEntity.getTitle()),
+                "APPLICATION", application.getId());
 
         return buildResponse(application, classEntity, tutor);
     }
@@ -256,6 +278,24 @@ public class ClassApplicationService {
         UserEntity tutor = userRepository.findById(application.getTutorId())
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy gia sư."));
 
+        // Thông báo gia sư được chọn
+        notificationService.sendNotification(application.getTutorId(), NotificationType.APPLICATION_ACCEPTED,
+                "Bạn được chọn dạy lớp",
+                String.format("Phụ huynh đã chọn bạn làm gia sư cho lớp %s.", classEntity.getTitle()),
+                "CLASS", classEntity.getId());
+
+        // Thông báo admin
+        notifyAdmins(NotificationType.APPLICATION_ACCEPTED,
+                "Phụ huynh chọn gia sư",
+                String.format("Lớp %s đã được gán cho gia sư %s.", classEntity.getTitle(), tutor.getFullName()),
+                "CLASS", classEntity.getId());
+
+        // Thông báo các gia sư bị reject
+        others.forEach(a -> notificationService.sendNotification(a.getTutorId(), NotificationType.APPLICATION_REJECTED,
+                "Đơn không được chọn",
+                String.format("Đơn đăng ký nhận lớp %s của bạn không được chọn.", classEntity.getTitle()),
+                "APPLICATION", a.getId()));
+
         return buildResponse(application, classEntity, tutor);
     }
 
@@ -273,7 +313,13 @@ public class ClassApplicationService {
 
         log.info("Admin rejected application {}", applicationId);
 
+        // Thông báo gia sư: đơn bị từ chối
         ClassEntity cls = classRepository.findById(application.getClassId()).orElse(null);
+        notificationService.sendNotification(application.getTutorId(), NotificationType.APPLICATION_REJECTED,
+                "Đơn bị từ chối",
+                String.format("Đơn đăng ký nhận lớp %s của bạn đã bị từ chối.", cls != null ? cls.getTitle() : ""),
+                "APPLICATION", applicationId);
+
         UserEntity tutor = userRepository.findById(application.getTutorId()).orElse(null);
         return buildResponse(application, cls, tutor);
     }
@@ -458,5 +504,12 @@ public class ClassApplicationService {
             log.warn("Cannot parse legacy tutorProposals for class {}: {}", cls.getId(), e.getMessage());
         }
         return null;
+    }
+
+    /** Gửi notification cho tất cả admin */
+    private void notifyAdmins(NotificationType type, String title, String body, String entityType, UUID entityId) {
+        userRepository.findByRoleAndIsDeletedFalseOrderByCreatedAtDesc(UserRole.ADMIN)
+                .forEach(admin -> notificationService.sendNotification(
+                        admin.getId(), type, title, body, entityType, entityId));
     }
 }

@@ -28,6 +28,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final FcmPushService fcmPushService;
 
     @Transactional(readOnly = true)
     public Page<NotificationResponseDTO> getUserNotifications(String username, Pageable pageable) {
@@ -106,6 +107,9 @@ public class NotificationService {
         } catch (Exception e) {
             log.warn("Failed to send WebSocket notification to user {}: {}", recipientId, e.getMessage());
         }
+
+        // Gửi FCM push notification (chạy async, không block)
+        fcmPushService.sendToUser(recipientId, title, body, entityType, entityId);
     }
 
     private UserEntity getUserByUsername(String username) {

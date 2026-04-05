@@ -7,9 +7,29 @@ import type { NotificationResponseDTO } from '../../services/notificationApi';
 import { messagingApi } from '../../services/messagingApi';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useNotificationStore } from '../../store/useNotificationStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import './NotificationDropdown.css';
+
+const DAILY_RESET_KEY = 'notif_last_reset_date';
+
+/**
+ * Kiểm tra xem đã sang ngày mới chưa → nếu rồi thì mark all as read
+ */
+async function checkDailyReset() {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const lastReset = localStorage.getItem(DAILY_RESET_KEY);
+
+  if (lastReset !== today) {
+    try {
+      await notificationApi.markAllAsRead();
+      localStorage.setItem(DAILY_RESET_KEY, today);
+    } catch {
+      // Nếu lỗi thì bỏ qua, sẽ thử lại lần sau
+    }
+  }
+}
 
 export function NotificationDropdown() {
   const [notifications, setNotifications] = useState<NotificationResponseDTO[]>([]);
@@ -29,7 +49,7 @@ export function NotificationDropdown() {
   });
 
   useEffect(() => {
-    fetchInitialData();
+    checkDailyReset().then(() => fetchInitialData());
     
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -37,7 +57,19 @@ export function NotificationDropdown() {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+
+    // Lắng nghe click notification từ Service Worker (khi tab đã mở)
+    const handleSwMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'NOTIFICATION_CLICK' && event.data.entityType) {
+        navigateByEntityType({ entityType: event.data.entityType } as NotificationResponseDTO);
+      }
+    };
+    navigator.serviceWorker?.addEventListener('message', handleSwMessage);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      navigator.serviceWorker?.removeEventListener('message', handleSwMessage);
+    };
   }, []);
 
   const fetchInitialData = async () => {
@@ -61,6 +93,8 @@ export function NotificationDropdown() {
       await notificationApi.markAllAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
+      // Cập nhật daily reset timestamp
+      localStorage.setItem(DAILY_RESET_KEY, new Date().toISOString().slice(0, 10));
     } catch (error) {
       console.error(error);
     }
@@ -82,29 +116,36 @@ export function NotificationDropdown() {
   };
 
   const navigateByEntityType = (notif: NotificationResponseDTO) => {
+    const role = useAuthStore.getState().user?.role;
+    const rolePrefix = role === 'ADMIN' ? '/admin'
+      : role === 'TUTOR' ? '/tutor'
+      : role === 'STUDENT' ? '/student'
+      : '/parent';
+
     switch (notif.entityType) {
       case 'CLASS':
-        navigate('/admin/classes');
+        navigate(role === 'ADMIN' ? '/admin/classes' : `${rolePrefix}/dashboard`);
         break;
       case 'SESSION':
-        navigate('/admin/schedules');
+        navigate(role === 'ADMIN' ? '/admin/schedules' : `${rolePrefix}/schedule`);
         break;
       case 'APPLICATION':
-        navigate('/admin/class-applications');
+        navigate(role === 'ADMIN' ? '/admin/class-applications' : `${rolePrefix}/dashboard`);
         break;
       case 'INVOICE':
-        navigate('/admin/payments');
+        navigate(role === 'ADMIN' ? '/admin/payments' : `${rolePrefix}/payment`);
         break;
       case 'ABSENCE':
-        navigate('/admin/absences');
+        navigate(role === 'ADMIN' ? '/admin/absences' : `${rolePrefix}/schedule`);
         break;
       case 'CONVERSATION':
-        navigate('/messages');
+        navigate(role === 'ADMIN' ? '/admin/messages' : `${rolePrefix}/messages`);
         break;
       case 'VERIFICATION':
         navigate('/admin/verification');
         break;
       default:
+        navigate(`${rolePrefix}/dashboard`);
         break;
     }
   };
@@ -156,7 +197,7 @@ export function NotificationDropdown() {
               </button>
             )}
           </div>
-          
+
           <div className="notification-body">
             {notifications.length === 0 ? (
               <div className="notification-empty">
