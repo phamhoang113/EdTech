@@ -39,6 +39,8 @@ import '../../features/tutor_profile/data/repositories/tutor_profile_repository_
     as _i618;
 import '../../features/tutor_profile/domain/repositories/tutor_profile_repository.dart'
     as _i255;
+import '../../features/tutor_profile/presentation/bloc/public_tutor_bloc.dart'
+    as _i412;
 import '../../features/tutor_profile/presentation/bloc/tutor_profile_bloc.dart'
     as _i958;
 import '../network/auth_interceptor.dart' as _i908;
@@ -106,6 +108,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i941.RegisterUseCase>(
       () => _i941.RegisterUseCase(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i412.PublicTutorBloc>(
+      () => _i412.PublicTutorBloc(gh<_i255.TutorProfileRepository>()),
     );
     gh.factory<_i958.TutorProfileBloc>(
       () => _i958.TutorProfileBloc(gh<_i255.TutorProfileRepository>()),

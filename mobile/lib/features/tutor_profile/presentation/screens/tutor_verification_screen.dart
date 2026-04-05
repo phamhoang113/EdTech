@@ -1,15 +1,21 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../app/theme.dart';
-import '../../../../../core/di/injection.dart';
+import '../../../../app/theme.dart';
+import '../../../../core/di/injection.dart';
 import '../bloc/tutor_profile_bloc.dart';
 import '../bloc/tutor_profile_event.dart';
 import '../bloc/tutor_profile_state.dart';
+import '../../domain/repositories/tutor_profile_repository.dart';
 
+/// Tutor Verification Screen — 9 fields matching web TutorVerificationModal.
+/// POST /api/v1/tutors/profile/verify (multipart/form-data)
 class TutorVerificationScreen extends StatefulWidget {
   const TutorVerificationScreen({super.key});
 
@@ -19,185 +25,549 @@ class TutorVerificationScreen extends StatefulWidget {
 
 class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
   final _bloc = getIt<TutorProfileBloc>();
-  String _tutorType = 'STUDENT';
-  File? _idCardFront;
-  File? _idCardBack;
-  File? _degree;
-
   final _picker = ImagePicker();
 
-  Future<void> _pickImage(bool isFront, bool isDegree) async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
+  static const int _maxChipSelect = 5;
+  static const int _maxTextLength = 500;
+
+  // ── Form state ──
+  String _tutorType = 'STUDENT';
+  String _dateOfBirth = '';
+  String _idCardNumber = '';
+  File? _degree;
+  Uint8List? _degreeBytes; // For preview on web
+  final List<String> _subjects = [];
+  final List<String> _teachingLevels = [];
+  int _experienceYears = 0;
+  String _location = '';
+  String _achievements = '';
+  String? _error;
+
+  // ── Filter data from API ──
+  List<String> _availableSubjects = [];
+  List<String> _availableLevels = [];
+  bool _filtersLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFilters();
+  }
+
+  Future<void> _loadFilters() async {
+    final repo = getIt<TutorProfileRepository>();
+    final data = await repo.getClassFilters();
+    if (!mounted) return;
+    setState(() {
+      _availableSubjects = (data['subjects'] ?? []).where((s) => s != 'Khác').toList();
+      _availableLevels = (data['levels'] ?? []).where((l) => l != 'Khác').toList();
+      _filtersLoaded = true;
+    });
+  }
+
+  Future<void> _pickDegreeImage() async {
+    final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (picked != null) {
+      final bytes = await picked.readAsBytes();
       setState(() {
-        if (isDegree) {
-          _degree = File(pickedFile.path);
-        } else if (isFront) {
-          _idCardFront = File(pickedFile.path);
-        } else {
-          _idCardBack = File(pickedFile.path);
-        }
+        _degreeBytes = bytes;
+        if (!kIsWeb) _degree = File(picked.path);
       });
     }
   }
 
+  void _toggleChip(String item, List<String> list) {
+    setState(() {
+      if (list.contains(item)) {
+        list.remove(item);
+      } else if (list.length < _maxChipSelect) {
+        list.add(item);
+      }
+    });
+  }
+
   void _submit() {
-    if (_idCardFront == null || _idCardBack == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng tải lên cả 2 mặt CCCD')),
-      );
+    // Validation (same as web)
+    if (_dateOfBirth.length != 10) {
+      setState(() => _error = 'Vui lòng nhập đầy đủ ngày tháng năm sinh (DD/MM/YYYY).');
+      return;
+    }
+    if (_idCardNumber.trim().isEmpty) {
+      setState(() => _error = 'Vui lòng nhập số CCCD / CMND.');
+      return;
+    }
+    if (_degreeBytes == null) {
+      setState(() => _error = 'Vui lòng tải lên ảnh chứng từ phù hợp.');
+      return;
+    }
+    if (_subjects.isEmpty) {
+      setState(() => _error = 'Vui lòng chọn ít nhất 1 môn học sở trường.');
+      return;
+    }
+    if (_teachingLevels.isEmpty) {
+      setState(() => _error = 'Vui lòng chọn ít nhất 1 lớp giảng dạy.');
       return;
     }
 
-    if (_degree == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng tải lên giấy tờ liên quan (Thẻ SV/Bằng cấp)')),
-      );
-      return;
-    }
+    setState(() => _error = null);
+
+    // Convert DD/MM/YYYY → YYYY-MM-DD for BE
+    final parts = _dateOfBirth.split('/');
+    final formattedDob = (parts.length == 3) ? '${parts[2]}-${parts[1]}-${parts[0]}' : _dateOfBirth;
 
     _bloc.add(VerifyTutorProfile(
       tutorType: _tutorType,
-      idCardFront: _idCardFront!,
-      idCardBack: _idCardBack!,
-      degree: _degree!,
+      idCardNumber: _idCardNumber.trim(),
+      degree: _degree,
+      dateOfBirth: formattedDob,
+      subjects: List<String>.from(_subjects),
+      teachingLevels: List<String>.from(_teachingLevels),
+      achievements: _achievements.trim(),
+      experienceYears: _experienceYears,
+      location: _location.trim(),
     ));
+  }
+
+  String get _degreeLabel {
+    switch (_tutorType) {
+      case 'STUDENT':
+        return 'Ảnh thẻ sinh viên';
+      case 'TEACHER':
+        return 'Chứng chỉ nghiệp vụ / sư phạm';
+      case 'GRADUATED':
+        return 'Bằng / Chứng nhận tốt nghiệp';
+      default:
+        return 'Giấy tờ liên quan';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return BlocProvider.value(
       value: _bloc,
       child: BlocConsumer<TutorProfileBloc, TutorProfileState>(
         listener: (context, state) {
           if (state is TutorProfileError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+            setState(() => _error = state.message);
           } else if (state is TutorProfileVerificationSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Đã gửi yêu cầu xác thực thành công. Vui lòng chờ duyệt!')),
-            );
-            context.go('/dashboard');
+            _showSuccessDialog();
           }
         },
         builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Xác thực Gia sư')),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text('Loại gia sư', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    value: _tutorType,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          final isLoading = state is TutorProfileLoading;
+
+          // No Scaffold — this widget is embedded inside TutorDashboard's body
+          if (!_filtersLoaded) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeader(isDark),
+                        const SizedBox(height: 24),
+                        _buildTutorTypeDropdown(theme),
+                        const SizedBox(height: 16),
+                        _buildDateOfBirthField(theme, isDark),
+                        const SizedBox(height: 16),
+                        _buildIdCardField(theme, isDark),
+                        const SizedBox(height: 16),
+                        _buildDegreeUpload(theme, isDark),
+                        const SizedBox(height: 20),
+                        _buildChipSection('Môn học sở trường', _availableSubjects, _subjects),
+                        const SizedBox(height: 16),
+                        _buildChipSection('Lớp giảng dạy', _availableLevels, _teachingLevels),
+                        const SizedBox(height: 16),
+                        _buildExperienceField(theme, isDark),
+                        const SizedBox(height: 16),
+                        _buildTextAreaField(
+                          label: 'Khu vực dạy',
+                          hint: 'VD: Quận 1, Quận 3, TP.HCM / Cầu Giấy, Hà Nội...',
+                          value: _location,
+                          onChanged: (v) => setState(() => _location = v),
+                          maxLines: 2,
+                          theme: theme,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextAreaField(
+                          label: 'Thành tích & Kinh nghiệm dạy học',
+                          hint: 'Mô tả thành tích nổi bật, giải thưởng, kinh nghiệm...',
+                          value: _achievements,
+                          onChanged: (v) => setState(() => _achievements = v),
+                          maxLines: 4,
+                          theme: theme,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 20),
+                        if (_error != null) _buildErrorBox(),
+                        const SizedBox(height: 8),
+                        _buildSubmitButton(isLoading),
+                        const SizedBox(height: 32),
+                      ],
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 'STUDENT', child: Text('Sinh viên')),
-                      DropdownMenuItem(value: 'TEACHER', child: Text('Giáo viên')),
-                      DropdownMenuItem(value: 'GRADUATED', child: Text('Đã tốt nghiệp')),
-                    ],
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() {
-                          _tutorType = val;
-                          _degree = null;
-                        });
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  const Text('Ảnh CCCD / CMND (Bắt buộc)', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(child: _ImageUploadBox(
-                        title: 'Mặt trước',
-                        file: _idCardFront,
-                        onTap: () => _pickImage(true, false),
-                      )),
-                      const SizedBox(width: 12),
-                      Expanded(child: _ImageUploadBox(
-                        title: 'Mặt sau',
-                        file: _idCardBack,
-                        onTap: () => _pickImage(false, false),
-                      )),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Text(_getDegreeLabel(), style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  _ImageUploadBox(
-                    title: 'Tải lên hình ảnh',
-                    file: _degree,
-                    onTap: () => _pickImage(false, true),
-                  ),
-                  const SizedBox(height: 32),
-                  ElevatedButton(
-                    onPressed: state is TutorProfileLoading ? null : _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: state is TutorProfileLoading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text('Gửi xác thực', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  ),
-                ],
-              ),
-            ),
-          );
+                  );
         },
       ),
     );
   }
 
-  String _getDegreeLabel() {
-    switch (_tutorType) {
-      case 'STUDENT': return 'Ảnh thẻ sinh viên (Bắt buộc)';
-      case 'TEACHER': return 'Chứng chỉ nghiệp vụ/sư phạm (Bắt buộc)';
-      case 'GRADUATED': return 'Bằng tốt nghiệp đại học/cao đẳng (Bắt buộc)';
-      default: return 'Giấy tờ liên quan (Bắt buộc)';
-    }
+  // ── Sub-widgets ──
+
+  Widget _buildHeader(bool isDark) {
+    return Column(
+      children: [
+        Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.accent]),
+            boxShadow: [BoxShadow(color: AppTheme.primary.withAlpha(60), blurRadius: 16, offset: const Offset(0, 6))],
+          ),
+          child: const Icon(Icons.verified_user_outlined, color: Colors.white, size: 30),
+        ),
+        const SizedBox(height: 12),
+        const Text('Xác thực hồ sơ gia sư', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 4),
+        Text(
+          'Để bắt đầu nhận lớp, bạn cần hoàn thành xác thực hồ sơ.',
+          style: TextStyle(color: isDark ? Colors.white54 : Colors.grey[600], fontSize: 13),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTutorTypeDropdown(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Loại gia sư', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          value: _tutorType,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          ),
+          items: const [
+            DropdownMenuItem(value: 'STUDENT', child: Text('Sinh viên')),
+            DropdownMenuItem(value: 'TEACHER', child: Text('Giáo viên')),
+            DropdownMenuItem(value: 'GRADUATED', child: Text('Gia sư Tốt nghiệp')),
+          ],
+          onChanged: (val) {
+            if (val != null) setState(() { _tutorType = val; _degree = null; });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDateOfBirthField(ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _requiredLabel('Ngày tháng năm sinh'),
+        const SizedBox(height: 6),
+        TextFormField(
+          initialValue: _dateOfBirth,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly, _DateInputFormatter()],
+          decoration: _fieldDecoration(theme, isDark, 'DD/MM/YYYY', Icons.calendar_today),
+          onChanged: (v) => _dateOfBirth = v,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIdCardField(ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _requiredLabel('Số CCCD / CMND'),
+        const SizedBox(height: 6),
+        TextFormField(
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(12)],
+          decoration: _fieldDecoration(theme, isDark, 'Nhập số CCCD/CMND (12 số)', Icons.credit_card),
+          onChanged: (v) => _idCardNumber = v,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDegreeUpload(ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _requiredLabel(_degreeLabel),
+        const SizedBox(height: 6),
+        GestureDetector(
+          onTap: _pickDegreeImage,
+          child: Container(
+            height: 130,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withAlpha(10) : Colors.grey.withAlpha(20),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _degreeBytes != null ? AppTheme.primary : (isDark ? Colors.white24 : Colors.grey.shade300),
+                width: _degreeBytes != null ? 2 : 1,
+              ),
+            ),
+            child: _degreeBytes != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.memory(_degreeBytes!, fit: BoxFit.cover),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.close, color: Colors.white, size: 18),
+                              onPressed: () => setState(() { _degree = null; _degreeBytes = null; }),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_photo_alternate_outlined, size: 36, color: isDark ? Colors.white38 : Colors.grey),
+                      const SizedBox(height: 6),
+                      Text('Nhấn để chọn ảnh', style: TextStyle(color: isDark ? Colors.white38 : Colors.grey, fontSize: 13)),
+                    ],
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChipSection(String label, List<String> available, List<String> selected) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _requiredLabel('$label (Tối đa $_maxChipSelect)'),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: available.map((item) {
+            final isSelected = selected.contains(item);
+            final isDisabled = !isSelected && selected.length >= _maxChipSelect;
+            return GestureDetector(
+              onTap: isDisabled ? null : () => _toggleChip(item, selected),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppTheme.primary.withAlpha(25) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isSelected ? AppTheme.primary : (isDisabled ? Colors.grey.shade300 : Colors.grey.shade400),
+                    width: isSelected ? 2 : 1,
+                  ),
+                ),
+                child: Text(
+                  item,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected ? AppTheme.primary : (isDisabled ? Colors.grey.shade400 : null),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${selected.length}/$_maxChipSelect đã chọn',
+          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExperienceField(ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Số năm kinh nghiệm giảng dạy', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        const SizedBox(height: 6),
+        TextFormField(
+          initialValue: _experienceYears.toString(),
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
+          decoration: _fieldDecoration(theme, isDark, '0', Icons.work_outline),
+          onChanged: (v) => _experienceYears = int.tryParse(v) ?? 0,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextAreaField({
+    required String label,
+    required String hint,
+    required String value,
+    required ValueChanged<String> onChanged,
+    required int maxLines,
+    required ThemeData theme,
+    required bool isDark,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('$label (Tối đa $_maxTextLength ký tự)', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        const SizedBox(height: 6),
+        TextFormField(
+          initialValue: value,
+          maxLines: maxLines,
+          maxLength: _maxTextLength,
+          decoration: InputDecoration(
+            hintText: hint,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: isDark ? theme.colorScheme.surfaceContainerHighest.withAlpha(80) : theme.colorScheme.surfaceContainerLowest,
+          ),
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorBox() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppTheme.error.withAlpha(20),
+        border: Border.all(color: AppTheme.error.withAlpha(60)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, color: AppTheme.error, size: 18),
+          const SizedBox(width: 8),
+          Expanded(child: Text(_error!, style: const TextStyle(color: AppTheme.error, fontSize: 13))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton(bool isLoading) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.accent]),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: AppTheme.primary.withAlpha(60), blurRadius: 12, offset: const Offset(0, 4))],
+      ),
+      child: ElevatedButton(
+        onPressed: isLoading ? null : _submit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: isLoading
+            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+            : const Text('Gửi xác thực', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.check_circle, color: Colors.green, size: 56),
+            const SizedBox(height: 12),
+            const Text('Gửi xác thực thành công!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            Text(
+              'Hồ sơ đã được gửi. Vui lòng chờ Quản trị viên phê duyệt.',
+              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        Navigator.of(context).pop(); // close dialog
+        context.go('/dashboard');
+      }
+    });
+  }
+
+  // ── Helpers ──
+
+  Widget _requiredLabel(String text) {
+    return RichText(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+          color: Theme.of(context).textTheme.bodyMedium?.color,
+        ),
+        children: const [
+          TextSpan(text: ' (Bắt buộc)', style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w400)),
+        ],
+      ),
+    );
+  }
+
+  InputDecoration _fieldDecoration(ThemeData theme, bool isDark, String hint, IconData icon) {
+    return InputDecoration(
+      hintText: hint,
+      prefixIcon: Icon(icon, size: 20),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      filled: true,
+      fillColor: isDark ? theme.colorScheme.surfaceContainerHighest.withAlpha(80) : theme.colorScheme.surfaceContainerLowest,
+    );
   }
 }
 
-class _ImageUploadBox extends StatelessWidget {
-  final String title;
-  final File? file;
-  final VoidCallback onTap;
-
-  const _ImageUploadBox({required this.title, this.file, required this.onTap});
-
+/// Auto-format date input: 01012000 → 01/01/2000
+class _DateInputFormatter extends TextInputFormatter {
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 120,
-        decoration: BoxDecoration(
-          color: Colors.grey.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.withOpacity(0.3), style: BorderStyle.solid),
-        ),
-        child: file != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.file(file!, fit: BoxFit.cover),
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.add_photo_alternate, size: 32, color: Colors.grey),
-                  const SizedBox(height: 8),
-                  Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                ],
-              ),
-      ),
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    var text = newValue.text.replaceAll('/', '');
+    if (text.length > 8) text = text.substring(0, 8);
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < text.length; i++) {
+      if (i == 2 || i == 4) buffer.write('/');
+      buffer.write(text[i]);
+    }
+
+    return TextEditingValue(
+      text: buffer.toString(),
+      selection: TextSelection.collapsed(offset: buffer.length),
     );
   }
 }

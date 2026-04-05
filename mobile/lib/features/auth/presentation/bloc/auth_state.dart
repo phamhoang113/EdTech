@@ -13,17 +13,6 @@ class AuthInitial extends AuthState {}
 
 class AuthLoading extends AuthState {}
 
-/// Đăng ký thành công → OTP đã gửi, backend trả otpToken UUID
-class AuthOtpSent extends AuthState {
-  final String phone;     // Chỉ để hiển thị UX
-  final String otpToken;  // UUID để verify — không cần phone nữa
-
-  const AuthOtpSent({required this.phone, required this.otpToken});
-
-  @override
-  List<Object> get props => [phone, otpToken];
-}
-
 /// Đã xác thực — lưu thông tin user
 class AuthAuthenticated extends AuthState {
   final UserEntity user;
@@ -45,4 +34,30 @@ class AuthError extends AuthState {
 
   @override
   List<Object> get props => [message];
+}
+
+/// Forgot password step 1 done — OTP needed
+class AuthForgotPasswordInitSuccess extends AuthState {
+  final String identifier;
+  final String maskedPhone;
+  final String fullPhone;
+
+  const AuthForgotPasswordInitSuccess({
+    required this.identifier,
+    required this.maskedPhone,
+    required this.fullPhone,
+  });
+
+  @override
+  List<Object> get props => [identifier, maskedPhone, fullPhone];
+}
+
+/// Forgot password step 2 done — new password generated
+class AuthForgotPasswordResetSuccess extends AuthState {
+  final String newPassword;
+
+  const AuthForgotPasswordResetSuccess(this.newPassword);
+
+  @override
+  List<Object> get props => [newPassword];
 }

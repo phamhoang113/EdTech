@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/di/injection.dart';
+import '../../../../core/di/tutor_verification_notifier.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -13,7 +15,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthStarted>(_onAuthStarted);
     on<AuthLoginRequested>(_onAuthLoginRequested);
     on<AuthRegisterRequested>(_onAuthRegisterRequested);
-    on<AuthVerifyOtpRequested>(_onAuthVerifyOtpRequested);
+    on<AuthForgotPasswordInitRequested>(_onForgotPasswordInit);
+    on<AuthForgotPasswordResetRequested>(_onForgotPasswordReset);
     on<AuthLogoutRequested>(_onAuthLogoutRequested);
   }
 
@@ -35,37 +38,58 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
   }
 
+  /// Register → directly calls /api/v1/auth/firebase with MOCK_TOKEN
+  /// No separate OTP step on test env
   Future<void> _onAuthRegisterRequested(
     AuthRegisterRequested event,
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
-    final result = await _authRepository.register(
-      event.phone,
-      event.password,
-      event.role,
+    final result = await _authRepository.registerWithFirebase(
+      phone: event.phone,
       fullName: event.fullName,
+      password: event.password,
+      role: event.role,
     );
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (otpToken) => emit(AuthOtpSent(phone: event.phone, otpToken: otpToken)),
-    );
-  }
-
-  Future<void> _onAuthVerifyOtpRequested(
-    AuthVerifyOtpRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(AuthLoading());
-    final result = await _authRepository.verifyOtp(event.otpToken, event.code);
     result.fold(
       (failure) => emit(AuthError(failure.message)),
       (user) => emit(AuthAuthenticated(user)),
     );
   }
 
+  /// Step 1: BE check identifier → return maskedPhone + fullPhone
+  Future<void> _onForgotPasswordInit(
+    AuthForgotPasswordInitRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    final result = await _authRepository.initForgotPassword(event.identifier);
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (data) => emit(AuthForgotPasswordInitSuccess(
+        identifier: event.identifier,
+        maskedPhone: data['maskedPhone'] ?? '',
+        fullPhone: data['fullPhone'] ?? '',
+      )),
+    );
+  }
+
+  /// Step 2: verify OTP → BE reset password → return new random password
+  Future<void> _onForgotPasswordReset(
+    AuthForgotPasswordResetRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    final result = await _authRepository.resetForgotPassword(event.identifier, event.idToken);
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (newPassword) => emit(AuthForgotPasswordResetSuccess(newPassword)),
+    );
+  }
+
   Future<void> _onAuthLogoutRequested(AuthLogoutRequested event, Emitter<AuthState> emit) async {
     await _authRepository.logout();
+    getIt<TutorVerificationNotifier>().clear();
     emit(AuthUnauthenticated());
   }
 }

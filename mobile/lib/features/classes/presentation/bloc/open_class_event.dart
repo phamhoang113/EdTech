@@ -8,3 +8,13 @@ abstract class OpenClassEvent extends Equatable {
 }
 
 class FetchOpenClassesRequested extends OpenClassEvent {}
+
+/// Load wards when user selects a province
+class LoadWardsRequested extends OpenClassEvent {
+  final String provinceCode;
+
+  const LoadWardsRequested(this.provinceCode);
+
+  @override
+  List<Object?> get props => [provinceCode];
+}

@@ -4,8 +4,22 @@ import '../entities/user_entity.dart';
 
 abstract class AuthRepository {
   Future<Either<Failure, UserEntity>> login(String phone, String password);
-  Future<Either<Failure, String>> register(String phone, String password, String role, {String fullName});
-  Future<Either<Failure, UserEntity>> verifyOtp(String otpToken, String code);
+
+  /// Register via Firebase auth (mock on test env)
+  /// Flow: form → mock OTP → MOCK_TOKEN → POST /api/v1/auth/firebase
+  Future<Either<Failure, UserEntity>> registerWithFirebase({
+    required String phone,
+    required String fullName,
+    required String password,
+    required String role,
+  });
+
+  /// Forgot password step 1: returns { maskedPhone, fullPhone }
+  Future<Either<Failure, Map<String, String>>> initForgotPassword(String identifier);
+
+  /// Forgot password step 2: returns new random password
+  Future<Either<Failure, String>> resetForgotPassword(String identifier, String idToken);
+
   Future<void> logout();
   Future<UserEntity?> getAuthenticatedUser();
 }

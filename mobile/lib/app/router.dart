@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/presentation/screens/login_sheet.dart';
 import '../features/auth/presentation/screens/register_role_screen.dart';
 import '../features/auth/presentation/screens/register_form_screen.dart';
-import '../features/auth/presentation/screens/otp_verify_screen.dart';
+import '../features/auth/presentation/screens/register_otp_screen.dart';
+
 import '../features/auth/presentation/screens/dashboard_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/home/presentation/screens/main_shell.dart';
@@ -15,10 +16,15 @@ import '../features/auth/presentation/bloc/auth_state.dart';
 import '../features/tutor_profile/presentation/screens/tutor_verification_screen.dart';
 import '../features/auth/presentation/screens/change_password_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../features/home/presentation/screens/coming_soon_screen.dart';
+import '../features/home/presentation/screens/blog_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _homeNavKey = GlobalKey<NavigatorState>(debugLabel: 'home');
 final GlobalKey<NavigatorState> _classesNavKey = GlobalKey<NavigatorState>(debugLabel: 'classes');
+final GlobalKey<NavigatorState> _blogNavKey = GlobalKey<NavigatorState>(debugLabel: 'blog');
+final GlobalKey<NavigatorState> _docsNavKey = GlobalKey<NavigatorState>(debugLabel: 'docs');
+final GlobalKey<NavigatorState> _aiNavKey = GlobalKey<NavigatorState>(debugLabel: 'ai');
 final GlobalKey<NavigatorState> _dashboardNavKey = GlobalKey<NavigatorState>(debugLabel: 'dashboard');
 
 final GoRouter appRouter = GoRouter(
@@ -51,7 +57,43 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 2: Dashboard
+        // Tab 2: Blog
+        StatefulShellBranch(
+          navigatorKey: _blogNavKey,
+          routes: [
+            GoRoute(
+              path: '/blog',
+              builder: (context, state) => const BlogScreen(),
+            ),
+          ],
+        ),
+        // Tab 3: Tài liệu học tập (Coming Soon)
+        StatefulShellBranch(
+          navigatorKey: _docsNavKey,
+          routes: [
+            GoRoute(
+              path: '/docs',
+              builder: (context, state) => const ComingSoonScreen(
+                featureName: 'Tài liệu học tập',
+                icon: Icons.menu_book_rounded,
+              ),
+            ),
+          ],
+        ),
+        // Tab 4: AI (Coming Soon)
+        StatefulShellBranch(
+          navigatorKey: _aiNavKey,
+          routes: [
+            GoRoute(
+              path: '/ai',
+              builder: (context, state) => const ComingSoonScreen(
+                featureName: 'Trợ lý AI',
+                icon: Icons.auto_awesome_rounded,
+              ),
+            ),
+          ],
+        ),
+        // Tab 5: Dashboard
         StatefulShellBranch(
           navigatorKey: _dashboardNavKey,
           routes: [
@@ -77,12 +119,14 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/verify-otp',
+      path: '/register-otp',
       builder: (context, state) {
         final extra = state.extra as Map<String, String>? ?? {};
-        return OtpVerifyScreen(
-          phone:    extra['phone']    ?? '',
-          otpToken: extra['otpToken'] ?? '',
+        return RegisterOtpScreen(
+          phone: extra['phone'] ?? '',
+          fullName: extra['fullName'] ?? '',
+          password: extra['password'] ?? '',
+          role: extra['role'] ?? 'PARENT',
         );
       },
     ),

@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme.dart';
 
 /// Màn hình chọn vai trò — 3 roles: PARENT, STUDENT, TUTOR
-/// Layout: vertical rows (emoji | text | radio) giống web
+/// Layout: vertical rows (icon | text | radio) đồng bộ web
 class RegisterRoleScreen extends StatefulWidget {
   const RegisterRoleScreen({super.key});
 
@@ -17,7 +17,7 @@ class _RegisterRoleScreenState extends State<RegisterRoleScreen> {
   static const _roles = [
     _RoleConfig(
       key: 'PARENT',
-      emoji: '👨‍👩‍👧',
+      icon: Icons.people_rounded,
       title: 'Phụ huynh',
       subtitle: 'Đặt gia sư cho con',
       desc: 'Tìm gia sư chất lượng, đặt lịch và theo dõi tiến độ học tập của con em.',
@@ -25,15 +25,15 @@ class _RegisterRoleScreenState extends State<RegisterRoleScreen> {
     ),
     _RoleConfig(
       key: 'STUDENT',
-      emoji: '📚',
+      icon: Icons.school_rounded,
       title: 'Học sinh',
-      subtitle: 'Tự học & tự thanh toán',
+      subtitle: 'Người học',
       desc: 'Tự tìm gia sư phù hợp, đặt lịch học và thanh toán học phí cho bản thân.',
       accentColor: Color(0xFF06B6D4), // cyan
     ),
     _RoleConfig(
       key: 'TUTOR',
-      emoji: '👩‍🏫',
+      icon: Icons.menu_book_rounded,
       title: 'Gia sư',
       subtitle: 'Dạy học, kiếm thêm thu nhập',
       desc: 'Chia sẻ kiến thức, nhận học sinh và tạo nguồn thu nhập ổn định từ việc dạy thêm.',
@@ -61,32 +61,13 @@ class _RegisterRoleScreenState extends State<RegisterRoleScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Logo
-              Row(
-                children: [
-                  Container(
-                    width: 36, height: 36,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.accent]),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Center(
-                      child: Text('🎓', style: TextStyle(fontSize: 18)),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'EdTech',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      foreground: Paint()
-                        ..shader = const LinearGradient(
-                          colors: [AppTheme.primary, AppTheme.accent],
-                        ).createShader(const Rect.fromLTWH(0, 0, 80, 20)),
-                    ),
-                  ),
-                ],
+              // Logo — dùng đúng logo.svg dự án
+              Image.asset(
+                'assets/logo.webp',
+                height: 40,
+                fit: BoxFit.contain,
+                alignment: Alignment.centerLeft,
+                filterQuality: FilterQuality.high,
               ),
               const SizedBox(height: 20),
 
@@ -169,7 +150,7 @@ class _RegisterRoleScreenState extends State<RegisterRoleScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: selected
-              ? r.accentColor.withOpacity(0.07)
+              ? r.accentColor.withAlpha(18)
               : surfaceColor,
           border: Border.all(
             color: borderColor,
@@ -177,13 +158,27 @@ class _RegisterRoleScreenState extends State<RegisterRoleScreen> {
           ),
           borderRadius: BorderRadius.circular(14),
           boxShadow: selected
-              ? [BoxShadow(color: r.accentColor.withOpacity(0.2), blurRadius: 12, offset: const Offset(0, 4))]
-              : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))],
+              ? [BoxShadow(color: r.accentColor.withAlpha(50), blurRadius: 12, offset: const Offset(0, 4))]
+              : [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 6, offset: const Offset(0, 2))],
         ),
         child: Row(
           children: [
-            // Emoji
-            Text(r.emoji, style: const TextStyle(fontSize: 28)),
+            // Icon (matching web's lucide icons)
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: selected
+                    ? r.accentColor.withAlpha(25)
+                    : (isDark ? Colors.white.withAlpha(10) : Colors.grey.shade100),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                r.icon,
+                size: 24,
+                color: selected ? r.accentColor : (isDark ? Colors.white54 : Colors.grey.shade600),
+              ),
+            ),
             const SizedBox(width: 14),
 
             // Text block
@@ -202,12 +197,15 @@ class _RegisterRoleScreenState extends State<RegisterRoleScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        '· ${r.subtitle}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: selected ? r.accentColor : (isDark ? Colors.white38 : Colors.grey),
-                          fontStyle: FontStyle.italic,
+                      Flexible(
+                        child: Text(
+                          '· ${r.subtitle}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: selected ? r.accentColor : (isDark ? Colors.white38 : Colors.grey),
+                            fontStyle: FontStyle.italic,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -253,11 +251,12 @@ class _RegisterRoleScreenState extends State<RegisterRoleScreen> {
 
 // ── Data class ──
 class _RoleConfig {
-  final String key, emoji, title, subtitle, desc;
+  final String key, title, subtitle, desc;
+  final IconData icon;
   final Color accentColor;
   const _RoleConfig({
     required this.key,
-    required this.emoji,
+    required this.icon,
     required this.title,
     required this.subtitle,
     required this.desc,

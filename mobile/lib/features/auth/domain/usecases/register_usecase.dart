@@ -11,8 +11,13 @@ class RegisterUseCase {
 
   RegisterUseCase(this.repository);
 
-  Future<Either<Failure, String>> call(RegisterParams params) {
-    return repository.register(params.phone, params.password, params.role, fullName: params.fullName);
+  Future<Either<Failure, UserEntity>> call(RegisterParams params) {
+    return repository.registerWithFirebase(
+      phone: params.phone,
+      fullName: params.fullName,
+      password: params.password,
+      role: params.role,
+    );
   }
 }
 

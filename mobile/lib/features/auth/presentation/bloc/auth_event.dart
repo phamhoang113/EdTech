@@ -19,6 +19,8 @@ class AuthLoginRequested extends AuthEvent {
   List<Object> get props => [phone, password];
 }
 
+/// Register via Firebase auth (mock for test env)
+/// No separate OTP step — goes directly to /api/v1/auth/firebase
 class AuthRegisterRequested extends AuthEvent {
   final String phone;
   final String password;
@@ -31,14 +33,25 @@ class AuthRegisterRequested extends AuthEvent {
   List<Object> get props => [phone, password, fullName, role];
 }
 
-class AuthVerifyOtpRequested extends AuthEvent {
-  final String otpToken; // UUID từ backend sau register
-  final String code;
+/// Forgot password step 1: init → get maskedPhone
+class AuthForgotPasswordInitRequested extends AuthEvent {
+  final String identifier;
 
-  const AuthVerifyOtpRequested(this.otpToken, this.code);
+  const AuthForgotPasswordInitRequested(this.identifier);
 
   @override
-  List<Object> get props => [otpToken, code];
+  List<Object> get props => [identifier];
+}
+
+/// Forgot password step 2: reset with mock/Firebase idToken
+class AuthForgotPasswordResetRequested extends AuthEvent {
+  final String identifier;
+  final String idToken;
+
+  const AuthForgotPasswordResetRequested(this.identifier, this.idToken);
+
+  @override
+  List<Object> get props => [identifier, idToken];
 }
 
 class AuthLogoutRequested extends AuthEvent {}

@@ -8,31 +8,39 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
-/// OTP Verify Screen — redesigned
-/// - ShieldCheck icon với pulse animation
-/// - 6 ô lớn layout 3 · 3
-/// - Countdown timer 5 phút
-/// - Progress bar
-class OtpVerifyScreen extends StatefulWidget {
+/// Register OTP Screen — mock Firebase OTP verification
+/// Accepts code 123456 on test env (same as web localhost bypass)
+/// After verification → calls /api/v1/auth/firebase
+class RegisterOtpScreen extends StatefulWidget {
   final String phone;
-  final String otpToken;
+  final String fullName;
+  final String password;
+  final String role;
 
-  const OtpVerifyScreen({super.key, required this.phone, required this.otpToken});
+  const RegisterOtpScreen({
+    super.key,
+    required this.phone,
+    required this.fullName,
+    required this.password,
+    required this.role,
+  });
 
   @override
-  State<OtpVerifyScreen> createState() => _OtpVerifyScreenState();
+  State<RegisterOtpScreen> createState() => _RegisterOtpScreenState();
 }
 
-class _OtpVerifyScreenState extends State<OtpVerifyScreen>
+class _RegisterOtpScreenState extends State<RegisterOtpScreen>
     with SingleTickerProviderStateMixin {
   final List<TextEditingController> _controllers =
       List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
-  int _secondsLeft = 300; // 5 minutes
+  static const _mockOtpCode = '123456';
+  int _secondsLeft = 300;
   Timer? _timer;
   late AnimationController _pulseCtrl;
   late Animation<double> _pulseAnim;
+  String? _error;
 
   @override
   void initState() {
@@ -48,6 +56,7 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen>
   }
 
   void _startTimer() {
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       setState(() {
@@ -58,8 +67,12 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen>
 
   @override
   void dispose() {
-    for (final c in _controllers) c.dispose();
-    for (final f in _focusNodes) f.dispose();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
     _timer?.cancel();
     _pulseCtrl.dispose();
     super.dispose();
@@ -81,25 +94,35 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen>
     if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
     }
-    setState(() {}); // rebuild progress bar
+    setState(() => _error = null);
     if (_otp.length == 6) _submit();
   }
 
   void _submit() {
     if (_otp.length < 6) return;
-    context.read<AuthBloc>().add(AuthVerifyOtpRequested(widget.otpToken, _otp));
+
+    // Mock OTP verification (same as web)
+    if (_otp != _mockOtpCode) {
+      _clearOtp();
+      setState(() => _error = 'Mã OTP sai. Môi trường test vui lòng nhập: $_mockOtpCode');
+      return;
+    }
+
+    // OTP correct → call Firebase auth API
+    context.read<AuthBloc>().add(AuthRegisterRequested(
+          widget.phone,
+          widget.password,
+          widget.fullName,
+          widget.role,
+        ));
   }
 
   void _clearOtp() {
-    for (final c in _controllers) c.clear();
+    for (final c in _controllers) {
+      c.clear();
+    }
     _focusNodes[0].requestFocus();
     setState(() {});
-  }
-
-  void _resend() {
-    setState(() => _secondsLeft = 300);
-    _startTimer();
-    context.pop(); // go back to register to re-request OTP
   }
 
   @override
@@ -113,14 +136,7 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen>
           context.go('/dashboard');
         } else if (state is AuthError) {
           _clearOtp();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppTheme.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-          );
+          setState(() => _error = state.message);
         }
       },
       child: Scaffold(
@@ -145,7 +161,8 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen>
                   child: ScaleTransition(
                     scale: _pulseAnim,
                     child: Container(
-                      width: 80, height: 80,
+                      width: 80,
+                      height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: const LinearGradient(
@@ -155,7 +172,7 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen>
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primary.withOpacity(0.45),
+                            color: AppTheme.primary.withAlpha(100),
                             blurRadius: 24,
                             offset: const Offset(0, 8),
                           ),
@@ -177,7 +194,7 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen>
                 const SizedBox(height: 8),
                 Text.rich(
                   TextSpan(
-                    text: 'Chúng tôi đã gửi mã 6 chữ số đến\n',
+                    text: 'Mã 6 chữ số đã gửi đến\n',
                     style: TextStyle(
                       color: isDark ? Colors.white54 : Colors.grey[600],
                       height: 1.5,
@@ -194,6 +211,16 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen>
                   ),
                   textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 6),
+                Text(
+                  'Môi trường test: nhập 123456',
+                  style: TextStyle(
+                    color: isDark ? Colors.white30 : Colors.grey[400],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
 
                 const SizedBox(height: 24),
 
@@ -203,49 +230,41 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen>
                   child: LinearProgressIndicator(
                     value: _filledCount / 6,
                     minHeight: 4,
-                    backgroundColor:
-                        isDark ? Colors.white12 : Colors.grey.shade200,
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                    backgroundColor: isDark ? Colors.white12 : Colors.grey.shade200,
+                    valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
                   ),
                 ),
 
                 const SizedBox(height: 28),
 
-                // --- OTP input boxes 3·3 ---
+                // --- OTP input boxes ---
                 _buildOtpBoxes(cs, isDark),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 20),
 
-                // --- Error label ---
-                BlocBuilder<AuthBloc, AuthState>(
-                  builder: (_, state) {
-                    if (state is AuthError) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        margin: const EdgeInsets.only(bottom: 14),
-                        decoration: BoxDecoration(
-                          color: AppTheme.error.withOpacity(0.1),
-                          border: Border.all(color: AppTheme.error.withOpacity(0.3)),
-                          borderRadius: BorderRadius.circular(10),
+                // --- Error ---
+                if (_error != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: AppTheme.error.withAlpha(20),
+                      border: Border.all(color: AppTheme.error.withAlpha(60)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: AppTheme.error, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _error!,
+                            style: const TextStyle(color: AppTheme.error, fontSize: 12),
+                          ),
                         ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.error_outline, color: AppTheme.error, size: 16),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                state.message,
-                                style: const TextStyle(color: AppTheme.error, fontSize: 12),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
+                      ],
+                    ),
+                  ),
 
                 // --- Submit button ---
                 BlocBuilder<AuthBloc, AuthState>(
@@ -269,11 +288,12 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen>
                         child: Center(
                           child: isLoading
                               ? const SizedBox(
-                                  width: 20, height: 20,
+                                  width: 20,
+                                  height: 20,
                                   child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                 )
                               : Text(
-                                  'Xác nhận',
+                                  'Xác nhận & Tạo tài khoản',
                                   style: TextStyle(
                                     color: _filledCount == 6 ? Colors.white : Colors.grey[500],
                                     fontWeight: FontWeight.w700,
@@ -288,55 +308,18 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen>
 
                 const SizedBox(height: 16),
 
-                // --- Resend + timer ---
+                // --- Timer ---
                 Center(
-                  child: RichText(
-                    text: TextSpan(
-                      style: TextStyle(
-                        color: isDark ? Colors.white38 : Colors.grey[500],
-                        fontSize: 13,
-                      ),
-                      children: [
-                        if (_secondsLeft > 0)
-                          TextSpan(
-                            text: 'Mã hết hạn sau ',
-                            children: [
-                              TextSpan(
-                                text: _timerLabel,
-                                style: const TextStyle(
-                                  color: AppTheme.warning,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          )
-                        else
-                          const TextSpan(text: 'Mã đã hết hạn.'),
-                        const TextSpan(text: '  ·  '),
-                        WidgetSpan(
-                          child: GestureDetector(
-                            onTap: _secondsLeft == 0 ? _resend : null,
-                            child: Text(
-                              'Gửi lại',
-                              style: TextStyle(
-                                color: _secondsLeft == 0
-                                    ? AppTheme.primary
-                                    : (isDark ? Colors.white24 : Colors.grey[400]),
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13,
-                                decoration: _secondsLeft == 0
-                                    ? TextDecoration.underline
-                                    : TextDecoration.none,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                  child: Text(
+                    _secondsLeft > 0 ? 'Mã hết hạn sau $_timerLabel' : 'Mã đã hết hạn',
+                    style: TextStyle(
+                      color: _secondsLeft > 0
+                          ? (isDark ? Colors.white38 : Colors.grey[500])
+                          : AppTheme.error,
+                      fontSize: 13,
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -350,39 +333,39 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen>
     final borderBase = isDark ? Colors.white12 : Colors.grey.shade300;
 
     Widget box(int i) => SizedBox(
-      width: 46,
-      height: 54,
-      child: TextFormField(
-        controller: _controllers[i],
-        focusNode: _focusNodes[i],
-        textAlign: TextAlign.center,
-        keyboardType: TextInputType.number,
-        maxLength: 1,
-        autofocus: i == 0,
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w800,
-          color: filled[i] ? AppTheme.primary : null,
-        ),
-        decoration: InputDecoration(
-          counterText: '',
-          filled: filled[i],
-          fillColor: filled[i] ? AppTheme.primary.withOpacity(0.08) : Colors.transparent,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(
-              color: filled[i] ? AppTheme.primary : borderBase,
-              width: filled[i] ? 2 : 1.5,
+          width: 46,
+          height: 54,
+          child: TextFormField(
+            controller: _controllers[i],
+            focusNode: _focusNodes[i],
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            maxLength: 1,
+            autofocus: i == 0,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: filled[i] ? AppTheme.primary : null,
             ),
+            decoration: InputDecoration(
+              counterText: '',
+              filled: filled[i],
+              fillColor: filled[i] ? AppTheme.primary.withAlpha(20) : Colors.transparent,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: filled[i] ? AppTheme.primary : borderBase,
+                  width: filled[i] ? 2 : 1.5,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+              ),
+            ),
+            onChanged: (v) => _onChanged(i, v),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppTheme.primary, width: 2),
-          ),
-        ),
-        onChanged: (v) => _onChanged(i, v),
-      ),
-    );
+        );
 
     const sep = Padding(
       padding: EdgeInsets.symmetric(horizontal: 6),
@@ -392,15 +375,19 @@ class _OtpVerifyScreenState extends State<OtpVerifyScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ...List.generate(3, (i) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: box(i),
-        )),
+        ...List.generate(
+            3,
+            (i) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: box(i),
+                )),
         sep,
-        ...List.generate(3, (j) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: box(j + 3),
-        )),
+        ...List.generate(
+            3,
+            (j) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: box(j + 3),
+                )),
       ],
     );
   }

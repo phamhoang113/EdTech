@@ -34,9 +34,9 @@ class AuthRepositoryImpl implements AuthRepository {
         mustChangePassword: response.mustChangePassword,
       );
       return Right(UserEntity(
-        id: phone, 
+        id: phone,
         phoneNumber: phone,
-        role: response.role, 
+        role: response.role,
         name: response.fullName,
         mustChangePassword: response.mustChangePassword ?? false,
       ));
@@ -47,17 +47,52 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  /// Register thành công → trả otpToken UUID để navigate sang OtpVerifyScreen
+  /// Register via Firebase auth endpoint.
+  /// On test env: generates MOCK_TOKEN_+84xxx (BE bypasses Firebase check).
+  /// On production: would use real Firebase Phone Auth SDK.
   @override
-  Future<Either<Failure, String>> register(
-    String phone,
-    String password,
-    String role, {
-    String fullName = '',
+  Future<Either<Failure, UserEntity>> registerWithFirebase({
+    required String phone,
+    required String fullName,
+    required String password,
+    required String role,
   }) async {
     try {
-      final otpToken = await _remoteDataSource.register(phone, password, fullName, role);
-      return Right(otpToken);
+      // Normalize phone to +84 format (same as web)
+      String formattedPhone = phone.trim();
+      if (formattedPhone.startsWith('0')) {
+        formattedPhone = '+84${formattedPhone.substring(1)}';
+      } else if (!formattedPhone.startsWith('+')) {
+        formattedPhone = '+$formattedPhone';
+      }
+
+      // Test env: mock idToken (same as web localhost bypass)
+      // Production: would call Firebase signInWithPhoneNumber here
+      final idToken = 'MOCK_TOKEN_$formattedPhone';
+
+      final response = await _remoteDataSource.firebaseAuth(
+        idToken: idToken,
+        fullName: fullName,
+        password: password,
+        role: role,
+      );
+
+      await _saveSession(
+        phone: phone,
+        role: response.role,
+        fullName: response.fullName,
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+        mustChangePassword: response.mustChangePassword,
+      );
+
+      return Right(UserEntity(
+        id: phone,
+        phoneNumber: phone,
+        role: response.role,
+        name: response.fullName,
+        mustChangePassword: response.mustChangePassword ?? false,
+      ));
     } on DioException catch (e) {
       return Left(ServerFailure(_extractMessage(e, 'Đăng ký thất bại')));
     } catch (e) {
@@ -65,30 +100,25 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  /// Verify OTP bằng otpToken UUID + code (không cần phone)
   @override
-  Future<Either<Failure, UserEntity>> verifyOtp(String otpToken, String code) async {
+  Future<Either<Failure, Map<String, String>>> initForgotPassword(String identifier) async {
     try {
-      final response = await _remoteDataSource.verifyOtp(otpToken, code);
-      // phone không có trong TokenResponse, lấy từ secure storage nếu có
-      final savedPhone = await _secureStorage.read(key: 'userPhone') ?? '';
-      await _saveSession(
-        phone: savedPhone,
-        role: response.role,
-        fullName: response.fullName,
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
-        mustChangePassword: response.mustChangePassword,
-      );
-      return Right(UserEntity(
-        id: savedPhone,
-        phoneNumber: savedPhone,
-        role: response.role,
-        name: response.fullName,
-        mustChangePassword: response.mustChangePassword ?? false,
-      ));
+      final data = await _remoteDataSource.initForgotPassword(identifier);
+      return Right(data);
     } on DioException catch (e) {
-      return Left(ServerFailure(_extractMessage(e, 'OTP không hợp lệ')));
+      return Left(ServerFailure(_extractMessage(e, 'Không tìm thấy tài khoản')));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> resetForgotPassword(String identifier, String idToken) async {
+    try {
+      final newPassword = await _remoteDataSource.resetForgotPassword(identifier, idToken);
+      return Right(newPassword);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_extractMessage(e, 'Đặt lại mật khẩu thất bại')));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -113,8 +143,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
     return UserEntity(
       id: phone,
-      phoneNumber: phone, 
-      role: role, 
+      phoneNumber: phone,
+      role: role,
       name: fullName,
       mustChangePassword: mustChangePassword,
     );

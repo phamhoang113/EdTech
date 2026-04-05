@@ -3,6 +3,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
+import '../../domain/entities/class_filter_entity.dart';
 import '../../domain/entities/open_class_entity.dart';
 import '../../domain/repositories/class_repository.dart';
 import '../datasources/class_remote_data_source.dart';
@@ -18,6 +19,42 @@ class ClassRepositoryImpl implements ClassRepository {
     try {
       final models = await remoteDataSource.getOpenClasses();
       return Right(models);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi không xác định: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ClassFilterEntity>> getClassFilters() async {
+    try {
+      final filters = await remoteDataSource.getClassFilters();
+      return Right(filters);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi không xác định: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ProvinceDto>>> getProvinces() async {
+    try {
+      final provinces = await remoteDataSource.getProvinces();
+      return Right(provinces);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi không xác định: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<WardDto>>> getWardsByProvince(String provinceCode) async {
+    try {
+      final wards = await remoteDataSource.getWardsByProvince(provinceCode);
+      return Right(wards);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

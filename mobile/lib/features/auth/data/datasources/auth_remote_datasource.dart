@@ -7,11 +7,23 @@ import '../models/auth_response_model.dart';
 abstract class AuthRemoteDataSource {
   Future<AuthResponseModel> login(String phone, String password);
 
-  /// Register thành công → trả về otpToken (UUID String) để verify
-  Future<String> register(String phone, String password, String fullName, String role);
+  /// Firebase auth — register/login via Firebase idToken
+  /// This is the ONLY registration path (same as web)
+  Future<AuthResponseModel> firebaseAuth({
+    required String idToken,
+    required String fullName,
+    required String password,
+    required String role,
+  });
 
-  /// Verify bằng otpToken + code — không cần phone
-  Future<AuthResponseModel> verifyOtp(String otpToken, String code);
+  /// Forgot password step 1: init → returns maskedPhone + fullPhone
+  Future<Map<String, String>> initForgotPassword(String identifier);
+
+  /// Forgot password step 2: reset with idToken → returns newPassword
+  Future<String> resetForgotPassword(String identifier, String idToken);
+
+  /// Refresh expired access token
+  Future<AuthResponseModel> refreshToken(String refreshToken);
 }
 
 @Injectable(as: AuthRemoteDataSource)
@@ -33,34 +45,55 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<String> register(
-    String phone,
-    String password,
-    String fullName,
-    String role,
-  ) async {
+  Future<AuthResponseModel> firebaseAuth({
+    required String idToken,
+    required String fullName,
+    required String password,
+    required String role,
+  }) async {
     final response = await _client.dio.post(
-      '/api/v1/auth/register',
+      '/api/v1/auth/firebase',
       data: {
-        'phone': phone,
-        'password': password,
+        'idToken': idToken,
         'fullName': fullName,
+        'password': password,
         'role': role,
       },
     );
-    // Backend trả RegisterResponse { otpToken, message }
-    final data = _unwrap(response) as Map<String, dynamic>;
-    return data['otpToken'] as String;
+    return AuthResponseModel.fromJson(_unwrap(response) as Map<String, dynamic>);
   }
 
   @override
-  Future<AuthResponseModel> verifyOtp(String otpToken, String code) async {
+  Future<Map<String, String>> initForgotPassword(String identifier) async {
     final response = await _client.dio.post(
-      '/api/v1/auth/verify-otp',
+      '/api/v1/auth/forgot-password/init',
+      data: {'identifier': identifier},
+    );
+    final data = _unwrap(response) as Map<String, dynamic>;
+    return {
+      'maskedPhone': data['maskedPhone'] as String? ?? '',
+      'fullPhone': data['fullPhone'] as String? ?? '',
+    };
+  }
+
+  @override
+  Future<String> resetForgotPassword(String identifier, String idToken) async {
+    final response = await _client.dio.post(
+      '/api/v1/auth/forgot-password/reset',
       data: {
-        'otpToken': otpToken, // UUID String — không gửi phone
-        'code': code,
+        'identifier': identifier,
+        'idToken': idToken,
       },
+    );
+    final data = _unwrap(response) as Map<String, dynamic>;
+    return data['newPassword'] as String? ?? '';
+  }
+
+  @override
+  Future<AuthResponseModel> refreshToken(String refreshToken) async {
+    final response = await _client.dio.post(
+      '/api/v1/auth/refresh',
+      data: {'refreshToken': refreshToken},
     );
     return AuthResponseModel.fromJson(_unwrap(response) as Map<String, dynamic>);
   }

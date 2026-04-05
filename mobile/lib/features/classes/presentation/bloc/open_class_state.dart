@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import '../../data/datasources/class_remote_data_source.dart';
+import '../../domain/entities/class_filter_entity.dart';
 import '../../domain/entities/open_class_entity.dart';
 
 abstract class OpenClassState extends Equatable {
@@ -14,11 +16,13 @@ class OpenClassLoading extends OpenClassState {}
 
 class OpenClassLoaded extends OpenClassState {
   final List<OpenClassEntity> classes;
+  final ClassFilterEntity filters;
+  final List<ProvinceDto> provinces;
 
-  const OpenClassLoaded(this.classes);
+  const OpenClassLoaded(this.classes, this.filters, this.provinces);
 
   @override
-  List<Object> get props => [classes];
+  List<Object> get props => [classes, filters, provinces];
 }
 
 class OpenClassError extends OpenClassState {
