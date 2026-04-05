@@ -29,6 +29,8 @@ import com.edtech.backend.cls.enums.ClassStatus;
 import com.edtech.backend.cls.repository.ClassApplicationRepository;
 import com.edtech.backend.cls.repository.ClassRepository;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.notification.entity.NotificationType;
+import com.edtech.backend.notification.service.NotificationService;
 import com.edtech.backend.tutor.entity.TutorProfileEntity;
 import com.edtech.backend.tutor.enums.VerificationStatus;
 import com.edtech.backend.tutor.repository.TutorProfileRepository;
@@ -50,6 +52,7 @@ public class AdminTutorService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final ClassRepository classRepository;
     private final ClassApplicationRepository applicationRepository;
+    private final NotificationService notificationService;
 
     /** Lấy toàn bộ gia sư (kể cả đã xóa mềm) để admin xem */
     public List<AdminTutorListItem> getAllTutors() {
@@ -178,6 +181,11 @@ public class AdminTutorService {
         profile.setVerificationStatus(VerificationStatus.APPROVED);
         tutorProfileRepository.save(profile);
         log.info("[APPROVE_TUTOR] userId={}, hourlyRate={}", userId, rate);
+
+        // Thông báo cho gia sư
+        notificationService.sendNotification(userId, NotificationType.APPLICATION_ACCEPTED,
+                "Hồ sơ được duyệt", "Hồ sơ gia sư của bạn đã được phê duyệt. Bạn có thể bắt đầu nhận lớp.",
+                "VERIFICATION", userId);
     }
 
     @Transactional
@@ -192,6 +200,11 @@ public class AdminTutorService {
         profile.setVerificationStatus(VerificationStatus.REJECTED);
         tutorProfileRepository.save(profile);
         log.info("[REJECT_TUTOR] userId={}", userId);
+
+        // Thông báo cho gia sư
+        notificationService.sendNotification(userId, NotificationType.APPLICATION_REJECTED,
+                "Hồ sơ bị từ chối", "Hồ sơ gia sư của bạn chưa đạt yêu cầu. Vui lòng cập nhật và gửi lại.",
+                "VERIFICATION", userId);
     }
 
     private AdminTutorVerificationResponse mapToAdminResponse(TutorProfileEntity profile, UserEntity user) {

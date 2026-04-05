@@ -57,6 +57,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   }),
 
   logout: () => {
+    // Xóa FCM push token khỏi backend (fire-and-forget)
+    import('../services/pushNotificationService').then(({ unregisterPushToken }) => {
+      unregisterPushToken().catch(() => {});
+    });
+
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('authUser');

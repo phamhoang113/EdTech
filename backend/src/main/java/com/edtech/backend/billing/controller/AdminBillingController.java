@@ -39,6 +39,8 @@ import com.edtech.backend.billing.service.BillingSchedulerService;
 import com.edtech.backend.core.dto.ApiResponse;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.notification.entity.NotificationType;
+import com.edtech.backend.notification.service.NotificationService;
 import com.edtech.backend.tutor.entity.TutorProfileEntity;
 import com.edtech.backend.tutor.repository.TutorProfileRepository;
 
@@ -53,6 +55,7 @@ public class AdminBillingController {
     private final TutorPayoutRepository tutorPayoutRepository;
     private final UserRepository userRepository;
     private final TutorProfileRepository tutorProfileRepository;
+    private final NotificationService notificationService;
 
     private UserEntity resolveAdmin(UserDetails userDetails) {
         return userRepository.findByIdentifierAndIsDeletedFalse(userDetails.getUsername())
@@ -199,6 +202,16 @@ public class AdminBillingController {
         }
 
         long verifiedCount = billings.stream().filter(b -> b.getStatus() == BillingStatus.PAID).count();
+
+        // Thông báo cho phụ huynh/học sinh
+        billings.stream()
+                .filter(b -> b.getStatus() == BillingStatus.PAID && b.getParent() != null)
+                .forEach(b -> notificationService.sendNotification(b.getParent().getId(),
+                        NotificationType.INVOICE_APPROVED,
+                        "Thanh toán được xác nhận",
+                        String.format("Hóa đơn kỳ %d/%d của bạn đã được xác nhận thanh toán.", b.getMonth(), b.getYear()),
+                        "INVOICE", b.getId()));
+
         return ResponseEntity.ok(ApiResponse.ok(
                 "Xác nhận thanh toán thành công " + verifiedCount + " hóa đơn. Đã mở khóa lương gia sư."
         ));
@@ -295,6 +308,16 @@ public class AdminBillingController {
         tutorPayoutRepository.save(payout);
 
         String tutorName = payout.getTutor() != null ? payout.getTutor().getFullName() : "N/A";
+
+        // Thông báo gia sư: đã được chi lương
+        if (payout.getTutor() != null) {
+            notificationService.sendNotification(payout.getTutor().getId(),
+                    NotificationType.PAYOUT_TRANSFERRED,
+                    "Lương đã được chuyển",
+                    String.format("Lương của bạn đã được chuyển. Mã giao dịch: %s", payout.getTransactionCode()),
+                    "INVOICE", payout.getId());
+        }
+
         return ResponseEntity.ok(ApiResponse.ok("Đã đánh dấu chi lương cho gia sư " + tutorName));
     }
 
