@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
+import '../storage/platform_storage.dart';
 import 'package:injectable/injectable.dart';
 
 /// Auth interceptor that adds Bearer token from secure storage.
@@ -7,7 +8,8 @@ import 'package:injectable/injectable.dart';
 /// (regular Interceptor's async void methods can cause Dio to hang).
 @injectable
 class AuthInterceptor extends QueuedInterceptor {
-  final FlutterSecureStorage _secureStorage;
+  final PlatformStorage _secureStorage;
+  bool _isRefreshing = false;
 
   AuthInterceptor(this._secureStorage);
 
@@ -18,20 +20,28 @@ class AuthInterceptor extends QueuedInterceptor {
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
       }
-    } catch (_) {
-      // Secure storage may fail on web — continue without token
+    } catch (e) {
+      debugPrint('[AuthInterceptor] Failed to read token: $e');
     }
     handler.next(options);
   }
 
   @override
   Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
-      final refreshed = await _tryRefreshToken(err.requestOptions);
-      if (refreshed != null) {
-        handler.resolve(refreshed);
-        return;
+    if (err.response?.statusCode == 401 && !_isRefreshing) {
+      _isRefreshing = true;
+      try {
+        final refreshed = await _tryRefreshToken(err.requestOptions);
+        if (refreshed != null) {
+          _isRefreshing = false;
+          handler.resolve(refreshed);
+          return;
+        }
+      } catch (_) {
+        // Refresh failed
       }
+      _isRefreshing = false;
+
       // Refresh failed → clear session
       try {
         await _secureStorage.deleteAll();
@@ -45,7 +55,10 @@ class AuthInterceptor extends QueuedInterceptor {
   Future<Response?> _tryRefreshToken(RequestOptions failedRequest) async {
     try {
       final refreshToken = await _secureStorage.read(key: 'refreshToken');
-      if (refreshToken == null) return null;
+      if (refreshToken == null || refreshToken.isEmpty) {
+        debugPrint('[AuthInterceptor] No refresh token available');
+        return null;
+      }
 
       final refreshDio = Dio(BaseOptions(
         baseUrl: failedRequest.baseUrl,
@@ -65,17 +78,23 @@ class AuthInterceptor extends QueuedInterceptor {
       final newRefreshToken = data['refreshToken'] as String?;
       if (newAccessToken == null) return null;
 
+      // Lưu token mới
       await _secureStorage.write(key: 'accessToken', value: newAccessToken);
       if (newRefreshToken != null) {
         await _secureStorage.write(key: 'refreshToken', value: newRefreshToken);
       }
 
+      debugPrint('[AuthInterceptor] Token refreshed successfully');
+
+      // Retry request với token mới
       failedRequest.headers['Authorization'] = 'Bearer $newAccessToken';
+
       final retryDio = Dio(BaseOptions(
         baseUrl: failedRequest.baseUrl,
         connectTimeout: failedRequest.connectTimeout,
         receiveTimeout: failedRequest.receiveTimeout,
       ));
+
       return retryDio.request(
         failedRequest.path,
         data: failedRequest.data,
@@ -83,9 +102,11 @@ class AuthInterceptor extends QueuedInterceptor {
         options: Options(
           method: failedRequest.method,
           headers: failedRequest.headers,
+          contentType: failedRequest.contentType,
         ),
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[AuthInterceptor] Refresh token failed: $e');
       return null;
     }
   }

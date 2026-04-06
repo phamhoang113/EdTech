@@ -7,31 +7,33 @@ import '../features/auth/presentation/screens/register_role_screen.dart';
 import '../features/auth/presentation/screens/register_form_screen.dart';
 import '../features/auth/presentation/screens/register_otp_screen.dart';
 
-import '../features/auth/presentation/screens/dashboard_screen.dart';
+
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/home/presentation/screens/main_shell.dart';
+import '../features/schedule/presentation/screens/schedule_screen.dart';
 import '../features/classes/presentation/screens/class_list_screen.dart';
+import '../features/classes/presentation/screens/request_class_screen.dart';
+import '../features/home/presentation/screens/blog_screen.dart';
+import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/auth/presentation/bloc/auth_bloc.dart';
 import '../features/auth/presentation/bloc/auth_state.dart';
 import '../features/tutor_profile/presentation/screens/tutor_verification_screen.dart';
 import '../features/auth/presentation/screens/change_password_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
-import '../features/home/presentation/screens/coming_soon_screen.dart';
-import '../features/home/presentation/screens/blog_screen.dart';
+import '../features/classes/presentation/screens/class_detail_screen.dart';
+import '../features/classes/domain/entities/open_class_entity.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _homeNavKey = GlobalKey<NavigatorState>(debugLabel: 'home');
-final GlobalKey<NavigatorState> _classesNavKey = GlobalKey<NavigatorState>(debugLabel: 'classes');
+final GlobalKey<NavigatorState> _scheduleNavKey = GlobalKey<NavigatorState>(debugLabel: 'schedule');
 final GlobalKey<NavigatorState> _blogNavKey = GlobalKey<NavigatorState>(debugLabel: 'blog');
-final GlobalKey<NavigatorState> _docsNavKey = GlobalKey<NavigatorState>(debugLabel: 'docs');
-final GlobalKey<NavigatorState> _aiNavKey = GlobalKey<NavigatorState>(debugLabel: 'ai');
-final GlobalKey<NavigatorState> _dashboardNavKey = GlobalKey<NavigatorState>(debugLabel: 'dashboard');
+final GlobalKey<NavigatorState> _profileNavKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: '/home',
   routes: [
-    // ── Main Shell with Bottom Navigation ──
+    // ── Main Shell with Bottom Navigation — 4 tabs ──
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return MainShell(navigationShell: navigationShell);
@@ -47,13 +49,13 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 1: Class List
+        // Tab 1: Lịch (schedule)
         StatefulShellBranch(
-          navigatorKey: _classesNavKey,
+          navigatorKey: _scheduleNavKey,
           routes: [
             GoRoute(
-              path: '/classes',
-              builder: (context, state) => const ClassListScreen(),
+              path: '/schedule',
+              builder: (context, state) => const ScheduleScreen(),
             ),
           ],
         ),
@@ -67,39 +69,13 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 3: Tài liệu học tập (Coming Soon)
+        // Tab 3: Tôi (Profile + Settings)
         StatefulShellBranch(
-          navigatorKey: _docsNavKey,
+          navigatorKey: _profileNavKey,
           routes: [
             GoRoute(
-              path: '/docs',
-              builder: (context, state) => const ComingSoonScreen(
-                featureName: 'Tài liệu học tập',
-                icon: Icons.menu_book_rounded,
-              ),
-            ),
-          ],
-        ),
-        // Tab 4: AI (Coming Soon)
-        StatefulShellBranch(
-          navigatorKey: _aiNavKey,
-          routes: [
-            GoRoute(
-              path: '/ai',
-              builder: (context, state) => const ComingSoonScreen(
-                featureName: 'Trợ lý AI',
-                icon: Icons.auto_awesome_rounded,
-              ),
-            ),
-          ],
-        ),
-        // Tab 5: Dashboard
-        StatefulShellBranch(
-          navigatorKey: _dashboardNavKey,
-          routes: [
-            GoRoute(
-              path: '/dashboard',
-              builder: (context, state) => const DashboardScreen(),
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
             ),
           ],
         ),
@@ -107,6 +83,24 @@ final GoRouter appRouter = GoRouter(
     ),
 
     // ── Non-shell routes (full screen, no bottom nav) ──
+    GoRoute(
+      path: '/classes',
+      builder: (context, state) => Scaffold(
+        appBar: AppBar(title: const Text('Tất cả lớp học')),
+        body: const ClassListScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/request-class',
+      builder: (context, state) => const RequestClassScreen(),
+    ),
+    GoRoute(
+      path: '/class-detail',
+      builder: (context, state) {
+        final classItem = state.extra as OpenClassEntity;
+        return ClassDetailScreen(classItem: classItem);
+      },
+    ),
     GoRoute(
       path: '/register/role',
       builder: (context, state) => const RegisterRoleScreen(),

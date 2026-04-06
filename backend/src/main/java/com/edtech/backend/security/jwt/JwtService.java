@@ -64,6 +64,12 @@ public class JwtService {
         return buildToken(new HashMap<>(), userDetails, expiry);
     }
 
+    /** Tạo access token theo role với extra claims (role, fullName, etc.) */
+    public String generateTokenForRole(Map<String, Object> extraClaims, UserDetails userDetails, UserRole role) {
+        long expiry = (role == UserRole.ADMIN) ? ADMIN_ACCESS_EXPIRY_MS : USER_ACCESS_EXPIRY_MS;
+        return buildToken(extraClaims, userDetails, expiry);
+    }
+
     /** Tạo refresh token theo role: ADMIN 1 ngày, user thường 365 ngày */
     public String generateRefreshTokenForRole(UserDetails userDetails, UserRole role) {
         long expiry = (role == UserRole.ADMIN) ? ADMIN_REFRESH_EXPIRY_MS : USER_REFRESH_EXPIRY_MS;

@@ -12,7 +12,6 @@ import '../../../../core/di/injection.dart';
 import '../bloc/tutor_profile_bloc.dart';
 import '../bloc/tutor_profile_event.dart';
 import '../bloc/tutor_profile_state.dart';
-import '../../domain/repositories/tutor_profile_repository.dart';
 
 /// Tutor Verification Screen — 9 fields matching web TutorVerificationModal.
 /// POST /api/v1/tutors/profile/verify (multipart/form-data)
@@ -43,7 +42,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
   String _achievements = '';
   String? _error;
 
-  // ── Filter data from API ──
+  // ── Filter data from BLoC ──
   List<String> _availableSubjects = [];
   List<String> _availableLevels = [];
   bool _filtersLoaded = false;
@@ -51,18 +50,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
   @override
   void initState() {
     super.initState();
-    _loadFilters();
-  }
-
-  Future<void> _loadFilters() async {
-    final repo = getIt<TutorProfileRepository>();
-    final data = await repo.getClassFilters();
-    if (!mounted) return;
-    setState(() {
-      _availableSubjects = (data['subjects'] ?? []).where((s) => s != 'Khác').toList();
-      _availableLevels = (data['levels'] ?? []).where((l) => l != 'Khác').toList();
-      _filtersLoaded = true;
-    });
+    _bloc.add(LoadClassFilters());
   }
 
   Future<void> _pickDegreeImage() async {
@@ -150,7 +138,13 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
       value: _bloc,
       child: BlocConsumer<TutorProfileBloc, TutorProfileState>(
         listener: (context, state) {
-          if (state is TutorProfileError) {
+          if (state is ClassFiltersLoaded) {
+            setState(() {
+              _availableSubjects = state.subjects;
+              _availableLevels = state.levels;
+              _filtersLoaded = true;
+            });
+          } else if (state is TutorProfileError) {
             setState(() => _error = state.message);
           } else if (state is TutorProfileVerificationSuccess) {
             _showSuccessDialog();
@@ -518,7 +512,7 @@ class _TutorVerificationScreenState extends State<TutorVerificationScreen> {
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         Navigator.of(context).pop(); // close dialog
-        context.go('/dashboard');
+        context.go('/home');
       }
     });
   }

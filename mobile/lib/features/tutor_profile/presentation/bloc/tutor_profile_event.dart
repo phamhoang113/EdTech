@@ -40,3 +40,6 @@ class VerifyTutorProfile extends TutorProfileEvent {
   @override
   List<Object?> get props => [tutorType, idCardNumber, degree, dateOfBirth, subjects, teachingLevels];
 }
+
+/// Load filter data (subjects, levels) for verification form.
+class LoadClassFilters extends TutorProfileEvent {}

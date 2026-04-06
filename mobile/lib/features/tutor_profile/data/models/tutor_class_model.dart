@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../domain/entities/tutor_class_entity.dart';
+
 /// A class assigned to the tutor (from GET /api/v1/tutor/classes)
 class TutorClassModel extends Equatable {
   final String id;
@@ -55,6 +57,25 @@ class TutorClassModel extends Equatable {
       description: json['description'] as String?,
     );
   }
+
+  /// Map data model → domain entity
+  TutorClassEntity toEntity() => TutorClassEntity(
+    id: id,
+    classCode: classCode,
+    title: title,
+    subject: subject,
+    grade: grade,
+    mode: mode,
+    status: status,
+    sessionsPerWeek: sessionsPerWeek,
+    sessionDurationMin: sessionDurationMin,
+    tutorFee: tutorFee,
+    startDate: startDate,
+    endDate: endDate,
+    schedule: schedule,
+    address: address,
+    description: description,
+  );
 
   @override
   List<Object?> get props => [id, classCode, title, subject, grade, mode, status];

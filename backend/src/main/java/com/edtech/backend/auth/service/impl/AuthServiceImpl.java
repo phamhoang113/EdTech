@@ -3,6 +3,7 @@ package com.edtech.backend.auth.service.impl;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
@@ -273,7 +274,11 @@ public class AuthServiceImpl implements AuthService {
                         Collections.emptyList());
 
         UserRole role = user.getRole();
-        String jwt = jwtService.generateTokenForRole(userDetails, role);
+        var extraClaims = Map.<String, Object>of(
+                "role", role.name(),
+                "fullName", user.getFullName() != null ? user.getFullName() : ""
+        );
+        String jwt = jwtService.generateTokenForRole(extraClaims, userDetails, role);
         String refreshTokenStr = jwtService.generateRefreshTokenForRole(userDetails, role);
         long refreshTtlMs = jwtService.getRefreshTokenTtlMs(role);
 

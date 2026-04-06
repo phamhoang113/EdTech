@@ -18,3 +18,13 @@ class LoadWardsRequested extends OpenClassEvent {
   @override
   List<Object?> get props => [provinceCode];
 }
+
+/// Create a new class request (from RequestClassScreen)
+class CreateClassRequested extends OpenClassEvent {
+  final Map<String, dynamic> data;
+
+  const CreateClassRequested(this.data);
+
+  @override
+  List<Object?> get props => [data];
+}

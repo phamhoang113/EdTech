@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../domain/entities/tutor_session_entity.dart';
+
 /// A teaching session (from GET /api/v1/tutor/sessions)
 class TutorSessionModel extends Equatable {
   final String id;
@@ -55,6 +57,25 @@ class TutorSessionModel extends Equatable {
       address: json['address'] as String?,
     );
   }
+
+  /// Map data model → domain entity
+  TutorSessionEntity toEntity() => TutorSessionEntity(
+    id: id,
+    classId: classId,
+    classCode: classCode,
+    classTitle: classTitle,
+    subject: subject,
+    tutorName: tutorName,
+    tutorPhone: tutorPhone,
+    sessionDate: sessionDate,
+    startTime: startTime,
+    endTime: endTime,
+    meetLink: meetLink,
+    status: status,
+    sessionType: sessionType,
+    tutorNote: tutorNote,
+    address: address,
+  );
 
   @override
   List<Object?> get props => [id, classId, sessionDate, status];

@@ -6,7 +6,6 @@ import '../../../../core/di/injection.dart';
 import '../../../classes/presentation/bloc/open_class_bloc.dart';
 import '../../../classes/presentation/bloc/open_class_event.dart';
 import '../../../classes/presentation/bloc/open_class_state.dart';
-import '../../../classes/presentation/widgets/class_details_dialog.dart';
 import 'open_class_card.dart';
 
 class OpenClassesSection extends StatelessWidget {
@@ -59,9 +58,9 @@ class OpenClassesSection extends StatelessWidget {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           BlocBuilder<OpenClassBloc, OpenClassState>(
             builder: (context, state) {
               if (state is OpenClassLoading || state is OpenClassInitial) {
@@ -72,7 +71,9 @@ class OpenClassesSection extends StatelessWidget {
               } else if (state is OpenClassError) {
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Center(child: Text(state.message, style: const TextStyle(color: Colors.red))),
+                  child: Center(
+                    child: Text(state.message, style: const TextStyle(color: Colors.red)),
+                  ),
                 );
               } else if (state is OpenClassLoaded) {
                 if (state.classes.isEmpty) {
@@ -81,39 +82,39 @@ class OpenClassesSection extends StatelessWidget {
                     child: Center(child: Text('Hiện tại chưa có lớp học nào trống.')),
                   );
                 }
-                
+
+                final displayClasses = state.classes.length > 6
+                    ? state.classes.sublist(0, 6)
+                    : state.classes;
+
                 return Column(
                   children: [
+                    // Vertical list — mỗi card 1 dòng
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: GridView.builder(
+                      child: ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          mainAxisExtent: 240, // Tăng chiều cao để không bị overflow 4 dòng thông tin
-                        ),
-                        itemCount: state.classes.length > 6 ? 6 : state.classes.length,
+                        itemCount: displayClasses.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
-                          final classItem = state.classes[index];
+                          final classItem = displayClasses[index];
                           return OpenClassCard(
                             classItem: classItem,
                             onTap: () {
-                              ClassDetailsDialog.show(context, classItem);
+                              context.push('/class-detail', extra: classItem);
                             },
                           );
                         },
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    // Button Xem tất cả nằm ở dưới cùng
+
+                    const SizedBox(height: 20),
+
+                    // "Xem tất cả" button
                     Center(
                       child: OutlinedButton(
-                        onPressed: () {
-                          context.go('/classes');
-                        },
+                        onPressed: () => context.push('/classes'),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                           side: BorderSide(color: Theme.of(context).colorScheme.primary),

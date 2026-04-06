@@ -1,7 +1,8 @@
 import 'package:equatable/equatable.dart';
+
 import '../../domain/entities/tutor_profile_entity.dart';
-import '../../data/models/tutor_class_model.dart';
-import '../../data/models/tutor_session_model.dart';
+import '../../domain/entities/tutor_class_entity.dart';
+import '../../domain/entities/tutor_session_entity.dart';
 
 abstract class TutorProfileState extends Equatable {
   const TutorProfileState();
@@ -26,8 +27,8 @@ class TutorProfileLoaded extends TutorProfileState {
 /// Full dashboard state with profile + classes + sessions
 class TutorDashboardLoaded extends TutorProfileState {
   final TutorProfileEntity profile;
-  final List<TutorClassModel> classes;
-  final List<TutorSessionModel> sessions;
+  final List<TutorClassEntity> classes;
+  final List<TutorSessionEntity> sessions;
 
   const TutorDashboardLoaded({
     required this.profile,
@@ -36,11 +37,15 @@ class TutorDashboardLoaded extends TutorProfileState {
   });
 
   /// Upcoming sessions: SCHEDULED + future date only
-  List<TutorSessionModel> get upcomingSessions {
+  List<TutorSessionEntity> get upcomingSessions {
     final now = DateTime.now();
     final todayStr = DateTime(now.year, now.month, now.day);
     return sessions
-        .where((s) => s.status == 'SCHEDULED' && DateTime.tryParse(s.sessionDate)?.isAfter(todayStr.subtract(const Duration(days: 1))) == true)
+        .where((s) =>
+            s.status == 'SCHEDULED' &&
+            DateTime.tryParse(s.sessionDate)
+                    ?.isAfter(todayStr.subtract(const Duration(days: 1))) ==
+                true)
         .take(4)
         .toList();
   }
@@ -72,4 +77,15 @@ class TutorProfileVerificationSuccess extends TutorProfileState {
 
   @override
   List<Object> get props => [profile];
+}
+
+/// State emitted when class filter data is loaded for the verification form.
+class ClassFiltersLoaded extends TutorProfileState {
+  final List<String> subjects;
+  final List<String> levels;
+
+  const ClassFiltersLoaded({required this.subjects, required this.levels});
+
+  @override
+  List<Object> get props => [subjects, levels];
 }

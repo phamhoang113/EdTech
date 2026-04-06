@@ -10,7 +10,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 
 /// MainShell — Provides fixed AppBar + BottomNavigationBar.
-/// 6 tabs: Home, Lớp học, Blog, Tài liệu, AI, Dashboard (icon only).
+/// 4 tabs: Trang chủ, Lịch, Blog, Tôi.
 class MainShell extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -21,12 +21,14 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
-  /// Dashboard index (last tab)
-  static const int _dashboardTabIndex = 5;
+  /// Profile tab index (last tab)
+  static const int _profileTabIndex = 3;
+  /// Schedule tab index
+  static const int _scheduleTabIndex = 1;
 
   void _onTabTapped(int index) {
-    if (index == _dashboardTabIndex) {
-      // Dashboard tab — guard with auth
+    // Schedule & Profile tabs require login
+    if (index == _scheduleTabIndex || index == _profileTabIndex) {
       final authState = context.read<AuthBloc>().state;
       if (authState is! AuthAuthenticated) {
         showAuthGuard(context, onSuccess: () {
@@ -39,25 +41,23 @@ class _MainShellState extends State<MainShell> {
       }
     }
 
-    // Block navigation for UNVERIFIED tutors — force them to complete verification
+    // Block navigation for UNVERIFIED tutors
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthAuthenticated &&
         authState.user.role == 'TUTOR' &&
-        index != _dashboardTabIndex) {
+        index != _profileTabIndex) {
       final notifier = getIt<TutorVerificationNotifier>();
       if (notifier.isBlocked) {
-        // Already on dashboard → just show message
-        if (widget.navigationShell.currentIndex == _dashboardTabIndex) {
+        if (widget.navigationShell.currentIndex == _profileTabIndex) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Vui lòng hoàn thành xác thực hồ sơ trước khi sử dụng tính năng khác.'),
+              content: Text('Vui lòng hoàn thành xác thực hồ sơ trước.'),
               duration: Duration(seconds: 2),
             ),
           );
           return;
         }
-        // Not on dashboard → navigate to dashboard
-        widget.navigationShell.goBranch(_dashboardTabIndex, initialLocation: true);
+        widget.navigationShell.goBranch(_profileTabIndex, initialLocation: true);
         return;
       }
     }
@@ -74,11 +74,11 @@ class _MainShellState extends State<MainShell> {
     final isDark = theme.brightness == Brightness.dark;
     final currentIndex = widget.navigationShell.currentIndex;
 
-    final isDashboard = currentIndex == _dashboardTabIndex;
+    // Ẩn AppBar khi ở tab "Tôi" (Profile tự quản lý header)
+    final isProfileTab = currentIndex == _profileTabIndex;
 
     return Scaffold(
-      // ── AppBar hidden on Dashboard tab (Dashboard has its own AppBar + Drawer) ──
-      appBar: isDashboard
+      appBar: isProfileTab
           ? null
           : AppBar(
               title: Image.asset(
@@ -111,10 +111,9 @@ class _MainShellState extends State<MainShell> {
               ],
             ),
 
-      // ── Body — current tab ──
       body: widget.navigationShell,
 
-      // ── Bottom Navigation Bar — 6 tabs, icon only ──
+      // ── Bottom Navigation Bar — 4 tabs ──
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         onDestinationSelected: _onTabTapped,
@@ -123,18 +122,18 @@ class _MainShellState extends State<MainShell> {
         indicatorColor: theme.colorScheme.primary.withAlpha(30),
         elevation: 3,
         shadowColor: isDark ? Colors.black54 : Colors.black12,
-        height: 60,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+        height: 64,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
-            label: 'Home',
+            label: 'Trang chủ',
           ),
           NavigationDestination(
-            icon: Icon(Icons.class_outlined),
-            selectedIcon: Icon(Icons.class_),
-            label: 'Lớp học',
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month),
+            label: 'Lịch',
           ),
           NavigationDestination(
             icon: Icon(Icons.article_outlined),
@@ -142,19 +141,9 @@ class _MainShellState extends State<MainShell> {
             label: 'Blog',
           ),
           NavigationDestination(
-            icon: Icon(Icons.menu_book_outlined),
-            selectedIcon: Icon(Icons.menu_book_rounded),
-            label: 'Tài liệu',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.auto_awesome_outlined),
-            selectedIcon: Icon(Icons.auto_awesome),
-            label: 'AI',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Tôi',
           ),
         ],
       ),

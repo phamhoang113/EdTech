@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
@@ -6,10 +7,10 @@ import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/tutor_profile_entity.dart';
 import '../../domain/entities/tutor_public_entity.dart';
+import '../../domain/entities/tutor_class_entity.dart';
+import '../../domain/entities/tutor_session_entity.dart';
 import '../../domain/repositories/tutor_profile_repository.dart';
 import '../datasources/tutor_profile_remote_datasource.dart';
-import '../models/tutor_class_model.dart';
-import '../models/tutor_session_model.dart';
 
 @Injectable(as: TutorProfileRepository)
 class TutorProfileRepositoryImpl implements TutorProfileRepository {
@@ -74,10 +75,10 @@ class TutorProfileRepositoryImpl implements TutorProfileRepository {
   }
 
   @override
-  Future<Either<Failure, List<TutorClassModel>>> getMyClasses() async {
+  Future<Either<Failure, List<TutorClassEntity>>> getMyClasses() async {
     try {
-      final classes = await remoteDataSource.getMyClasses();
-      return Right(classes);
+      final models = await remoteDataSource.getMyClasses();
+      return Right(models.map((m) => m.toEntity()).toList());
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -86,10 +87,10 @@ class TutorProfileRepositoryImpl implements TutorProfileRepository {
   }
 
   @override
-  Future<Either<Failure, List<TutorSessionModel>>> getMySessions() async {
+  Future<Either<Failure, List<TutorSessionEntity>>> getMySessions() async {
     try {
-      final sessions = await remoteDataSource.getMySessions();
-      return Right(sessions);
+      final models = await remoteDataSource.getMySessions();
+      return Right(models.map((m) => m.toEntity()).toList());
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

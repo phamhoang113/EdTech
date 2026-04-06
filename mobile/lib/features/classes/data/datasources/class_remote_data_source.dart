@@ -42,6 +42,7 @@ abstract class ClassRemoteDataSource {
   Future<ClassFilterEntity> getClassFilters();
   Future<List<ProvinceDto>> getProvinces();
   Future<List<WardDto>> getWardsByProvince(String provinceCode);
+  Future<void> createClass(Map<String, dynamic> data);
 }
 
 @LazySingleton(as: ClassRemoteDataSource)
@@ -111,6 +112,20 @@ class ClassRemoteDataSourceImpl implements ClassRemoteDataSource {
       rethrow;
     } catch (e) {
       throw ServerException('Lỗi tải danh sách quận huyện: $e');
+    }
+  }
+
+  @override
+  Future<void> createClass(Map<String, dynamic> data) async {
+    try {
+      await _dioClient.dio.post(
+        data['_endpoint'] as String? ?? '/api/v1/parent/classes',
+        data: Map<String, dynamic>.from(data)..remove('_endpoint'),
+      );
+    } on ServerException {
+      rethrow;
+    } catch (e) {
+      throw ServerException('Lỗi tạo lớp học: $e');
     }
   }
 

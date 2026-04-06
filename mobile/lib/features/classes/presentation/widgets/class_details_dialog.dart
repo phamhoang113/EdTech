@@ -2,15 +2,13 @@ import 'package:flutter/material.dart';
 
 import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dartz/dartz.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../app/router.dart';
-import '../../../../core/error/failures.dart';
-import '../../../../core/di/injection.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
-import '../../../tutor_profile/domain/repositories/tutor_profile_repository.dart';
-import '../../../tutor_profile/domain/entities/tutor_profile_entity.dart';
+import '../../../tutor_profile/presentation/bloc/tutor_profile_bloc.dart';
+import '../../../tutor_profile/presentation/bloc/tutor_profile_state.dart';
 import '../../domain/entities/open_class_entity.dart';
 
 class ClassDetailsDialog extends StatelessWidget {
@@ -27,15 +25,9 @@ class ClassDetailsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tutorFeeMin = classItem.minTutorFee.toStringAsFixed(0).replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]}.',
-        );
+    final tutorFeeMin = CurrencyFormatter.formatVND(classItem.minTutorFee);
 
-    final tutorFeeMax = classItem.maxTutorFee.toStringAsFixed(0).replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]}.',
-        );
+    final tutorFeeMax = CurrencyFormatter.formatVND(classItem.maxTutorFee);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -232,20 +224,20 @@ class ClassDetailsDialog extends StatelessWidget {
 
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
+        String? userLevel;
         if (authState is AuthAuthenticated && authState.user.role == 'TUTOR') {
-          return FutureBuilder<Either<Failure, TutorProfileEntity>>(
-            future: getIt<TutorProfileRepository>().getMyProfile(),
-            builder: (context, snapshot) {
-              String? userLevel;
-              if (snapshot.hasData) {
-                snapshot.data!.fold((_) {}, (profile) => userLevel = profile.level);
-              }
-              return _buildFeeList(context, fees, userLevel);
-            },
-          );
-        } else {
-          return _buildFeeList(context, fees, null);
+          try {
+            final tutorState = context.read<TutorProfileBloc>().state;
+            if (tutorState is TutorDashboardLoaded) {
+              userLevel = tutorState.profile.level;
+            } else if (tutorState is TutorProfileLoaded) {
+              userLevel = tutorState.profile.level;
+            }
+          } catch (_) {
+            // TutorProfileBloc not in tree
+          }
         }
+        return _buildFeeList(context, fees, userLevel);
       },
     );
   }
@@ -256,10 +248,7 @@ class ClassDetailsDialog extends StatelessWidget {
       final feeObj = fees[i];
       final level = feeObj['level']?.toString() ?? 'Khác';
       final feeNum = feeObj['fee'] is num ? feeObj['fee'] as num : 0;
-      final feeStr = feeNum.toStringAsFixed(0).replaceAllMapped(
-            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-            (Match m) => '${m[1]}.',
-          );
+      final feeStr = CurrencyFormatter.formatVND(feeNum);
           
       // Ngắn gọn: Nếu highlightLevel != null, tức là User ĐÃ LOGIN và LÀ TUTOR
       // => Cần làm sáng level của họ và mờ đi các level khác.

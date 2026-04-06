@@ -1,4 +1,4 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../../../core/storage/platform_storage.dart';
 import 'package:injectable/injectable.dart';
 import 'dart:convert';
 import '../models/user_model.dart';
@@ -12,7 +12,7 @@ abstract class AuthLocalDataSource {
 
 @Injectable(as: AuthLocalDataSource)
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
-  final FlutterSecureStorage _storage;
+  final PlatformStorage _storage;
 
   static const _accessTokenKey = 'accessToken';
   static const _refreshTokenKey = 'refreshToken';

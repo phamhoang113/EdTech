@@ -1,14 +1,12 @@
-import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/di/tutor_verification_notifier.dart';
-import '../../../../core/error/failures.dart';
 
-import '../../data/models/tutor_class_model.dart';
-import '../../data/models/tutor_session_model.dart';
 import '../../domain/entities/tutor_profile_entity.dart';
+import '../../domain/entities/tutor_session_entity.dart';
+import '../../domain/entities/tutor_class_entity.dart';
 import '../../domain/repositories/tutor_profile_repository.dart';
 import 'tutor_profile_event.dart';
 import 'tutor_profile_state.dart';
@@ -21,6 +19,7 @@ class TutorProfileBloc extends Bloc<TutorProfileEvent, TutorProfileState> {
     on<LoadTutorProfile>(_onLoadTutorProfile);
     on<LoadTutorDashboard>(_onLoadDashboard);
     on<VerifyTutorProfile>(_onVerifyTutorProfile);
+    on<LoadClassFilters>(_onLoadClassFilters);
   }
 
   Future<void> _onLoadTutorProfile(
@@ -36,7 +35,7 @@ class TutorProfileBloc extends Bloc<TutorProfileEvent, TutorProfileState> {
   }
 
   /// Load all dashboard data: profile + classes + sessions.
-  /// Uses Completer + Timer to guarantee state emission within 6s,
+  /// Uses Future.any to guarantee state emission within 6s,
   /// even if Dio/SecureStorage hangs on web.
   Future<void> _onLoadDashboard(
     LoadTutorDashboard event,
@@ -79,13 +78,13 @@ class TutorProfileBloc extends Bloc<TutorProfileEvent, TutorProfileState> {
 
     // Classes & sessions — silent failures
     final classesResult = await repository.getMyClasses();
-    final sessions = <TutorSessionModel>[];
+    final sessions = <TutorSessionEntity>[];
     try {
       final sessionsResult = await repository.getMySessions();
       sessions.addAll(sessionsResult.getOrElse(() => []));
     } catch (_) {}
 
-    final classes = classesResult.getOrElse(() => <TutorClassModel>[]);
+    final classes = classesResult.getOrElse(() => <TutorClassEntity>[]);
 
     return TutorDashboardLoaded(
       profile: profile,
@@ -114,5 +113,19 @@ class TutorProfileBloc extends Bloc<TutorProfileEvent, TutorProfileState> {
       (failure) => emit(TutorProfileError(failure.message)),
       (profile) => emit(TutorProfileVerificationSuccess(profile)),
     );
+  }
+
+  Future<void> _onLoadClassFilters(
+    LoadClassFilters event,
+    Emitter<TutorProfileState> emit,
+  ) async {
+    try {
+      final data = await repository.getClassFilters();
+      final subjects = (data['subjects'] ?? []).where((s) => s != 'Khác').toList();
+      final levels = (data['levels'] ?? []).where((l) => l != 'Khác').toList();
+      emit(ClassFiltersLoaded(subjects: subjects, levels: levels));
+    } catch (e) {
+      emit(TutorProfileError('Không thể tải dữ liệu bộ lọc: $e'));
+    }
   }
 }

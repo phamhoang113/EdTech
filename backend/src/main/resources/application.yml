@@ -67,7 +67,7 @@ application:
   security:
     jwt:
       secret-key: ${JWT_SECRET:849c73b0a701b22e176da93c5d6df2400f4f9f7baaa53e1a0b6d91cd369a13b6}
-      expiration: ${JWT_EXPIRY_MS:900000}
+      expiration: ${JWT_EXPIRY_MS:86400000}
       refresh-token:
         expiration: ${JWT_REFRESH_EXPIRY_MS:604800000}
 

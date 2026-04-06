@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme.dart';
 import '../../../../app/theme_cubit.dart';
 import '../../../../core/di/injection.dart';
-import '../../../tutor_profile/data/models/tutor_class_model.dart';
-import '../../../tutor_profile/data/models/tutor_session_model.dart';
+import '../../../tutor_profile/domain/entities/tutor_class_entity.dart';
+import '../../../tutor_profile/domain/entities/tutor_session_entity.dart';
 import '../../../tutor_profile/presentation/bloc/tutor_profile_bloc.dart';
 import '../../../tutor_profile/presentation/bloc/tutor_profile_event.dart';
 import '../../../tutor_profile/presentation/bloc/tutor_profile_state.dart';
@@ -479,7 +479,7 @@ class _VerificationBanner extends StatelessWidget {
 
 /// ── Session Item ──
 class _SessionItem extends StatelessWidget {
-  final TutorSessionModel session;
+  final TutorSessionEntity session;
   final bool isDark;
 
   const _SessionItem({required this.session, required this.isDark});
@@ -550,7 +550,7 @@ class _SessionItem extends StatelessWidget {
 
 /// ── Class Item ──
 class _ClassItem extends StatelessWidget {
-  final TutorClassModel cls;
+  final TutorClassEntity cls;
   final bool isDark;
 
   const _ClassItem({required this.cls, required this.isDark});

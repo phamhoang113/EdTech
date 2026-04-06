@@ -19,6 +19,7 @@ class _LoginSheetState extends State<LoginSheet> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -31,11 +32,10 @@ class _LoginSheetState extends State<LoginSheet> {
     final phone = _phoneController.text.trim();
     final password = _passwordController.text.trim();
     if (phone.isNotEmpty && password.isNotEmpty) {
+      setState(() => _errorMessage = null);
       context.read<AuthBloc>().add(AuthLoginRequested(phone, password));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin')),
-      );
+      setState(() => _errorMessage = 'Vui lòng nhập đầy đủ thông tin');
     }
   }
 
@@ -55,9 +55,7 @@ class _LoginSheetState extends State<LoginSheet> {
             widget.onSuccess?.call();
           }
         } else if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
+          setState(() => _errorMessage = state.message);
         }
       },
       builder: (context, state) {
@@ -108,6 +106,35 @@ class _LoginSheetState extends State<LoginSheet> {
                 ),
                 const SizedBox(height: 28),
 
+                // ── Error Message (inline) ──
+                if (_errorMessage != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.error.withAlpha(20),
+                      border: Border.all(color: theme.colorScheme.error.withAlpha(60)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: theme.colorScheme.error, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(color: theme.colorScheme.error, fontSize: 13),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => setState(() => _errorMessage = null),
+                          child: Icon(Icons.close, size: 16, color: theme.colorScheme.error),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
                 // ── Phone Field ──
                 TextField(
                   controller: _phoneController,
@@ -133,6 +160,7 @@ class _LoginSheetState extends State<LoginSheet> {
                   ),
                   keyboardType: TextInputType.phone,
                   enabled: !isLoading,
+                  onSubmitted: (_) => _onLoginPressed(),
                 ),
                 const SizedBox(height: 16),
 
@@ -166,6 +194,7 @@ class _LoginSheetState extends State<LoginSheet> {
                   ),
                   obscureText: _obscurePassword,
                   enabled: !isLoading,
+                  onSubmitted: (_) => _onLoginPressed(),
                 ),
 
                 // ── Forgot Password ──

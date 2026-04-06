@@ -133,7 +133,7 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen>
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
-          context.go('/dashboard');
+          context.go('/home');
         } else if (state is AuthError) {
           _clearOtp();
           setState(() => _error = state.message);

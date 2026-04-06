@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+
+import '../config/app_config.dart';
 import 'auth_interceptor.dart';
 
 @singleton
@@ -8,7 +10,7 @@ class DioClient {
 
   DioClient(AuthInterceptor authInterceptor)
       : dio = Dio(BaseOptions(
-          baseUrl: 'http://localhost:8080', // Replace with dynamic env later
+          baseUrl: AppConfig.apiBaseUrl,
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 30),
           responseType: ResponseType.json,

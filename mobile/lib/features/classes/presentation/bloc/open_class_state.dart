@@ -1,7 +1,8 @@
 import 'package:equatable/equatable.dart';
-import '../../data/datasources/class_remote_data_source.dart';
+
 import '../../domain/entities/class_filter_entity.dart';
 import '../../domain/entities/open_class_entity.dart';
+import '../../domain/entities/province_entity.dart';
 
 abstract class OpenClassState extends Equatable {
   const OpenClassState();
@@ -17,7 +18,7 @@ class OpenClassLoading extends OpenClassState {}
 class OpenClassLoaded extends OpenClassState {
   final List<OpenClassEntity> classes;
   final ClassFilterEntity filters;
-  final List<ProvinceDto> provinces;
+  final List<ProvinceEntity> provinces;
 
   const OpenClassLoaded(this.classes, this.filters, this.provinces);
 
@@ -33,3 +34,9 @@ class OpenClassError extends OpenClassState {
   @override
   List<Object> get props => [message];
 }
+
+/// State khi đang submit tạo lớp
+class ClassCreating extends OpenClassState {}
+
+/// State khi tạo lớp thành công
+class ClassCreated extends OpenClassState {}

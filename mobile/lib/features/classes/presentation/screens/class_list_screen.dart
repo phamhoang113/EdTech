@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection.dart';
-import '../../data/datasources/class_remote_data_source.dart';
+import '../../../../core/utils/currency_formatter.dart';
+import '../../domain/entities/province_entity.dart';
+import '../../domain/entities/ward_entity.dart';
 import '../../domain/entities/open_class_entity.dart';
 import '../bloc/open_class_bloc.dart';
 import '../bloc/open_class_event.dart';
 import '../bloc/open_class_state.dart';
-import '../widgets/class_details_dialog.dart';
+import 'package:go_router/go_router.dart';
 
 /// ClassListScreen — synced with web filter UI.
 /// Filters: search + Môn học + Hình thức + Cấp độ + Tỉnh/TP + Quận/Huyện + Giới tính + Trình độ GS
@@ -40,9 +42,9 @@ class _ClassListBodyState extends State<_ClassListBody> {
   String? _tutorLevelFilter;
 
   // Province/Ward — real API data
-  ProvinceDto? _selectedProvince;
-  WardDto? _selectedWard;
-  List<WardDto> _wards = [];
+  ProvinceEntity? _selectedProvince;
+  WardEntity? _selectedWard;
+  List<WardEntity> _wards = [];
   bool _loadingWards = false;
 
   @override
@@ -51,7 +53,7 @@ class _ClassListBodyState extends State<_ClassListBody> {
     super.dispose();
   }
 
-  Future<void> _onProvinceSelected(ProvinceDto province) async {
+  Future<void> _onProvinceSelected(ProvinceEntity province) async {
     setState(() {
       _selectedProvince = province;
       _selectedWard = null;
@@ -267,7 +269,7 @@ class _ClassListBodyState extends State<_ClassListBody> {
                     itemBuilder: (context, index) {
                       return _ClassCard(
                         classItem: filtered[index],
-                        onTap: () => ClassDetailsDialog.show(context, filtered[index]),
+                        onTap: () => context.push('/class-detail', extra: filtered[index]),
                       );
                     },
                   ),
@@ -353,7 +355,7 @@ class _ClassListBodyState extends State<_ClassListBody> {
   }
 
   // ── Province Sheet ──
-  void _showProvinceSheet(List<ProvinceDto> provinces) {
+  void _showProvinceSheet(List<ProvinceEntity> provinces) {
     _showSearchableSheet(
       title: 'Chọn Tỉnh / Thành phố',
       items: provinces,
@@ -787,8 +789,8 @@ class _ClassCard extends StatelessWidget {
   }
 
   String _buildFeeDisplay() {
-    final minFee = _formatVND(classItem.minTutorFee);
-    final maxFee = _formatVND(classItem.maxTutorFee);
+    final minFee = CurrencyFormatter.formatVND(classItem.minTutorFee);
+    final maxFee = CurrencyFormatter.formatVND(classItem.maxTutorFee);
     final isRange = classItem.minTutorFee != classItem.maxTutorFee;
     return isRange ? '$minFee - ${maxFee}đ' : '${minFee}đ';
   }
@@ -806,12 +808,6 @@ class _ClassCard extends StatelessWidget {
     return classItem.schedule;
   }
 
-  static String _formatVND(num value) {
-    return value.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    );
-  }
 }
 
 /// ── Reusable icon + text row ──
