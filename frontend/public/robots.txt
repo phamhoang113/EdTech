@@ -5,4 +5,4 @@ Disallow: /api/
 Disallow: /private/
 Disallow: /dashboard/
 
-Sitemap: https://giasutinhhoa.com/sitemap.xml
+Sitemap: https://www.giasutinhhoa.com/sitemap.xml

@@ -1,102 +1,103 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Trang chủ -->
+  <!-- Trang chá»§ -->
   <url>
-    <loc>https://giasutinhhoa.com/</loc>
+    <loc>https://www.giasutinhhoa.com/</loc>
     <lastmod>2026-04-01T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   
-  <!-- Các trang danh sách dữ liệu chính -->
+  <!-- CÃ¡c trang danh sÃ¡ch dá»¯ liá»‡u chÃ­nh -->
   <url>
-    <loc>https://giasutinhhoa.com/tutors</loc>
+    <loc>https://www.giasutinhhoa.com/tutors</loc>
     <lastmod>2026-04-01T00:00:00+00:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://giasutinhhoa.com/classes</loc>
+    <loc>https://www.giasutinhhoa.com/classes</loc>
     <lastmod>2026-04-01T00:00:00+00:00</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Các trang giới thiệu, thông tin chung -->
+  <!-- CÃ¡c trang giá»›i thiá»‡u, thÃ´ng tin chung -->
   <url>
-    <loc>https://giasutinhhoa.com/about</loc>
+    <loc>https://www.giasutinhhoa.com/about</loc>
     <lastmod>2026-04-01T00:00:00+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://giasutinhhoa.com/contact</loc>
+    <loc>https://www.giasutinhhoa.com/contact</loc>
     <lastmod>2026-04-01T00:00:00+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://giasutinhhoa.com/faq</loc>
+    <loc>https://www.giasutinhhoa.com/faq</loc>
     <lastmod>2026-04-01T00:00:00+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://giasutinhhoa.com/careers</loc>
+    <loc>https://www.giasutinhhoa.com/careers</loc>
     <lastmod>2026-04-01T00:00:00+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
-  <!-- Các chính sách & tài khoản -->
+  <!-- CÃ¡c chÃ­nh sÃ¡ch & tÃ i khoáº£n -->
   <url>
-    <loc>https://giasutinhhoa.com/register</loc>
+    <loc>https://www.giasutinhhoa.com/register</loc>
     <lastmod>2026-04-01T00:00:00+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://giasutinhhoa.com/terms</loc>
+    <loc>https://www.giasutinhhoa.com/terms</loc>
     <lastmod>2026-04-01T00:00:00+00:00</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://giasutinhhoa.com/privacy</loc>
+    <loc>https://www.giasutinhhoa.com/privacy</loc>
     <lastmod>2026-04-01T00:00:00+00:00</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
 
-  <!-- Bài viết / Blog SEO -->
+  <!-- BÃ i viáº¿t / Blog SEO -->
   <url>
-    <loc>https://giasutinhhoa.com/bai-viet</loc>
+    <loc>https://www.giasutinhhoa.com/bai-viet</loc>
     <lastmod>2026-04-03T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://giasutinhhoa.com/bai-viet/tai-sao-con-hoc-hoai-khong-vo</loc>
+    <loc>https://www.giasutinhhoa.com/bai-viet/tai-sao-con-hoc-hoai-khong-vo</loc>
     <lastmod>2026-04-03T00:00:00+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://giasutinhhoa.com/bai-viet/phuong-phap-day-con-hoc-tai-nha</loc>
+    <loc>https://www.giasutinhhoa.com/bai-viet/phuong-phap-day-con-hoc-tai-nha</loc>
     <lastmod>2026-04-03T00:00:00+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://giasutinhhoa.com/bai-viet/cach-chon-gia-su-gioi</loc>
+    <loc>https://www.giasutinhhoa.com/bai-viet/cach-chon-gia-su-gioi</loc>
     <lastmod>2026-04-03T00:00:00+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://giasutinhhoa.com/bai-viet/loi-ich-hoc-1-kem-1</loc>
+    <loc>https://www.giasutinhhoa.com/bai-viet/loi-ich-hoc-1-kem-1</loc>
     <lastmod>2026-04-03T00:00:00+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 </urlset>
+
