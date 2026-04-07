@@ -1,10 +1,6 @@
-// @ts-nocheck
-import { useOutletContext } from 'react-router-dom';
-import type { PublicLayoutContext } from '../components/layout/PublicLayout';
-
 import { Briefcase, MapPin, Clock, ArrowRight } from 'lucide-react';
 
-
+import { SEO } from '../components/common/SEO';
 import './CareersPage.css';
 
 const JOB_OPENINGS: any[] = [];
@@ -12,6 +8,10 @@ const JOB_OPENINGS: any[] = [];
 export const CareersPage = () => {
   return (
     <div className="careers-page">
+      <SEO
+        title="Tuyển Dụng | Gia Sư Tinh Hoa"
+        description="Gia nhập đội ngũ Gia Sư Tinh Hoa — Cùng kiến tạo tương lai giáo dục Việt Nam bằng công nghệ. Xem các vị trí đang tuyển dụng."
+      />
       <main className="careers-main">
         {/* HERO SECTION */}
         <section className="careers-hero">

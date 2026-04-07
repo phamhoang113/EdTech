@@ -6,6 +6,7 @@ import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } fro
 import { auth } from '../firebase';
 import { useAuthStore } from '../store/useAuthStore';
 
+import { SEO } from '../components/common/SEO';
 import './RegisterPage.css';
 
 type Role = 'PARENT' | 'TUTOR' | 'STUDENT';
@@ -169,6 +170,10 @@ export const RegisterPage = () => {
 
   return (
     <div className="register-page">
+      <SEO
+        title="Đăng Ký Tài Khoản | Gia Sư Tinh Hoa"
+        description="Đăng ký tài khoản Phụ huynh, Học sinh hoặc Gia sư trên nền tảng Gia Sư Tinh Hoa. Bắt đầu hành trình học tập ngay hôm nay."
+      />
       <div className="register-card">
         {/* Back button */}
         <button className="register-back" onClick={() => step === 'OTP' ? setStep('FORM') : navigate(-1)}>

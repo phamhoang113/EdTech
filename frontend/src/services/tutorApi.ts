@@ -215,7 +215,7 @@ export const tutorApi = {
     return res.data;
   },
 
-  generateDrafts: async (weekOf: string): Promise<{ createdCount: number; weekStart: string; weekEnd: string }> => {
+  generateDrafts: async (weekOf: string): Promise<{ createdCount: number; weekStart: string; weekEnd: string; skippedClasses?: string[] }> => {
     const res = await apiClient.post('/api/v1/tutor/schedule/generate-drafts', null, {
       params: { weekOf },
     });

@@ -1,15 +1,15 @@
-// @ts-nocheck
-import { useOutletContext } from 'react-router-dom';
-import type { PublicLayoutContext } from '../components/layout/PublicLayout';
-
 import { FileText, Shield, AlertTriangle, HelpCircle } from 'lucide-react';
 
-
+import { SEO } from '../components/common/SEO';
 import './TermsPage.css';
 
 export const TermsPage = () => {
   return (
     <div className="terms-page">
+      <SEO
+        title="Điều khoản & Điều kiện | Gia Sư Tinh Hoa"
+        description="Điều khoản sử dụng dịch vụ, chính sách thanh toán, hoàn phí và quy định dành cho Gia sư, Phụ huynh và Học sinh tại Gia Sư Tinh Hoa."
+      />
       <main className="terms-main">
         <div className="terms-header">
           <div className="container">

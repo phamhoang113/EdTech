@@ -1,4 +1,4 @@
-import { BookOpen, Search, Trash2, ChevronRight, Phone, MapPin, GraduationCap, User, X, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Activity, Calendar, RefreshCw } from 'lucide-react';
+import { BookOpen, Search, Trash2, ChevronRight, Phone, MapPin, GraduationCap, User, X, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Activity, Calendar, RefreshCw, PauseCircle, PlayCircle } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { AdminCreateClassModal } from './AdminCreateClassModal';
 
@@ -26,6 +26,7 @@ const STATUS_CFG: Record<string, { label: string; cls: string; icon: ReactElemen
   COMPLETED: { label: 'Hoàn thành', cls: 'status-completed', icon: <CheckCircle size={11}/> },
   CANCELLED: { label: 'Đã huỷ',    cls: 'status-cancelled', icon: <XCircle size={11}/> },
   AUTO_CLOSED: { label: 'Hết hạn',  cls: 'status-cancelled', icon: <Clock size={11}/> },
+  SUSPENDED: { label: 'Tạm hoãn',  cls: 'status-suspended', icon: <PauseCircle size={11}/> },
 };
 
 function StatusBadge({ status }: { status: ClassStatus }) {
@@ -35,8 +36,9 @@ function StatusBadge({ status }: { status: ClassStatus }) {
 
 /* ─── Next status options (valid transitions) ────────────────────────────── */
 const NEXT_STATUS: Partial<Record<ClassStatus, ClassStatus[]>> = {
-  OPEN:   ['ACTIVE', 'CANCELLED'],
-  ACTIVE: ['COMPLETED', 'CANCELLED'],
+  OPEN:      ['ACTIVE', 'CANCELLED'],
+  ACTIVE:    ['COMPLETED', 'CANCELLED'],
+  SUSPENDED: ['ACTIVE', 'COMPLETED', 'CANCELLED'],
 };
 
 /* ─── Class Card ─────────────────────────────────────────────────────────── */
@@ -141,12 +143,16 @@ function ClassDetailDrawer({
   onDelete,
   onStatusChange,
   onRefresh,
+  onSuspend,
+  onResume,
 }: {
   cls: AdminClassListItem;
   onClose: () => void;
   onDelete: (c: AdminClassListItem) => void;
   onStatusChange: (c: AdminClassListItem, s: ClassStatus) => void;
   onRefresh: () => void;
+  onSuspend: (c: AdminClassListItem) => void;
+  onResume: (c: AdminClassListItem) => void;
 }) {
   const [stats, setStats] = useState<AdminClassScheduleStatsDTO | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
@@ -448,20 +454,42 @@ function ClassDetailDrawer({
             )}
           </section>
 
-          {/* Status change */}
-          {nextOptions.length > 0 && (
+          {/* Suspend Info */}
+          {cls.status === 'SUSPENDED' && (
             <section className="acl-drawer-section">
-              <h3><RefreshCw size={13}/> Chuyển trạng thái</h3>
-              <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                {nextOptions.map(s => (
-                  <button key={s} className={`acl-status-btn acl-status-btn--${s.toLowerCase()}`}
-                    onClick={() => onStatusChange(cls, s)}>
-                    {STATUS_CFG[s].icon} Chuyển sang {STATUS_CFG[s].label}
-                  </button>
-                ))}
+              <h3><PauseCircle size={13}/> Thông tin tạm hoãn</h3>
+              <div className="acl-dgrid">
+                <div className="acl-dfield"><span>Từ ngày</span><strong>{cls.suspendStartDate ?? '—'}</strong></div>
+                <div className="acl-dfield"><span>Đến ngày</span><strong>{cls.suspendEndDate ?? '—'}</strong></div>
+                <div className="acl-dfield" style={{ gridColumn: '1 / -1' }}><span>Lý do</span><strong>{cls.suspendReason ?? 'Không có'}</strong></div>
               </div>
             </section>
           )}
+
+          {/* Status change */}
+          <section className="acl-drawer-section">
+            <h3><RefreshCw size={13}/> Hành động</h3>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              {cls.status === 'ACTIVE' && (
+                <button className="acl-status-btn acl-status-btn--suspended"
+                  onClick={() => onSuspend(cls)}>
+                  <PauseCircle size={13}/> Tạm hoãn lớp
+                </button>
+              )}
+              {cls.status === 'SUSPENDED' && (
+                <button className="acl-status-btn acl-status-btn--active"
+                  onClick={() => onResume(cls)}>
+                  <PlayCircle size={13}/> Kích hoạt lại
+                </button>
+              )}
+              {nextOptions.filter(s => s !== 'SUSPENDED').map(s => (
+                <button key={s} className={`acl-status-btn acl-status-btn--${s.toLowerCase()}`}
+                  onClick={() => onStatusChange(cls, s)}>
+                  {STATUS_CFG[s].icon} Chuyển sang {STATUS_CFG[s].label}
+                </button>
+              ))}
+            </div>
+          </section>
         </div>
 
         <div className="acl-drawer-footer">
@@ -514,14 +542,78 @@ function DeleteModal({ cls, onConfirm, onCancel }: {
   );
 }
 
+/* ─── Suspend Modal ───────────────────────────────────────────────────────────── */
+function SuspendModal({ cls, onConfirm, onCancel }: {
+  cls: AdminClassListItem;
+  onConfirm: (startDate: string, endDate: string, reason: string) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [startDate, setStartDate] = useState(todayStr);
+  const [endDate, setEndDate] = useState('');
+  const [reason, setReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  return (
+    <div className="acl-modal-overlay" onClick={onCancel}>
+      <div className="acl-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
+        <div className="acl-modal-header">
+          <PauseCircle size={16} style={{ color: '#f59e0b' }}/>
+          <span>Tạm hoãn lớp {cls.classCode}</span>
+          <button className="acl-close-btn" onClick={onCancel}><X size={15}/></button>
+        </div>
+        <div className="acl-modal-body">
+          <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: 16 }}>
+            Chọn khoảng thời gian tạm hoãn. Các buổi DRAFT/SCHEDULED trong khoảng này sẽ bị hủy tự động.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+            <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#374151' }}>
+              Từ ngày
+              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
+                style={{ width: '100%', marginTop: 4, padding: '8px 10px', border: '1.5px solid #d1d5db', borderRadius: 6, fontSize: '0.85rem' }} />
+            </label>
+            <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#374151' }}>
+              Đến ngày
+              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
+                style={{ width: '100%', marginTop: 4, padding: '8px 10px', border: '1.5px solid #d1d5db', borderRadius: 6, fontSize: '0.85rem' }} />
+            </label>
+          </div>
+          <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#374151' }}>
+            Lý do (tùy chọn)
+            <textarea value={reason} onChange={e => setReason(e.target.value)}
+              placeholder="VD: Nghỉ hè, lý do cá nhân..."
+              rows={2}
+              style={{ width: '100%', marginTop: 4, padding: '8px 10px', border: '1.5px solid #d1d5db', borderRadius: 6, fontSize: '0.85rem', resize: 'vertical' }} />
+          </label>
+        </div>
+        <div className="acl-modal-footer">
+          <button className="acl-btn-ghost" onClick={onCancel}>Huỷ</button>
+          <button
+            className="acl-status-btn acl-status-btn--suspended"
+            disabled={submitting || !startDate || !endDate}
+            onClick={async () => {
+              setSubmitting(true);
+              await onConfirm(startDate, endDate, reason);
+              setSubmitting(false);
+            }}
+            style={{ padding: '8px 18px' }}
+          >
+            <PauseCircle size={13}/> {submitting ? 'Đang xử lý...' : 'Xác nhận tạm hoãn'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main Page ─────────────────────────────────────────────────────────── */
 type FilterKey = 'ALL' | ClassStatus | 'PENDING_PROPOSAL';
 
-const STATUS_TABS: FilterKey[] = ['ALL', 'OPEN', 'PENDING_PROPOSAL', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'AUTO_CLOSED'];
+const STATUS_TABS: FilterKey[] = ['ALL', 'OPEN', 'PENDING_PROPOSAL', 'ACTIVE', 'SUSPENDED', 'COMPLETED', 'CANCELLED', 'AUTO_CLOSED'];
 const STATUS_LABELS: Record<FilterKey, string> = {
   ALL: 'Tất cả', OPEN: 'Đang mở', PENDING_PROPOSAL: 'Chờ PH chọn',
   ASSIGNED: 'Đang mở', MATCHED: 'Đang mở',
-  ACTIVE: 'Đang dạy', COMPLETED: 'Hoàn thành', CANCELLED: 'Đã huỷ',
+  ACTIVE: 'Đang dạy', SUSPENDED: 'Tạm hoãn', COMPLETED: 'Hoàn thành', CANCELLED: 'Đã huỷ',
   AUTO_CLOSED: 'Hết hạn',
 };
 
@@ -533,6 +625,7 @@ export function AdminClasses() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<AdminClassListItem | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AdminClassListItem | null>(null);
+  const [pendingSuspend, setPendingSuspend] = useState<AdminClassListItem | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const { toast, show: showToast } = useToast();
 
@@ -609,7 +702,42 @@ export function AdminClasses() {
         <ClassDetailDrawer cls={selected} onClose={() => setSelected(null)}
           onDelete={c => { setSelected(null); setPendingDelete(c); }}
           onRefresh={fetchAll}
-          onStatusChange={handleStatusChange}/>
+          onStatusChange={handleStatusChange}
+          onSuspend={c => { setSelected(null); setPendingSuspend(c); }}
+          onResume={async c => {
+            try {
+              await adminApi.resumeClass(c.id);
+              showToast('success', `Lớp ${c.classCode} đã hoạt động trở lại!`);
+              setSelected(null);
+              await fetchAll();
+            } catch (e: any) {
+              showToast('error', e?.response?.data?.message ?? 'Kích hoạt lại thất bại');
+            }
+          }}
+        />
+      )}
+      {pendingSuspend && (
+        <SuspendModal
+          cls={pendingSuspend}
+          onCancel={() => setPendingSuspend(null)}
+          onConfirm={async (startDate, endDate, reason) => {
+            try {
+              const res = await adminApi.suspendClass(pendingSuspend.id, startDate, endDate, reason);
+              const data = res.data;
+              const warnings = data?.completedWarnings ?? [];
+              if (warnings.length > 0) {
+                showToast('error', `⚠️ Có ${warnings.length} buổi COMPLETED trong khoảng - kiểm tra lại!`);
+              } else {
+                showToast('success', `Đã tạm hoãn lớp ${pendingSuspend.classCode} (hủy ${data?.cancelledSessions ?? 0} buổi)`);
+              }
+              setPendingSuspend(null);
+              setSelected(null);
+              await fetchAll();
+            } catch (e: any) {
+              showToast('error', e?.response?.data?.message ?? 'Tạm hoãn thất bại');
+            }
+          }}
+        />
       )}
       {showCreateModal && (
         <AdminCreateClassModal 
@@ -639,6 +767,7 @@ export function AdminClasses() {
           { key: 'open',      label: 'Đang mở',       cls: 'acl-stat--blue',   filterKey: 'OPEN' },
           { key: 'pending',   label: 'Chờ PH chọn',   cls: 'acl-stat--violet', filterKey: 'PENDING_PROPOSAL' },
           { key: 'active',    label: 'Đang dạy',      cls: 'acl-stat--green',  filterKey: 'ACTIVE' },
+          { key: 'suspended', label: 'Tạm hoãn',      cls: 'acl-stat--amber',  filterKey: 'SUSPENDED' },
           { key: 'completed', label: 'Hoàn thành',    cls: '',                 filterKey: 'COMPLETED' },
           { key: 'cancelled', label: 'Đã huỷ',        cls: 'acl-stat--red',    filterKey: 'CANCELLED' },
         ];

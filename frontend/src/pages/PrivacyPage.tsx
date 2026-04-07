@@ -1,15 +1,15 @@
-// @ts-nocheck
-import { useOutletContext } from 'react-router-dom';
-import type { PublicLayoutContext } from '../components/layout/PublicLayout';
-
 import { ShieldCheck, Database, Lock, EyeOff } from 'lucide-react';
 
-
+import { SEO } from '../components/common/SEO';
 import './PrivacyPage.css';
 
 export const PrivacyPage = () => {
   return (
     <div className="privacy-page">
+      <SEO
+        title="Chính sách Bảo mật | Gia Sư Tinh Hoa"
+        description="Tìm hiểu cách Gia Sư Tinh Hoa thu thập, sử dụng và bảo vệ dữ liệu cá nhân của bạn. Bảo mật là ưu tiên hàng đầu."
+      />
       <main className="privacy-main">
         <div className="privacy-header">
           <div className="container">

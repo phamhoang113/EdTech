@@ -593,8 +593,11 @@ export function TutorSchedulePage() {
     try {
       setGenerating(true);
       const result = await tutorApi.generateDrafts(weekOfStr);
-      if (result.createdCount === 0) {
+      const skipped: string[] = result.skippedClasses ?? [];
+      if (result.createdCount === 0 && skipped.length === 0) {
         alert('Không có lịch mẫu nào để tạo. Hãy set lịch cho lớp trước (nút "Sửa lịch" trên card lớp).');
+      } else if (skipped.length > 0) {
+        alert(`Đã tạo ${result.createdCount} buổi.\n\n⚠️ Các lớp sau chưa có lịch dạy (đã bỏ qua): ${skipped.join(', ')}`);
       }
       await fetchData();
     } catch (err: any) {
@@ -734,10 +737,10 @@ export function TutorSchedulePage() {
 
   const goToThisWeek = () => setCurrentDate(new Date());
 
-  const isFutureWeek = useMemo(() => {
+  const isCurrentOrFutureWeek = useMemo(() => {
     const now = new Date();
     const { start: thisWeekStart } = getWeekRange(now);
-    return weekStart > thisWeekStart;
+    return weekStart >= thisWeekStart;
   }, [weekStart]);
 
   const isToday = (d: Date) => {
@@ -828,7 +831,7 @@ export function TutorSchedulePage() {
             <div className="tsched-body">
               {loading ? (
                 <div className="tsched-empty">Đang tải lịch dạy...</div>
-              ) : filteredSessions.length === 0 && isFutureWeek ? (
+              ) : filteredSessions.length === 0 && isCurrentOrFutureWeek ? (
                 <div className="tsched-empty-future">
                   <CalendarIcon size={40} style={{ color: '#6366f1', marginBottom: 12 }} />
                   <p className="tsched-empty-future-text">Chưa có buổi dạy nào trong tuần này</p>

@@ -36,6 +36,8 @@
 .acl-stat--green .acl-stat-num  { color: #059669; }
 .acl-stat--red    { border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.03); }
 .acl-stat--red .acl-stat-num    { color: #ef4444; }
+.acl-stat--amber  { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.04); }
+.acl-stat--amber .acl-stat-num  { color: #d97706; }
 .acl-stat--total  { background: linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.06)); }
 .acl-stat--active { outline: 2px solid currentColor; opacity: 1; }
 
@@ -119,6 +121,7 @@
 .status-active    { background: rgba(5,150,105,0.12);  color: #059669; }
 .status-completed { background: rgba(107,114,128,0.12);color: #6b7280; }
 .status-cancelled { background: rgba(239,68,68,0.1);   color: #ef4444; }
+.status-suspended { background: rgba(245,158,11,0.12); color: #d97706; }
 .acl-pending-badge {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 8px; border-radius: 20px;
@@ -233,6 +236,9 @@
 .acl-status-btn--completed:hover { background: rgba(107,114,128,0.18); }
 .acl-status-btn--cancelled { background: rgba(239,68,68,0.08); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
 .acl-status-btn--cancelled:hover { background: rgba(239,68,68,0.14); }
+.acl-status-btn--suspended { background: rgba(245,158,11,0.1); color: #d97706; border: 1px solid rgba(245,158,11,0.3); }
+.acl-status-btn--suspended:hover { background: rgba(245,158,11,0.18); }
+.acl-status-btn--suspended:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .acl-drawer-footer {
   padding: 14px 20px; border-top: 1px solid var(--color-border);

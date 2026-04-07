@@ -253,6 +253,16 @@ export const adminApi = {
     return response.data;
   },
 
+  suspendClass: async (classId: string, startDate: string, endDate: string, reason?: string): Promise<ApiResponse<{ cancelledSessions: number; completedWarnings: string[] }>> => {
+    const response = await apiClient.patch(`/api/v1/admin/classes/${classId}/suspend`, { startDate, endDate, reason });
+    return response.data;
+  },
+
+  resumeClass: async (classId: string): Promise<ApiResponse<void>> => {
+    const response = await apiClient.patch(`/api/v1/admin/classes/${classId}/resume`);
+    return response.data;
+  },
+
   // ─── Billing ────────────────────────────────────────────────────────────
 
   getBillings: async (status?: string, month?: number, year?: number): Promise<ApiResponse<AdminBillingItem[]>> => {
@@ -360,7 +370,7 @@ export interface AdminTutorListItem {
   createdAt: string;
 }
 
-export type ClassStatus = 'OPEN' | 'ASSIGNED' | 'MATCHED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'AUTO_CLOSED';
+export type ClassStatus = 'OPEN' | 'ASSIGNED' | 'MATCHED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'AUTO_CLOSED' | 'SUSPENDED';
 
 export interface AdminClassListItem {
   id: string;
@@ -401,6 +411,12 @@ export interface AdminClassListItem {
   hasPendingProposals: boolean;
   pendingApplicationCount: number;
   createdAt: string;
+
+  // Suspend Info
+  suspendedAt?: string;
+  suspendReason?: string;
+  suspendStartDate?: string;
+  suspendEndDate?: string;
 }
 
 export interface AdminClassScheduleStatsDTO {
