@@ -14,5 +14,8 @@ public enum NotificationType {
     SUBMISSION_GRADED,
     PAYOUT_TRANSFERRED,
     CLASS_CANCELLED,
+    CLASS_SUSPENDED,          // Lớp bị tạm hoãn
+    CLASS_RESUMED,            // Lớp được kích hoạt lại
+    CLASS_SUSPEND_REMINDER,   // Nhắc nhở sắp hết thời gian tạm hoãn
     NEW_MESSAGE    // Added for messaging phase
 }

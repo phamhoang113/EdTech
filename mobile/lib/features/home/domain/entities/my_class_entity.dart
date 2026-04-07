@@ -8,6 +8,11 @@ class MyClassEntity extends Equatable {
   final String subject;
   final String grade;
   final String status;
+  final String? mode;
+  final String? tutorName;
+  final String? tutorPhone;
+  final String? schedule;
+  final int? sessionsPerWeek;
   final int pendingApplicationCount;
 
   const MyClassEntity({
@@ -17,6 +22,11 @@ class MyClassEntity extends Equatable {
     required this.subject,
     required this.grade,
     required this.status,
+    this.mode,
+    this.tutorName,
+    this.tutorPhone,
+    this.schedule,
+    this.sessionsPerWeek,
     this.pendingApplicationCount = 0,
   });
 
@@ -28,10 +38,15 @@ class MyClassEntity extends Equatable {
       subject: json['subject']?.toString() ?? '',
       grade: json['grade']?.toString() ?? '',
       status: json['status']?.toString() ?? '',
+      mode: json['mode']?.toString(),
+      tutorName: json['tutorName']?.toString(),
+      tutorPhone: json['tutorPhone']?.toString(),
+      schedule: json['schedule']?.toString(),
+      sessionsPerWeek: json['sessionsPerWeek'] as int?,
       pendingApplicationCount: json['pendingApplicationCount'] as int? ?? 0,
     );
   }
 
   @override
-  List<Object?> get props => [id, classCode, title, subject, grade, status];
+  List<Object?> get props => [id, classCode, title, subject, grade, status, tutorName];
 }

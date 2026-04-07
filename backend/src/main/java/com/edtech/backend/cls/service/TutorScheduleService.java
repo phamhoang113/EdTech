@@ -273,6 +273,9 @@ public class TutorScheduleService {
         int totalCreated = 0;
 
         for (ClassEntity cls : activeClasses) {
+            if (cls.getStatus() == ClassStatus.SUSPENDED) {
+                continue;
+            }
             if (cls.getTutorId() == null || cls.getSchedule() == null || "[]".equals(cls.getSchedule())) {
                 continue;
             }
@@ -421,33 +424,22 @@ public class TutorScheduleService {
             throw new BusinessRuleException("Chỉ có thể tạo lịch cho tuần hiện tại hoặc tương lai");
         }
 
-        // Chỉ cho tạo lịch tuần SAU từ Thứ 4 (T4) trở đi
-        LocalDate thisMonday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        boolean isNextWeek = targetMonday.isAfter(thisMonday);
-        if (isNextWeek && LocalDate.now().getDayOfWeek().getValue() < DayOfWeek.WEDNESDAY.getValue()) {
-            throw new BusinessRuleException("Chỉ có thể tạo lịch tuần sau từ Thứ 4 trở đi");
-        }
-
-        List<ClassEntity> tutorClasses = classRepository.findByTutorIdAndStatusAndIsDeletedFalse(
+        List<ClassEntity> allTutorClasses = classRepository.findByTutorIdAndStatusAndIsDeletedFalse(
                 tutorId, ClassStatus.ACTIVE);
 
-        // Validate: tất cả lớp ACTIVE phải có schedule
-        List<String> unscheduledClassNames = tutorClasses.stream()
+        // Tách lớp có schedule và lớp chưa set schedule
+        List<String> skippedClassNames = allTutorClasses.stream()
                 .filter(c -> c.getSchedule() == null || "[]".equals(c.getSchedule()))
                 .map(ClassEntity::getTitle)
                 .collect(Collectors.toList());
-        if (!unscheduledClassNames.isEmpty()) {
-            throw new BusinessRuleException(
-                    String.format(ERR_CLASSES_NO_SCHEDULE, String.join(", ", unscheduledClassNames)));
-        }
+
+        List<ClassEntity> tutorClasses = allTutorClasses.stream()
+                .filter(c -> c.getSchedule() != null && !"[]".equals(c.getSchedule()))
+                .collect(Collectors.toList());
 
         int totalCreated = 0;
 
         for (ClassEntity cls : tutorClasses) {
-            if (cls.getSchedule() == null || "[]".equals(cls.getSchedule())) {
-                continue;
-            }
-
             List<ScheduleSlotDTO> slots = parseSchedule(cls.getSchedule());
             for (ScheduleSlotDTO slot : slots) {
                 DayOfWeek dayOfWeek = WeekDay.resolve(slot.getDayOfWeek());
@@ -480,14 +472,15 @@ public class TutorScheduleService {
             }
         }
 
-        log.info("[GENERATE_DRAFTS_TUTOR] tutorId={}, totalCreated={}, week={}/{}",
-                tutorId, totalCreated, targetMonday, targetSunday);
+        log.info("[GENERATE_DRAFTS_TUTOR] tutorId={}, totalCreated={}, skipped={}, week={}/{}",
+                tutorId, totalCreated, skippedClassNames.size(), targetMonday, targetSunday);
 
-        return Map.of(
-                "createdCount", totalCreated,
-                "weekStart", targetMonday.toString(),
-                "weekEnd", targetSunday.toString()
-        );
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("createdCount", totalCreated);
+        result.put("weekStart", targetMonday.toString());
+        result.put("weekEnd", targetSunday.toString());
+        result.put("skippedClasses", skippedClassNames);
+        return result;
     }
 
     // ─── Auto-Confirm Drafts (called by Scheduler) ────────────────

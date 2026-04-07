@@ -109,6 +109,12 @@ public class BillingSchedulerService {
             ClassEntity cls = classMap.get(classId);
             if (cls == null) continue;
 
+            // Skip lớp đang tạm hoãn — phòng thủ thêm dù SUSPENDED sẽ không có COMPLETED session mới
+            if (cls.getStatus() == com.edtech.backend.cls.enums.ClassStatus.SUSPENDED) {
+                log.info("[Billing] Class {} dang SUSPENDED, skip.", classId);
+                continue;
+            }
+
             // Check if billing already generated to prevent duplication
             if (billingRepository.existsByClsIdAndMonthAndYear(classId, month, year)) {
                 log.warn("[Billing] Class {} da co hoa don thang {}/{}, skip.", classId, month, year);

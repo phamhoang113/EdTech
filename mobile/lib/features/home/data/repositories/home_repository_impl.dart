@@ -4,6 +4,8 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/my_class_entity.dart';
+import '../../domain/entities/upcoming_session_entity.dart';
+import '../../domain/entities/billing_summary_entity.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../datasources/home_remote_datasource.dart';
 
@@ -23,5 +25,15 @@ class HomeRepositoryImpl implements HomeRepository {
     } catch (e) {
       return Left(ServerFailure('Lỗi không xác định: $e'));
     }
+  }
+
+  @override
+  Future<List<UpcomingSessionEntity>> getUpcomingSessions(String role) async {
+    return remoteDataSource.getUpcomingSessions(role);
+  }
+
+  @override
+  Future<List<BillingSummaryEntity>> getUnpaidBillings() async {
+    return remoteDataSource.getUnpaidBillings();
   }
 }

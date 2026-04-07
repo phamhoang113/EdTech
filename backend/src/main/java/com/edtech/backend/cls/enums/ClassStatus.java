@@ -8,5 +8,6 @@ public enum ClassStatus {
     ACTIVE,
     COMPLETED,
     CANCELLED,
-    AUTO_CLOSED  // Hết hạn 1 tháng không có GS nhận → tự đóng
+    AUTO_CLOSED,  // Hết hạn 1 tháng không có GS nhận → tự đóng
+    SUSPENDED     // Admin tạm hoãn lớp (nghỉ hè, lý do cá nhân...) — không tạo session, không tính phí
 }

@@ -1,17 +1,4 @@
 {
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.giasutinhhoa.com"
-        }
-      ],
-      "destination": "https://giasutinhhoa.com/:path*",
-      "permanent": true
-    }
-  ],
   "headers": [
     {
       "source": "/assets/:path*",

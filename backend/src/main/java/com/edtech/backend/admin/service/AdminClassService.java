@@ -2,6 +2,7 @@ package com.edtech.backend.admin.service;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.edtech.backend.admin.dto.AdminClassListItem;
 import com.edtech.backend.admin.dto.AdminClassScheduleStatsDTO;
+import com.edtech.backend.admin.dto.SuspendClassRequest;
 import com.edtech.backend.admin.dto.CreateClassRequest;
 import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.repository.UserRepository;
@@ -68,12 +70,14 @@ public class AdminClassService {
         long active    = classRepository.countByStatusAndIsDeletedFalse(ClassStatus.ACTIVE);
         long completed = classRepository.countByStatusAndIsDeletedFalse(ClassStatus.COMPLETED);
         long cancelled = classRepository.countByStatusAndIsDeletedFalse(ClassStatus.CANCELLED);
+        long suspended = classRepository.countByStatusAndIsDeletedFalse(ClassStatus.SUSPENDED);
         return Map.of(
-                "total",     open + active + completed + cancelled,
+                "total",     open + active + completed + cancelled + suspended,
                 "open",      open,
                 "active",    active,
                 "completed", completed,
-                "cancelled", cancelled
+                "cancelled", cancelled,
+                "suspended", suspended
         );
     }
 
@@ -188,6 +192,10 @@ public class AdminClassService {
                     .pendingApplicationCount(pendingCount)
                     .createdAt(cls.getCreatedAt())
                     .studentIds(cls.getStudents() != null ? cls.getStudents().stream().map(UserEntity::getId).toList() : List.of())
+                    .suspendedAt(cls.getSuspendedAt())
+                    .suspendReason(cls.getSuspendReason())
+                    .suspendStartDate(cls.getSuspendStartDate())
+                    .suspendEndDate(cls.getSuspendEndDate())
                     .build());
         }
         return result;
@@ -286,6 +294,105 @@ public class AdminClassService {
         log.info("[DELETE_CLASS] classId={}", classId);
     }
 
+    // ─── Suspend / Resume ─────────────────────────────────────────────────────
+
+    /**
+     * Tạm hoãn lớp: ACTIVE → SUSPENDED.
+     * Xóa tất cả session DRAFT/SCHEDULED trong khoảng startDate→endDate.
+     * Trả về danh sách session COMPLETED trong khoảng → frontend hiện cảnh báo.
+     */
+    @Transactional
+    public Map<String, Object> suspendClass(UUID classId, SuspendClassRequest request) {
+        ClassEntity cls = findActiveClassOrThrow(classId);
+
+        if (cls.getStatus() != ClassStatus.ACTIVE) {
+            throw new BusinessRuleException("Chỉ lớp ACTIVE mới có thể tạm hoãn.");
+        }
+        if (!request.getEndDate().isAfter(request.getStartDate())) {
+            throw new BusinessRuleException("Ngày kết thúc phải sau ngày bắt đầu.");
+        }
+
+        // Tìm session trong khoảng thời gian suspend
+        List<SessionEntity> sessionsInRange = sessionRepository.findByClsIdAndSessionDateBetween(
+                cls.getId(), request.getStartDate(), request.getEndDate());
+
+        // Tách session COMPLETED để cảnh báo
+        List<String> completedWarnings = sessionsInRange.stream()
+                .filter(s -> s.getStatus() == SessionStatus.COMPLETED)
+                .map(s -> String.format("%s (%s %s-%s)",
+                        cls.getTitle(), s.getSessionDate(), s.getStartTime(), s.getEndTime()))
+                .toList();
+
+        // Xóa/Cancel session DRAFT và SCHEDULED trong khoảng
+        List<SessionEntity> sessionsToCancel = sessionsInRange.stream()
+                .filter(s -> s.getStatus() == SessionStatus.DRAFT || s.getStatus() == SessionStatus.SCHEDULED)
+                .toList();
+        int cancelledCount = sessionsToCancel.size();
+        sessionRepository.deleteAll(sessionsToCancel);
+
+        // Cập nhật trạng thái lớp
+        cls.setStatus(ClassStatus.SUSPENDED);
+        cls.setSuspendedAt(Instant.now());
+        cls.setSuspendReason(request.getReason());
+        cls.setSuspendStartDate(request.getStartDate());
+        cls.setSuspendEndDate(request.getEndDate());
+        classRepository.save(cls);
+
+        log.info("[SUSPEND_CLASS] classId={}, from={}, to={}, reason={}, cancelledSessions={}",
+                classId, request.getStartDate(), request.getEndDate(), request.getReason(), cancelledCount);
+
+        // Gửi notification cho tất cả bên liên quan (GS, PH, HS)
+        notifyAllParties(cls, NotificationType.CLASS_SUSPENDED,
+                "Lớp " + cls.getTitle() + " đã tạm hoãn",
+                String.format("Lớp %s tạm hoãn từ %s đến %s. Lý do: %s",
+                        cls.getTitle(), request.getStartDate(), request.getEndDate(),
+                        request.getReason() != null ? request.getReason() : "Không rõ"));
+
+        return Map.of(
+                "cancelledSessions", cancelledCount,
+                "completedWarnings", completedWarnings
+        );
+    }
+
+    /** Kích hoạt lại lớp: SUSPENDED → ACTIVE */
+    @Transactional
+    public void resumeClass(UUID classId) {
+        ClassEntity cls = findActiveClassOrThrow(classId);
+
+        if (cls.getStatus() != ClassStatus.SUSPENDED) {
+            throw new BusinessRuleException("Chỉ lớp SUSPENDED mới có thể kích hoạt lại.");
+        }
+
+        cls.setStatus(ClassStatus.ACTIVE);
+        cls.setSuspendedAt(null);
+        cls.setSuspendReason(null);
+        cls.setSuspendStartDate(null);
+        cls.setSuspendEndDate(null);
+        classRepository.save(cls);
+
+        log.info("[RESUME_CLASS] classId={}", classId);
+
+        // Gửi notification cho tất cả bên liên quan
+        notifyAllParties(cls, NotificationType.CLASS_RESUMED,
+                "Lớp " + cls.getTitle() + " đã hoạt động trở lại",
+                "Lớp " + cls.getTitle() + " đã được kích hoạt lại. Gia sư có thể tạo lịch dạy mới.");
+    }
+
+    /** Gửi notification cho GS, PH, và tất cả HS liên quan */
+    private void notifyAllParties(ClassEntity cls, NotificationType type, String title, String body) {
+        // Thông báo GS
+        if (cls.getTutorId() != null) {
+            notificationService.sendNotification(cls.getTutorId(), type, title, body, "CLASS", cls.getId());
+        }
+        // Thông báo PH
+        notificationService.sendNotification(cls.getParentId(), type, title, body, "CLASS", cls.getId());
+        // Thông báo tất cả HS
+        if (cls.getStudents() != null) {
+            cls.getStudents().forEach(student ->
+                    notificationService.sendNotification(student.getId(), type, title, body, "CLASS", cls.getId()));
+        }
+    }
+
     // ─── Private helpers ──────────────────────────────────────────────────────
 
     private ClassEntity findActiveClassOrThrow(UUID classId) {
@@ -296,9 +403,10 @@ public class AdminClassService {
 
     private boolean isValidTransition(ClassStatus from, ClassStatus to) {
         return switch (from) {
-            case OPEN   -> to == ClassStatus.ACTIVE || to == ClassStatus.CANCELLED;
-            case ACTIVE -> to == ClassStatus.COMPLETED || to == ClassStatus.CANCELLED;
-            default     -> false;
+            case OPEN      -> to == ClassStatus.ACTIVE || to == ClassStatus.CANCELLED;
+            case ACTIVE    -> to == ClassStatus.COMPLETED || to == ClassStatus.CANCELLED || to == ClassStatus.SUSPENDED;
+            case SUSPENDED -> to == ClassStatus.ACTIVE || to == ClassStatus.COMPLETED || to == ClassStatus.CANCELLED;
+            default        -> false;
         };
     }
 
@@ -355,6 +463,10 @@ public class AdminClassService {
                 .pendingApplicationCount(pendingCount)
                 .createdAt(cls.getCreatedAt())
                 .studentIds(cls.getStudents() != null ? cls.getStudents().stream().map(UserEntity::getId).toList() : List.of())
+                .suspendedAt(cls.getSuspendedAt())
+                .suspendReason(cls.getSuspendReason())
+                .suspendStartDate(cls.getSuspendStartDate())
+                .suspendEndDate(cls.getSuspendEndDate())
                 .build();
     }
 

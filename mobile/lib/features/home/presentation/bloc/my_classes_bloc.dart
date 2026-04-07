@@ -19,10 +19,33 @@ class MyClassesBloc extends Bloc<MyClassesEvent, MyClassesState> {
   ) async {
     emit(MyClassesLoading());
 
-    final result = await _repository.getMyClasses(event.role);
-    result.fold(
-      (failure) => emit(MyClassesError(failure.message)),
-      (classes) => emit(MyClassesLoaded(classes)),
+    final classesResult = await _repository.getMyClasses(event.role);
+
+    await classesResult.fold(
+      (failure) async => emit(MyClassesError(failure.message)),
+      (classes) async {
+        // Load sessions & billings song song (non-blocking)
+        final sessionsFuture = _repository.getUpcomingSessions(event.role);
+        final billingsFuture = event.role == 'PARENT'
+            ? _repository.getUnpaidBillings()
+            : Future.value(<dynamic>[]);
+
+        final results = await Future.wait([sessionsFuture, billingsFuture]);
+
+        final sessions = results[0];
+        final billings = results[1];
+
+        final totalPending = classes
+            .where((c) => c.pendingApplicationCount > 0)
+            .fold<int>(0, (sum, c) => sum + c.pendingApplicationCount);
+
+        emit(MyClassesLoaded(
+          classes: classes,
+          upcomingSessions: List.from(sessions),
+          unpaidBillings: List.from(billings),
+          totalPendingApplicants: totalPending,
+        ));
+      },
     );
   }
 }

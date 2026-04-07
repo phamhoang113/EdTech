@@ -1,6 +1,7 @@
 package com.edtech.backend.cls.entity;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -151,4 +152,17 @@ public class ClassEntity extends BaseEntity {
     @Column(name = "is_mock")
     @Builder.Default
     private Boolean isMock = false;
+
+    // Suspend tracking
+    @Column(name = "suspended_at")
+    private Instant suspendedAt;
+
+    @Column(name = "suspend_reason", columnDefinition = "TEXT")
+    private String suspendReason;
+
+    @Column(name = "suspend_start_date")
+    private LocalDate suspendStartDate;
+
+    @Column(name = "suspend_end_date")
+    private LocalDate suspendEndDate;
 }

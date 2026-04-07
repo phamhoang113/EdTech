@@ -62,4 +62,10 @@ public class AdminClassListItem {
     long pendingApplicationCount;
     Instant createdAt;
     List<UUID> studentIds;
+
+    // Suspend Info
+    Instant suspendedAt;
+    String suspendReason;
+    LocalDate suspendStartDate;
+    LocalDate suspendEndDate;
 }

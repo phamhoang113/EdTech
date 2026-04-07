@@ -91,6 +91,14 @@ public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
 
     List<SessionEntity> findByClsIdIn(List<UUID> classIds);
 
+    @Query("SELECT s FROM SessionEntity s WHERE s.cls.id = :classId " +
+           "AND s.sessionDate >= :startDate AND s.sessionDate <= :endDate")
+    List<SessionEntity> findByClsIdAndSessionDateBetween(
+            @Param("classId") UUID classId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
     @Query("SELECT s.cls.id, COUNT(s.id) " +
            "FROM SessionEntity s " +
            "WHERE s.status IN :statuses " +

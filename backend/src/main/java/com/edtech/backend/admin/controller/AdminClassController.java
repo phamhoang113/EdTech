@@ -22,6 +22,7 @@ import com.edtech.backend.admin.dto.AdminClassListItem;
 import com.edtech.backend.admin.dto.AdminClassScheduleStatsDTO;
 import com.edtech.backend.admin.dto.ApproveClassRequest;
 import com.edtech.backend.admin.dto.CreateClassRequest;
+import com.edtech.backend.admin.dto.SuspendClassRequest;
 import com.edtech.backend.admin.dto.UpdateLearningStartDateRequest;
 import com.edtech.backend.admin.service.AdminClassService;
 import com.edtech.backend.cls.enums.ClassStatus;
@@ -116,5 +117,21 @@ public class AdminClassController {
             @RequestParam(required = false) String reason) {
         adminClassService.rejectClassRequest(id, reason);
         return ResponseEntity.ok(ApiResponse.ok(null, "Đã từ chối yêu cầu"));
+    }
+
+    /** Tạm hoãn lớp: ACTIVE → SUSPENDED */
+    @PatchMapping("/{id}/suspend")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> suspendClass(
+            @PathVariable UUID id,
+            @Valid @RequestBody SuspendClassRequest request) {
+        java.util.Map<String, Object> result = adminClassService.suspendClass(id, request);
+        return ResponseEntity.ok(ApiResponse.ok(result, "Đã tạm hoãn lớp"));
+    }
+
+    /** Kích hoạt lại lớp: SUSPENDED → ACTIVE */
+    @PatchMapping("/{id}/resume")
+    public ResponseEntity<ApiResponse<Void>> resumeClass(@PathVariable UUID id) {
+        adminClassService.resumeClass(id);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Đã kích hoạt lại lớp"));
     }
 }
