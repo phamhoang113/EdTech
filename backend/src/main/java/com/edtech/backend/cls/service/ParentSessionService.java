@@ -26,8 +26,11 @@ import com.edtech.backend.cls.enums.AbsenceRequestType;
 import com.edtech.backend.cls.enums.SessionStatus;
 import com.edtech.backend.cls.repository.AbsenceRequestRepository;
 import com.edtech.backend.cls.repository.SessionRepository;
+import com.edtech.backend.auth.enums.UserRole;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.notification.entity.NotificationType;
+import com.edtech.backend.notification.service.NotificationService;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +47,7 @@ public class ParentSessionService {
     private final SessionRepository sessionRepository;
     private final AbsenceRequestRepository absenceRequestRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<SessionDTO> getSessionsByParent(UUID parentId, LocalDate startDate, LocalDate endDate) {
@@ -127,6 +131,27 @@ public class ParentSessionService {
         log.info("[PARENT_ABSENCE] parentId={}, sessionId={}, makeUp={}, absenceId={}",
                 parentId, sessionId, request.isMakeUpRequired(), absenceRequest.getId());
 
+        // Notify Admin + GS về đơn xin nghỉ
+        String parentName = parent != null ? parent.getFullName() : "Phụ huynh";
+        String classTitle = session.getCls().getTitle();
+        String notifBody = String.format("%s xin nghỉ buổi học ngày %s (%s).",
+                parentName, session.getSessionDate(), classTitle);
+
+        notifyAbsenceToAdminsAndTutor(session, notifBody, absenceRequest.getId());
+
         return SessionDTO.fromEntity(session);
+    }
+
+    private void notifyAbsenceToAdminsAndTutor(SessionEntity session, String body, UUID absenceId) {
+        userRepository.findByRoleAndIsDeletedFalseOrderByCreatedAtDesc(UserRole.ADMIN)
+                .forEach(admin -> notificationService.sendNotification(
+                        admin.getId(), NotificationType.ABSENCE_REQUESTED,
+                        "Đơn xin nghỉ mới", body, "ABSENCE", absenceId));
+
+        UUID tutorId = session.getCls().getTutorId();
+        if (tutorId != null) {
+            notificationService.sendNotification(tutorId, NotificationType.ABSENCE_REQUESTED,
+                    "Phụ huynh xin nghỉ cho con", body, "ABSENCE", absenceId);
+        }
     }
 }

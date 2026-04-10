@@ -18,15 +18,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.enums.UserRole;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.billing.entity.BillingEntity;
-import com.edtech.backend.billing.entity.TutorPayoutEntity;
 import com.edtech.backend.billing.enums.BillingStatus;
-import com.edtech.backend.billing.enums.TutorPayoutStatus;
 import com.edtech.backend.billing.repository.BillingRepository;
-import com.edtech.backend.billing.repository.TutorPayoutRepository;
 import com.edtech.backend.cls.entity.ClassEntity;
+import com.edtech.backend.cls.enums.ClassStatus;
 import com.edtech.backend.cls.enums.SessionStatus;
+import com.edtech.backend.cls.enums.SessionType;
 import com.edtech.backend.cls.repository.ClassRepository;
 import com.edtech.backend.cls.repository.SessionRepository;
 
@@ -36,13 +36,17 @@ import com.edtech.backend.cls.repository.SessionRepository;
 @Transactional(readOnly = true)
 public class BillingSchedulerService {
 
+    /** Số lượng billing xử lý mỗi lần để tối ưu RAM */
+    private static final int CHUNK_SIZE = 200;
+    /** 1 tháng = 4 tuần cố định */
+    private static final int WEEKS_PER_MONTH = 4;
+    /** Đơn vị làm tròn lương GS */
+    private static final BigDecimal ROUND_UNIT = BigDecimal.valueOf(10_000);
+
     private final SessionRepository sessionRepository;
     private final ClassRepository classRepository;
     private final BillingRepository billingRepository;
-    private final TutorPayoutRepository tutorPayoutRepository;
     private final UserRepository userRepository;
-
-
 
     /**
      * Chạy tự động lúc 00:01 ngày 01 hằng tháng.
@@ -70,28 +74,33 @@ public class BillingSchedulerService {
         log.info("[BillingScheduler] Admin manually triggered chot so cho thang {}/{}", month, year);
         LocalDate firstDay = LocalDate.of(year, month, 1);
         LocalDate lastDay = firstDay.with(TemporalAdjusters.lastDayOfMonth());
-        
+
         generateBillingsForTimeframe(firstDay, lastDay, month, year);
     }
 
     private void generateBillingsForTimeframe(LocalDate startDate, LocalDate endDate, int targetMonth, int targetYear) {
-        List<SessionStatus> validStatuses = List.of(SessionStatus.COMPLETED, SessionStatus.COMPLETED_PENDING);
+        // Đếm buổi COMPLETED + COMPLETED_PENDING theo class
+        List<SessionStatus> completedStatuses = List.of(SessionStatus.COMPLETED, SessionStatus.COMPLETED_PENDING);
+        List<Object[]> completedStats = sessionRepository.countSessionsByClassAndDateRange(completedStatuses, startDate, endDate);
 
-        List<Object[]> stats = sessionRepository.countSessionsByClassAndDateRange(validStatuses, startDate, endDate);
-        log.info("[BillingScheduler] Tim thay {} lop hoc co session hoan thanh trong {}/{}", stats.size(), targetMonth, targetYear);
+        // Đếm buổi tăng cường (EXTRA) đã COMPLETED theo class
+        List<Object[]> extraStats = sessionRepository.countSessionsByTypeAndStatusesAndClassAndDateRange(
+                SessionType.EXTRA, completedStatuses, startDate, endDate);
+        Map<UUID, Long> extraCompletedMap = extraStats.stream()
+                .collect(Collectors.toMap(row -> (UUID) row[0], row -> (Long) row[1]));
 
-        // Chunk process de toi uu RAM
-        final int CHUNK_SIZE = 200;
-        for (int i = 0; i < stats.size(); i += CHUNK_SIZE) {
-            int end = Math.min(i + CHUNK_SIZE, stats.size());
-            List<Object[]> chunk = stats.subList(i, end);
-            processChunk(chunk, targetMonth, targetYear);
+        log.info("[BillingScheduler] Tim thay {} lop hoc co session hoan thanh trong {}/{}", completedStats.size(), targetMonth, targetYear);
+
+        for (int i = 0; i < completedStats.size(); i += CHUNK_SIZE) {
+            int end = Math.min(i + CHUNK_SIZE, completedStats.size());
+            List<Object[]> chunk = completedStats.subList(i, end);
+            processChunk(chunk, extraCompletedMap, targetMonth, targetYear);
         }
         log.info("[BillingScheduler] Ket thuc Job chot so thang {}/{}", targetMonth, targetYear);
     }
 
     @Transactional
-    protected void processChunk(List<Object[]> chunk, int month, int year) {
+    protected void processChunk(List<Object[]> chunk, Map<UUID, Long> extraCompletedMap, int month, int year) {
         List<UUID> classIds = chunk.stream()
                 .map(row -> (UUID) row[0])
                 .collect(Collectors.toList());
@@ -103,14 +112,13 @@ public class BillingSchedulerService {
 
         for (Object[] row : chunk) {
             UUID classId = (UUID) row[0];
-            Long countLong = (Long) row[1];
-            int totalSessions = countLong.intValue();
+            int completedSessions = ((Long) row[1]).intValue();
 
             ClassEntity cls = classMap.get(classId);
             if (cls == null) continue;
 
-            // Skip lớp đang tạm hoãn — phòng thủ thêm dù SUSPENDED sẽ không có COMPLETED session mới
-            if (cls.getStatus() == com.edtech.backend.cls.enums.ClassStatus.SUSPENDED) {
+            // Skip lớp đang tạm hoãn
+            if (cls.getStatus() == ClassStatus.SUSPENDED) {
                 log.info("[Billing] Class {} dang SUSPENDED, skip.", classId);
                 continue;
             }
@@ -121,52 +129,121 @@ public class BillingSchedulerService {
                 continue;
             }
 
-            // Calculation
-            int sessionsPerMonth = cls.getSessionsPerWeek() != null && cls.getSessionsPerWeek() > 0 
-                ? cls.getSessionsPerWeek() * 4 
-                : 4;
+            int expectedSessions = calculateExpectedSessions(cls);
 
-            BigDecimal parentFeePerSession = cls.getParentFee().divide(BigDecimal.valueOf(sessionsPerMonth), 0, RoundingMode.HALF_UP);
-            BigDecimal totalParentFee = parentFeePerSession.multiply(BigDecimal.valueOf(totalSessions));
-
-            BigDecimal totalTutorFee = BigDecimal.ZERO;
-            if (cls.getTutorFee() != null) {
-                BigDecimal tutorFeePerSession = cls.getTutorFee().divide(BigDecimal.valueOf(sessionsPerMonth), 0, RoundingMode.HALF_UP);
-                totalTutorFee = tutorFeePerSession.multiply(BigDecimal.valueOf(totalSessions));
-            }
+            BigDecimal totalParentFee = calculateParentFee(cls, completedSessions, expectedSessions);
+            long extraCompleted = extraCompletedMap.getOrDefault(classId, 0L);
+            BigDecimal totalTutorFee = calculateTutorPayout(cls, completedSessions, (int) extraCompleted);
 
             UserEntity payer = cls.getParentId() != null ? userRepository.getReferenceById(cls.getParentId()) : null;
-
-            String prefix = "PAYP";
-            if (payer != null && payer.getRole() != null && payer.getRole().name().equals("STUDENT")) {
-                prefix = "PAYS";
-            }
-
-            // Format for payer: PAYP/PAYS<ParentIdSubstring><MMyy>
-            String yymm = String.format("%02d%02d", month, year % 100);
-            String parentIdSub = cls.getParentId() != null ? cls.getParentId().toString().substring(0,6).toUpperCase() : "UNK";
-            String parentTxCode = prefix + parentIdSub + yymm;
+            String transactionCode = buildTransactionCode(payer, cls, month, year);
 
             BillingEntity billing = BillingEntity.builder()
                     .cls(cls)
                     .parent(payer)
                     .month(month)
                     .year(year)
-                    .totalSessions(totalSessions)
+                    .totalSessions(completedSessions)
                     .parentFeeAmount(totalParentFee)
                     .tutorPayoutAmount(totalTutorFee)
-                    .transactionCode(parentTxCode)
+                    .transactionCode(transactionCode)
                     .status(totalParentFee.compareTo(BigDecimal.ZERO) == 0 ? BillingStatus.PAID : BillingStatus.DRAFT)
                     .build();
 
             newBillings.add(billing);
 
-            // Defer payout generation until billing ID is available (we need to save billings first)
+            log.info("[Billing] Class {} | completed={} expected={} extra={} | parentFee={} tutorPayout={}",
+                    classId, completedSessions, expectedSessions, extraCompleted, totalParentFee, totalTutorFee);
         }
 
         if (!newBillings.isEmpty()) {
             billingRepository.saveAll(newBillings);
-            // TutorPayout is created when admin approves DRAFT → UNPAID
         }
+    }
+
+    // ─── Calculation helpers ────────────────────────────────────────────────
+
+    /** Số buổi kỳ vọng/tháng = sessionsPerWeek × 4 */
+    private int calculateExpectedSessions(ClassEntity cls) {
+        int sessionsPerWeek = cls.getSessionsPerWeek() != null && cls.getSessionsPerWeek() > 0
+                ? cls.getSessionsPerWeek() : 1;
+        return sessionsPerWeek * WEEKS_PER_MONTH;
+    }
+
+    /**
+     * Phí PH = parentFeePerSession × completedSessions
+     * parentFeePerSession = parentFee / expectedSessions
+     */
+    private BigDecimal calculateParentFee(ClassEntity cls, int completedSessions, int expectedSessions) {
+        if (cls.getParentFee() == null || cls.getParentFee().compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal feePerSession = cls.getParentFee()
+                .divide(BigDecimal.valueOf(expectedSessions), 0, RoundingMode.HALF_UP);
+        return feePerSession.multiply(BigDecimal.valueOf(completedSessions));
+    }
+
+    /**
+     * Lương GS:
+     * - Base = tutorFee (cố định/tháng)
+     * - netMissed = max(0, expected - completed) → thiếu buổi so với quota
+     * - realExtra = min(extraTypeCount, max(0, completed - expected)) → chỉ EXTRA vượt quota
+     * - Trừ/buổi = roundDown(tutorFee / expected, 10k) → GS bị trừ ít
+     * - Kết quả cuối = roundUp(payout, 10k) → GS nhận nhiều hơn chút
+     *
+     * Buổi EXTRA bù cho buổi nghỉ trước. Chỉ khi vượt quota mới tính bonus.
+     * VD: expected=8, GS nghỉ 1, dạy bù 1 EXTRA → completed=8 → net=0 → 1.500k (full)
+     * VD: expected=8, 1 EXTRA không bù → completed=9 → realExtra=1 → 1.500k + 180k
+     */
+    private BigDecimal calculateTutorPayout(ClassEntity cls, int completedSessions, int extraTypeCount) {
+        if (cls.getTutorFee() == null || cls.getTutorFee().compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal tutorFee = cls.getTutorFee();
+        int expectedSessions = calculateExpectedSessions(cls);
+
+        // Trừ/buổi làm tròn XUỐNG 10k → GS bị trừ ít hơn
+        BigDecimal feePerSession = roundDownTo10k(
+                tutorFee.divide(BigDecimal.valueOf(expectedSessions), 2, RoundingMode.HALF_UP));
+
+        // Thiếu buổi so với quota (GS nghỉ hoặc HS nghỉ đều giảm completed)
+        int netMissed = Math.max(0, expectedSessions - completedSessions);
+        BigDecimal deduction = feePerSession.multiply(BigDecimal.valueOf(netMissed));
+
+        // Buổi tăng cường thật = EXTRA sessions vượt quota (bù xong mới tính)
+        int realExtra = Math.min(extraTypeCount, Math.max(0, completedSessions - expectedSessions));
+        BigDecimal bonus = feePerSession.multiply(BigDecimal.valueOf(realExtra));
+
+        BigDecimal payout = tutorFee.subtract(deduction).add(bonus);
+
+        // Không cho âm
+        if (payout.compareTo(BigDecimal.ZERO) < 0) {
+            return BigDecimal.ZERO;
+        }
+
+        // Kết quả làm tròn LÊN 10k → GS nhận nhiều hơn chút
+        return roundUpTo10k(payout);
+    }
+
+    /** Làm tròn XUỐNG đến bội số 10.000đ (dùng cho trừ lương/buổi) */
+    private BigDecimal roundDownTo10k(BigDecimal amount) {
+        return amount.divide(ROUND_UNIT, 0, RoundingMode.FLOOR).multiply(ROUND_UNIT);
+    }
+
+    /** Làm tròn LÊN đến bội số 10.000đ (dùng cho kết quả cuối) */
+    private BigDecimal roundUpTo10k(BigDecimal amount) {
+        return amount.divide(ROUND_UNIT, 0, RoundingMode.CEILING).multiply(ROUND_UNIT);
+    }
+
+    private String buildTransactionCode(UserEntity payer, ClassEntity cls, int month, int year) {
+        String prefix = "PAYP";
+        if (payer != null && payer.getRole() == UserRole.STUDENT) {
+            prefix = "PAYS";
+        }
+        String yymm = String.format("%02d%02d", month, year % 100);
+        String payerIdSub = cls.getParentId() != null
+                ? cls.getParentId().toString().substring(0, 6).toUpperCase() : "UNK";
+        return prefix + payerIdSub + yymm;
     }
 }

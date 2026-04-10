@@ -3,6 +3,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/di/tutor_verification_notifier.dart';
+import '../../../../core/services/push_notification_service.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -24,6 +25,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final user = await _authRepository.getAuthenticatedUser();
     if (user != null) {
       emit(AuthAuthenticated(user));
+      // Re-register FCM token for returning users
+      PushNotificationService.instance.requestPermissionAndRegisterToken();
     } else {
       emit(AuthUnauthenticated());
     }
@@ -34,7 +37,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await _authRepository.login(event.phone, event.password);
     result.fold(
       (failure) => emit(AuthError(failure.message)),
-      (user) => emit(AuthAuthenticated(user)),
+      (user) {
+        emit(AuthAuthenticated(user));
+        PushNotificationService.instance.requestPermissionAndRegisterToken();
+      },
     );
   }
 
@@ -53,7 +59,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
     result.fold(
       (failure) => emit(AuthError(failure.message)),
-      (user) => emit(AuthAuthenticated(user)),
+      (user) {
+        emit(AuthAuthenticated(user));
+        PushNotificationService.instance.requestPermissionAndRegisterToken();
+      },
     );
   }
 
@@ -88,6 +97,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onAuthLogoutRequested(AuthLogoutRequested event, Emitter<AuthState> emit) async {
+    await PushNotificationService.instance.unregisterToken();
     await _authRepository.logout();
     getIt<TutorVerificationNotifier>().clear();
     emit(AuthUnauthenticated());

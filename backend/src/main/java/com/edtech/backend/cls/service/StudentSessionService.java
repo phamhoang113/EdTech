@@ -26,8 +26,11 @@ import com.edtech.backend.cls.enums.AbsenceRequestType;
 import com.edtech.backend.cls.enums.SessionStatus;
 import com.edtech.backend.cls.repository.AbsenceRequestRepository;
 import com.edtech.backend.cls.repository.SessionRepository;
+import com.edtech.backend.auth.enums.UserRole;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.notification.entity.NotificationType;
+import com.edtech.backend.notification.service.NotificationService;
 
 @Service
 @RequiredArgsConstructor
@@ -37,9 +40,17 @@ public class StudentSessionService {
 
     private static final int CANCELLATION_HOURS_BEFORE = 2;
 
+    private static final String ERR_SESSION_NOT_FOUND = "Buổi học không tồn tại";
+    private static final String ERR_NOT_IN_CLASS = "Bạn không có quyền thao tác trên buổi học này";
+    private static final String ERR_ONLY_SCHEDULED = "Chỉ có thể huỷ những buổi học chưa diễn ra";
+    private static final String ERR_TOO_LATE_TO_CANCEL =
+            "Chỉ được huỷ buổi học trước 2 tiếng so với thời gian bắt đầu. Vui lòng liên hệ trực tiếp Gia sư hoặc Trung tâm.";
+    private static final String DEFAULT_ABSENCE_REASON = "Không có lý do";
+
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
     private final AbsenceRequestRepository absenceRequestRepository;
+    private final NotificationService notificationService;
 
     public List<SessionDTO> getSessionsByStudent(UUID studentId, LocalDate startDate, LocalDate endDate) {
         if (startDate == null) {
@@ -69,7 +80,7 @@ public class StudentSessionService {
         log.info("[STUDENT_ABSENCE] studentId={}, sessionId={}", studentId, sessionId);
 
         SessionEntity session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new EntityNotFoundException("Buổi học không tồn tại"));
+                .orElseThrow(() -> new EntityNotFoundException(ERR_SESSION_NOT_FOUND));
 
         validateStudentBelongsToClass(studentId, session);
         validateSessionCanBeCancelled(session);
@@ -80,7 +91,7 @@ public class StudentSessionService {
                 .session(session)
                 .requester(student)
                 .requestType(AbsenceRequestType.STUDENT_LEAVE)
-                .reason(request.getReason() != null ? request.getReason() : "Không có lý do")
+                .reason(request.getReason() != null ? request.getReason() : DEFAULT_ABSENCE_REASON)
                 .makeUpRequired(request.isMakeUpRequired())
                 .status(AbsenceRequestStatus.PENDING)
                 .build();
@@ -89,6 +100,14 @@ public class StudentSessionService {
 
         log.info("[STUDENT_ABSENCE] studentId={}, sessionId={}, makeUp={}, absenceId={}",
                 studentId, sessionId, request.isMakeUpRequired(), absenceRequest.getId());
+
+        // Notify Admin + GS về đơn xin nghỉ
+        String studentName = student != null ? student.getFullName() : "Học sinh";
+        String classTitle = session.getCls().getTitle();
+        String notifBody = String.format("%s xin nghỉ buổi học ngày %s (%s).",
+                studentName, session.getSessionDate(), classTitle);
+
+        notifyAbsenceToAdminsAndTutor(session, notifBody, absenceRequest.getId());
 
         return SessionDTO.fromEntity(session);
     }
@@ -125,21 +144,35 @@ public class StudentSessionService {
         boolean isStudentInClass = session.getCls().getStudents().stream()
                 .anyMatch(st -> st.getId().equals(studentId));
         if (!isStudentInClass) {
-            throw new BusinessRuleException("Bạn không có quyền thao tác trên buổi học này");
+            throw new BusinessRuleException(ERR_NOT_IN_CLASS);
+        }
+    }
+
+    private void notifyAbsenceToAdminsAndTutor(SessionEntity session, String body, UUID absenceId) {
+        // Notify tất cả Admin
+        userRepository.findByRoleAndIsDeletedFalseOrderByCreatedAtDesc(UserRole.ADMIN)
+                .forEach(admin -> notificationService.sendNotification(
+                        admin.getId(), NotificationType.ABSENCE_REQUESTED,
+                        "Đơn xin nghỉ mới", body, "ABSENCE", absenceId));
+
+        // Notify GS của lớp
+        UUID tutorId = session.getCls().getTutorId();
+        if (tutorId != null) {
+            notificationService.sendNotification(tutorId, NotificationType.ABSENCE_REQUESTED,
+                    "Học sinh xin nghỉ", body, "ABSENCE", absenceId);
         }
     }
 
     private void validateSessionCanBeCancelled(SessionEntity session) {
         if (session.getStatus() != SessionStatus.SCHEDULED) {
-            throw new BusinessRuleException("Chỉ có thể huỷ những buổi học chưa diễn ra");
+            throw new BusinessRuleException(ERR_ONLY_SCHEDULED);
         }
 
         LocalDateTime sessionDateTime = LocalDateTime.of(session.getSessionDate(), session.getStartTime());
         LocalDateTime now = LocalDateTime.now();
 
         if (now.plusHours(CANCELLATION_HOURS_BEFORE).isAfter(sessionDateTime)) {
-            throw new BusinessRuleException(
-                    "Chỉ được huỷ buổi học trước 2 tiếng so với thời gian bắt đầu. Vui lòng liên hệ trực tiếp Gia sư hoặc Trung tâm.");
+            throw new BusinessRuleException(ERR_TOO_LATE_TO_CANCEL);
         }
     }
 }

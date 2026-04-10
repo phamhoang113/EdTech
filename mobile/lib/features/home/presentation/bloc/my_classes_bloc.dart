@@ -24,16 +24,20 @@ class MyClassesBloc extends Bloc<MyClassesEvent, MyClassesState> {
     await classesResult.fold(
       (failure) async => emit(MyClassesError(failure.message)),
       (classes) async {
-        // Load sessions & billings song song (non-blocking)
+        // Load sessions, billings, and children song song (non-blocking)
         final sessionsFuture = _repository.getUpcomingSessions(event.role);
         final billingsFuture = event.role == 'PARENT'
             ? _repository.getUnpaidBillings()
             : Future.value(<dynamic>[]);
+        final childrenFuture = event.role == 'PARENT'
+            ? _repository.getMyChildren()
+            : Future.value(<dynamic>[]);
 
-        final results = await Future.wait([sessionsFuture, billingsFuture]);
+        final results = await Future.wait([sessionsFuture, billingsFuture, childrenFuture]);
 
         final sessions = results[0];
         final billings = results[1];
+        final children = results[2];
 
         final totalPending = classes
             .where((c) => c.pendingApplicationCount > 0)
@@ -43,6 +47,7 @@ class MyClassesBloc extends Bloc<MyClassesEvent, MyClassesState> {
           classes: classes,
           upcomingSessions: List.from(sessions),
           unpaidBillings: List.from(billings),
+          children: List.from(children),
           totalPendingApplicants: totalPending,
         ));
       },

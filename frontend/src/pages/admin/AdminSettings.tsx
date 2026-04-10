@@ -16,7 +16,7 @@ const SECTIONS = [
 
 const DEFAULT: SystemSettings = {
   siteName: 'Gia Sư Tinh Hoa',
-  contactEmail: 'support@giasutinhhoa.vn',
+  contactEmail: 'giasutinhhoa2026@gmail.com',
   contactPhone: '1800 1234',
   maintenanceMode: false,
   platformFeePercent: 20,

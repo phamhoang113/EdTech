@@ -139,9 +139,9 @@ class _LoginSheetState extends State<LoginSheet> {
                 TextField(
                   controller: _phoneController,
                   decoration: InputDecoration(
-                    labelText: 'Số điện thoại',
-                    hintText: '0912 345 678',
-                    prefixIcon: const Icon(Icons.phone_outlined),
+                    labelText: 'Tài khoản',
+                    hintText: 'SĐT hoặc tên đăng nhập',
+                    prefixIcon: const Icon(Icons.person_outline),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -158,7 +158,7 @@ class _LoginSheetState extends State<LoginSheet> {
                         ? theme.colorScheme.surfaceContainerHighest.withAlpha(80)
                         : theme.colorScheme.surfaceContainerLowest,
                   ),
-                  keyboardType: TextInputType.phone,
+                  keyboardType: TextInputType.text,
                   enabled: !isLoading,
                   onSubmitted: (_) => _onLoginPressed(),
                 ),

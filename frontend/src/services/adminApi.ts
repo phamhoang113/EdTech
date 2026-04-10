@@ -39,9 +39,11 @@ export type UserRole = 'ADMIN' | 'TUTOR' | 'PARENT' | 'STUDENT';
 export interface AdminUserListItem {
   id: string;
   fullName: string;
+  username: string | null;
   email: string | null;
   phone: string;
   role: UserRole;
+  avatarBase64?: string | null;
   isActive: boolean;
   isDeleted: boolean;
   createdAt: string;
@@ -62,6 +64,12 @@ export interface AdminUserDetail extends AdminUserListItem {
   experienceYears?: number;
   dateOfBirth?: string;
   achievements?: string;
+
+  // Parent → children (chỉ có khi role = PARENT)
+  children?: { profileId: string; fullName: string; phone: string | null; username: string | null; grade: string | null; school: string | null; linkStatus: string }[];
+
+  // Student → parents (chỉ có khi role = STUDENT)
+  parentLinks?: { profileId: string; parentName: string; parentPhone: string | null; linkStatus: string }[];
 }
 
 export interface SystemSettings {
@@ -96,8 +104,9 @@ export const adminApi = {
     return response.data;
   },
 
-  approveClassRequest: async (classId: string, tutorFee?: number, levelFees?: string, tutorProposals?: string, platformPct?: number): Promise<ApiResponse<void>> => {
+  approveClassRequest: async (classId: string, title?: string, tutorFee?: number, levelFees?: string, tutorProposals?: string, platformPct?: number): Promise<ApiResponse<void>> => {
     const body: Record<string, unknown> = {};
+    if (title !== undefined) body.title = title;
     if (tutorFee !== undefined) body.tutorFee = tutorFee;
     if (levelFees !== undefined) body.levelFees = levelFees;
     if (tutorProposals !== undefined) body.tutorProposals = tutorProposals;
@@ -187,8 +196,10 @@ export const adminApi = {
     return response.data;
   },
 
-  approveClassApplication: async (applicationId: string, actualSalary?: number): Promise<ApiResponse<ClassApplicationItem>> => {
-    const params = actualSalary != null ? { actualSalary } : {};
+  approveClassApplication: async (applicationId: string, actualSalary?: number, note?: string): Promise<ApiResponse<ClassApplicationItem>> => {
+    const params: Record<string, string | number> = {};
+    if (actualSalary != null) params.actualSalary = actualSalary;
+    if (note != null) params.note = note;
     const response = await apiClient.post(`/api/v1/admin/class-applications/${applicationId}/approve`, null, { params });
     return response.data;
   },
@@ -356,7 +367,10 @@ export interface ClassApplicationItem {
 export interface AdminTutorListItem {
   userId: string;
   fullName: string;
+  username: string | null;
+  email: string | null;
   phone: string;
+  avatarBase64?: string | null;
   tutorType?: string;
   verificationStatus: 'UNVERIFIED' | 'PENDING' | 'APPROVED' | 'REJECTED';
   isDeleted: boolean;
@@ -367,6 +381,14 @@ export interface AdminTutorListItem {
   activeClassCount: number;
   estimatedMonthlyEarnings?: number;
   platformFeePerMonth?: number;
+  bio?: string | null;
+  experienceYears?: number;
+  teachingLevels?: string[];
+  teachingMode?: string | null;
+  rating?: number | null;
+  ratingCount?: number;
+  dateOfBirth?: string | null;
+  achievements?: string | null;
   createdAt: string;
 }
 

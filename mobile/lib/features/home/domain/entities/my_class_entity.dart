@@ -13,7 +13,12 @@ class MyClassEntity extends Equatable {
   final String? tutorPhone;
   final String? schedule;
   final int? sessionsPerWeek;
+  final int? sessionDurationMin;
+  final String? levelFees;
+  final String? genderRequirement;
+  final double? parentFee;
   final int pendingApplicationCount;
+  final List<String> studentIds;
 
   const MyClassEntity({
     required this.id,
@@ -27,7 +32,12 @@ class MyClassEntity extends Equatable {
     this.tutorPhone,
     this.schedule,
     this.sessionsPerWeek,
+    this.sessionDurationMin,
+    this.levelFees,
+    this.genderRequirement,
+    this.parentFee,
     this.pendingApplicationCount = 0,
+    this.studentIds = const [],
   });
 
   factory MyClassEntity.fromJson(Map<String, dynamic> json) {
@@ -43,10 +53,18 @@ class MyClassEntity extends Equatable {
       tutorPhone: json['tutorPhone']?.toString(),
       schedule: json['schedule']?.toString(),
       sessionsPerWeek: json['sessionsPerWeek'] as int?,
+      sessionDurationMin: json['sessionDurationMin'] as int?,
+      levelFees: json['levelFees']?.toString(),
+      genderRequirement: json['genderRequirement']?.toString(),
+      parentFee: json['parentFee'] != null ? (json['parentFee'] as num).toDouble() : null,
       pendingApplicationCount: json['pendingApplicationCount'] as int? ?? 0,
+      studentIds: (json['studentIds'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
     );
   }
 
   @override
-  List<Object?> get props => [id, classCode, title, subject, grade, status, tutorName];
+  List<Object?> get props => [id, classCode, title, subject, grade, status, tutorName, studentIds, sessionDurationMin, levelFees, parentFee, genderRequirement];
 }

@@ -16,6 +16,9 @@ import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.enums.UserRole;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.core.exception.BusinessRuleException;
+import com.edtech.backend.core.util.ImageCompressUtil;
+import com.edtech.backend.student.entity.StudentProfileEntity;
+import com.edtech.backend.student.repository.StudentProfileRepository;
 import com.edtech.backend.tutor.entity.TutorProfileEntity;
 import com.edtech.backend.tutor.enums.VerificationStatus;
 import com.edtech.backend.tutor.repository.TutorProfileRepository;
@@ -27,6 +30,7 @@ public class AdminUserService {
 
     private final UserRepository userRepository;
     private final TutorProfileRepository tutorProfileRepository;
+    private final StudentProfileRepository studentProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final AdminTutorService adminTutorService;
 
@@ -49,9 +53,11 @@ public class AdminUserService {
         AdminUserDetail.AdminUserDetailBuilder builder = AdminUserDetail.builder()
                 .id(user.getId())
                 .fullName(user.getFullName())
+                .username(user.getUsername())
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .role(user.getRole())
+                .avatarBase64(ImageCompressUtil.decompress(user.getAvatarBase64()))
                 .isActive(user.getIsActive())
                 .isDeleted(user.getIsDeleted())
                 .createdAt(user.getCreatedAt());
@@ -73,6 +79,42 @@ public class AdminUserService {
                         .dateOfBirth(p.getDateOfBirth())
                         .achievements(p.getAchievements());
             });
+        }
+
+        // Nếu là PARENT, load danh sách con em
+        if (user.getRole() == UserRole.PARENT) {
+            List<AdminUserDetail.LinkedChild> children = studentProfileRepository
+                    .findByParentIdAndNotDeleted(userId)
+                    .stream()
+                    .map(profile -> AdminUserDetail.LinkedChild.builder()
+                            .profileId(profile.getId().toString())
+                            .fullName(profile.getUser().getFullName())
+                            .phone(profile.getUser().getPhone())
+                            .username(profile.getUser().getUsername())
+                            .grade(profile.getGrade())
+                            .school(profile.getSchool())
+                            .linkStatus(profile.getLinkStatus())
+                            .build())
+                    .toList();
+            builder.children(children);
+        }
+
+        // Nếu là STUDENT, load danh sách PH liên kết
+        if (user.getRole() == UserRole.STUDENT) {
+            List<AdminUserDetail.LinkedParent> parentLinks = studentProfileRepository
+                    .findByUserId(userId)
+                    .stream()
+                    .map(profile -> {
+                        UserEntity parent = userRepository.findById(profile.getParentId()).orElse(null);
+                        return AdminUserDetail.LinkedParent.builder()
+                                .profileId(profile.getId().toString())
+                                .parentName(parent != null ? parent.getFullName() : "?")
+                                .parentPhone(parent != null ? parent.getPhone() : null)
+                                .linkStatus(profile.getLinkStatus())
+                                .build();
+                    })
+                    .toList();
+            builder.parentLinks(parentLinks);
         }
 
         return builder.build();
@@ -111,6 +153,7 @@ public class AdminUserService {
 
         UserEntity user = UserEntity.builder()
                 .phone(req.getPhone())
+                .username(req.getPhone())
                 .passwordHash(passwordEncoder.encode(req.getPassword()))
                 .fullName(req.getFullName())
                 .role(req.getRole())
@@ -161,9 +204,11 @@ public class AdminUserService {
         return AdminUserListItem.builder()
                 .id(u.getId())
                 .fullName(u.getFullName())
+                .username(u.getUsername())
                 .email(u.getEmail())
                 .phone(u.getPhone())
                 .role(u.getRole())
+                .avatarBase64(ImageCompressUtil.decompress(u.getAvatarBase64()))
                 .isActive(u.getIsActive())
                 .isDeleted(u.getIsDeleted())
                 .createdAt(u.getCreatedAt())

@@ -1,4 +1,4 @@
-import { ChevronRight, ChevronLeft, Phone, Briefcase, DollarSign, Calendar, Clock, Users, CheckCircle, AlertCircle, Star, BookOpen, X, GraduationCap, MapPin, Wifi, Home, Award } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Phone, Briefcase, DollarSign, Calendar, Clock, Users, CheckCircle, AlertCircle, Star, BookOpen, X, GraduationCap, MapPin, Wifi, Home, Award, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 
@@ -131,7 +131,7 @@ function TutorDetailModal({ tutor, onClose, onSelect, classStatus }: {
           })()}
 
           {tutor.achievements && (
-            <div className="ap-note-box" style={{ borderColor: '#a5b4fc' }}>
+            <div className="ap-note-box" style={{ borderColor: '#a5b4fc', marginBottom: 12 }}>
               <div className="ap-note-label" style={{ color: '#6366f1' }}>
                 <GraduationCap size={12}/> Bằng cấp / kinh nghiệm
               </div>
@@ -139,23 +139,36 @@ function TutorDetailModal({ tutor, onClose, onSelect, classStatus }: {
             </div>
           )}
 
-          {/* 🖼️ Ảnh bằng cấp — click phóng to lightbox */}
-          {tutor.certBase64s && tutor.certBase64s.length > 0 && (
-            <div style={{ margin: '10px 0' }}>
-              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#6366f1', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Award size={12}/> Hình ảnh bằng cấp ({tutor.certBase64s.length})
+          {tutor.note && (
+            <div className="ap-note-box" style={{ borderColor: '#10b981', background: '#ecfdf5', marginBottom: 12 }}>
+              <div className="ap-note-label" style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: '0.8rem', marginBottom: 6 }}>
+                 Lời nhắn từ Admin trung tâm
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8 }}>
-                {tutor.certBase64s.map((img, idx) => (
-                  <button key={idx} onClick={() => setZoomImg(toSrc(img))}
-                    style={{ padding: 0, border: '1.5px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', cursor: 'zoom-in', aspectRatio: '4/3', background: '#f9fafb' }}>
-                    <img src={toSrc(img)} alt={`Bằng cấp ${idx + 1}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}/>
-                  </button>
-                ))}
-              </div>
+              <p className="ap-note-text" style={{ color: '#065f46', fontSize: '0.9rem', lineHeight: 1.5, margin: 0 }}>{tutor.note}</p>
             </div>
           )}
+
+          {/* 🖼️ Ảnh bằng cấp — click phóng to lightbox */}
+          {(() => {
+            const validCerts = (tutor.certBase64s || []).filter(img => img && img.trim().length > 50);
+            if (validCerts.length === 0) return null;
+            return (
+              <div style={{ margin: '10px 0' }}>
+                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#6366f1', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Award size={12}/> Hình ảnh bằng cấp ({validCerts.length})
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8 }}>
+                  {validCerts.map((img, idx) => (
+                    <button key={idx} onClick={() => setZoomImg(toSrc(img))}
+                      style={{ padding: 0, border: '1.5px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', cursor: 'zoom-in', aspectRatio: '4/3', background: '#f9fafb' }}>
+                      <img src={toSrc(img)} alt={`Bằng cấp ${idx + 1}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}/>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {error && (
             <div className="ap-error"><AlertCircle size={13}/> {error}</div>
@@ -239,12 +252,18 @@ function ApplicantCard({ tutor, onClick }: { tutor: TutorApplicant; onClick: () 
 }
 
 /* ── Class Card ───────────────────────────────────────────────────────────── */
-function ClassCard({ cls, onClick, isActive }: {
+function ClassCard({ cls, onClick, isActive, onDelete, isConfirmDelete }: {
   cls: ParentClass; onClick: () => void; isActive: boolean;
+  onDelete?: (id: string) => void; isConfirmDelete?: boolean;
 }) {
   const st = classStatusLabel(cls.status);
+  const isCancelled = cls.status === 'CANCELLED';
   return (
-    <button className={`ap-class-card${isActive ? ' active' : ''}`} onClick={onClick}>
+    <div
+      className={`ap-class-card${isActive ? ' active' : ''}`}
+      style={{ position: 'relative', cursor: 'pointer' }}
+      onClick={onClick}
+    >
       <div className="ap-class-card-top">
         <div className="ap-class-subject">{cls.subject}</div>
         <span className="ap-class-status" style={{ background: st.bg, color: st.text }}>{st.label}</span>
@@ -259,12 +278,32 @@ function ClassCard({ cls, onClick, isActive }: {
         <span><Users size={10}/> {cls.pendingApplicationCount} GS</span>
       </div>
       <ChevronRight size={14} className="ap-class-chevron"/>
-    </button>
+      {isCancelled && onDelete && (
+        <button
+          title={isConfirmDelete ? 'Nhấn lần nữa để xóa' : 'Xóa lớp đã hủy'}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(cls.id); }}
+          style={{
+            position: 'absolute', bottom: 10, right: 10,
+            height: 28, minWidth: 28, padding: isConfirmDelete ? '0 10px' : '0',
+            borderRadius: 8, border: 'none', cursor: 'pointer',
+            background: isConfirmDelete ? '#ef4444' : 'rgba(239,68,68,0.1)',
+            color: isConfirmDelete ? '#fff' : '#ef4444',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+            transition: 'all 0.2s', zIndex: 2,
+            fontSize: '0.75rem', fontWeight: 700,
+            animation: isConfirmDelete ? 'ap-pulse 1s ease infinite' : 'none',
+          }}
+        >
+          <Trash2 size={13} style={{ pointerEvents: 'none', flexShrink: 0 }}/>
+          {isConfirmDelete && <span style={{ pointerEvents: 'none' }}>Xóa?</span>}
+        </button>
+      )}
+    </div>
   );
 }
 
 /* ── Class Detail Section ─────────────────────────────────────────── */
-function ClassDetailSection({ cls, onManageStudents }: { cls: ParentClass; onManageStudents: () => void }) {
+function ClassDetailSection({ cls, onManageStudents, hasChildren }: { cls: ParentClass; onManageStudents: () => void; hasChildren: boolean }) {
   const st = classStatusLabel(cls.status);
   const scheduleEntries = (() => {
     try { return JSON.parse(cls.schedule ?? '[]') as { dayOfWeek: string; ca: string; startTime: string; endTime: string }[]; }
@@ -295,7 +334,7 @@ function ClassDetailSection({ cls, onManageStudents }: { cls: ParentClass; onMan
       </div>
 
       {/* Missing Students warning */}
-      {(!cls.studentIds || cls.studentIds.length === 0) && (
+      {hasChildren && (!cls.studentIds || cls.studentIds.length === 0) && (
         <div style={{
           margin: '12px 0', padding: '12px 16px', borderRadius: 12,
           background: 'rgba(239,68,68,0.08)', border: '1.5px solid rgba(239,68,68,0.25)',
@@ -435,6 +474,7 @@ export function ApplicantsPage() {
   const [selectedTutor, setSelectedTutor] = useState<TutorApplicant | null>(null);
   const [showRequestClass, setShowRequestClass] = useState(false);
   const [showManageStudents, setShowManageStudents] = useState(false);
+  const [hasChildren, setHasChildren] = useState(true); // default true để không flash
 
   /* Load danh sách lớp */
   useEffect(() => {
@@ -442,6 +482,10 @@ export function ApplicantsPage() {
       .then(res => setClasses(res.data ?? []))
       .catch(() => {})
       .finally(() => setLoadingClasses(false));
+    // Check PH có con không — nếu không thì không bắt gán HS
+    parentApi.getMyChildren()
+      .then(res => setHasChildren((res.data ?? []).length > 0))
+      .catch(() => {});
   }, []);
 
   /* Load GS ứng tuyển khi chọn lớp */
@@ -460,6 +504,46 @@ export function ApplicantsPage() {
   /* Sau khi chọn GS — refresh applicants */
   const handleTutorSelected = () => {
     if (selectedClass) handleSelectClass(selectedClass);
+  };
+
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  /* Xóa lớp đã hủy — 2 bước: set confirm → thực hiện xóa */
+  const handleDeleteClass = async (classId: string) => {
+    // Bước 1: yêu cầu xác nhận
+    if (deleteConfirmId !== classId) {
+      setDeleteConfirmId(classId);
+      // Tự hủy confirm sau 5s
+      setTimeout(() => setDeleteConfirmId(prev => prev === classId ? null : prev), 5000);
+      return;
+    }
+    // Bước 2: xác nhận xóa
+    setDeleteConfirmId(null);
+    try {
+      await parentApi.deleteClass(classId);
+      setClasses(prev => prev.filter(c => c.id !== classId));
+      if (selectedClass?.id === classId) {
+        setSelectedClass(null);
+        setApplicants([]);
+      }
+      // Toast xanh bottom-right
+      const el = document.createElement('div');
+      el.textContent = '✅ Đã xóa bản ghi lớp thành công!';
+      Object.assign(el.style, {
+        position: 'fixed', bottom: '24px', right: '24px', zIndex: '999999',
+        padding: '14px 24px', borderRadius: '12px', fontWeight: '700', fontSize: '0.92rem',
+        background: '#ecfdf5', color: '#065f46',
+        border: '1.5px solid rgba(5,150,105,0.4)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+        transition: 'opacity 0.3s', opacity: '0',
+        fontFamily: 'Inter, sans-serif',
+      });
+      document.body.appendChild(el);
+      requestAnimationFrame(() => { el.style.opacity = '1'; });
+      setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 4000);
+    } catch {
+      alert('Xóa thất bại. Chỉ lớp đã hủy mới được xóa.');
+    }
   };
 
   return (
@@ -499,6 +583,8 @@ export function ApplicantsPage() {
                     key={cls.id} cls={cls}
                     isActive={selectedClass?.id === cls.id}
                     onClick={() => handleSelectClass(cls)}
+                    onDelete={handleDeleteClass}
+                    isConfirmDelete={deleteConfirmId === cls.id}
                   />
                 ))
               )}
@@ -517,7 +603,7 @@ export function ApplicantsPage() {
               ) : (
                 <>
                   {/* Thông tin lớp */}
-                  <ClassDetailSection cls={selectedClass} onManageStudents={() => setShowManageStudents(true)} />
+                  <ClassDetailSection cls={selectedClass} onManageStudents={() => setShowManageStudents(true)} hasChildren={hasChildren} />
 
                   {/* Danh sách GS ứng tuyển */}
                   <div className="ap-panel-label" style={{ marginTop: 24 }}>
@@ -561,6 +647,22 @@ export function ApplicantsPage() {
           onSuccess={() => {
             setShowRequestClass(false);
             parentApi.getMyClasses().then(res => setClasses(res.data ?? []));
+            window.dispatchEvent(new CustomEvent('refresh-notifications'));
+            // Toast xanh bottom-right
+            const el = document.createElement('div');
+            el.textContent = '✅ Đã gửi yêu cầu mở lớp thành công! Admin sẽ xem xét sớm.';
+            Object.assign(el.style, {
+              position: 'fixed', bottom: '24px', right: '24px', zIndex: '999999',
+              padding: '14px 24px', borderRadius: '12px', fontWeight: '700', fontSize: '0.92rem',
+              background: '#ecfdf5', color: '#065f46',
+              border: '1.5px solid rgba(5,150,105,0.4)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+              transition: 'opacity 0.3s', opacity: '0',
+              fontFamily: 'Inter, sans-serif',
+            });
+            document.body.appendChild(el);
+            requestAnimationFrame(() => { el.style.opacity = '1'; });
+            setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 5000);
           }}
         />
       )}

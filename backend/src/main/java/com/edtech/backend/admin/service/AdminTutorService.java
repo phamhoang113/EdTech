@@ -29,6 +29,7 @@ import com.edtech.backend.cls.enums.ClassStatus;
 import com.edtech.backend.cls.repository.ClassApplicationRepository;
 import com.edtech.backend.cls.repository.ClassRepository;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.core.util.ImageCompressUtil;
 import com.edtech.backend.notification.entity.NotificationType;
 import com.edtech.backend.notification.service.NotificationService;
 import com.edtech.backend.tutor.entity.TutorProfileEntity;
@@ -90,14 +91,25 @@ public class AdminTutorService {
             result.add(AdminTutorListItem.builder()
                     .userId(u.getId())
                     .fullName(u.getFullName())
+                    .username(u.getUsername())
+                    .email(u.getEmail())
                     .phone(u.getPhone())
+                    .avatarBase64(ImageCompressUtil.decompress(u.getAvatarBase64()))
                     .tutorType(p.getTutorType() != null ? p.getTutorType().getDisplayName() : null)
                     .verificationStatus(p.getVerificationStatus())
-                    .isDeleted(Boolean.TRUE.equals(u.getIsDeleted()))
-                    .isActive(Boolean.TRUE.equals(u.getIsActive()))
+                    .bio(p.getBio())
+                    .achievements(p.getAchievements())
                     .subjects(p.getSubjects() != null ? Arrays.asList(p.getSubjects()) : null)
+                    .teachingLevels(p.getTeachingLevels() != null ? Arrays.asList(p.getTeachingLevels()) : null)
+                    .teachingMode(p.getTeachingMode())
                     .location(p.getLocation())
                     .hourlyRate(p.getHourlyRate())
+                    .experienceYears(p.getExperienceYears())
+                    .dateOfBirth(p.getDateOfBirth())
+                    .rating(p.getRating())
+                    .ratingCount(p.getRatingCount())
+                    .isDeleted(Boolean.TRUE.equals(u.getIsDeleted()))
+                    .isActive(Boolean.TRUE.equals(u.getIsActive()))
                     .activeClassCount(activeCnt)
                     .estimatedMonthlyEarnings(monthlyEarnings)
                     .platformFeePerMonth(platformFee)
@@ -212,7 +224,8 @@ public class AdminTutorService {
         
         // Only cert (degree/certificate) images are stored - CCCD is number only
         if (profile.getCertBase64s() != null && profile.getCertBase64s().length > 0) {
-            docs.add(AdminTutorVerificationResponse.DocItem.builder().name("Bằng cấp/Chứng chỉ").icon("🎓").url(profile.getCertBase64s()[0]).build());
+            String decompressedCert = ImageCompressUtil.decompress(profile.getCertBase64s()[0]);
+            docs.add(AdminTutorVerificationResponse.DocItem.builder().name("Bằng cấp/Chứng chỉ").icon("🎓").url(decompressedCert).build());
         }
 
         String levelsStr = profile.getTeachingLevels() != null ? String.join(", ", profile.getTeachingLevels()) : DEFAULT_VALUE;

@@ -80,6 +80,21 @@ public class ParentStudentController {
         return ResponseEntity.ok(ApiResponse.ok(null, "Đã xoá liên kết con em."));
     }
 
+    @PostMapping("/{id}/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetChildPassword(
+            @PathVariable UUID id,
+            @RequestBody java.util.Map<String, String> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        UUID parentId = resolveParentId(userDetails.getUsername());
+        String newPassword = body.get("newPassword");
+        if (newPassword == null || newPassword.isBlank() || newPassword.length() < 6) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Mật khẩu phải có ít nhất 6 ký tự."));
+        }
+        studentService.resetChildPassword(id, parentId, newPassword);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Đã đặt lại mật khẩu thành công."));
+    }
+
     // ─── Helper ──────────────────────────────────────────────────────────────
 
     private UUID resolveParentId(String phone) {

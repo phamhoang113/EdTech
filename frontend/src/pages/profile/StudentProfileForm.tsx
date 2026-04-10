@@ -3,17 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { userProfileApi } from '../../services/userProfileApi';
 import type { UpdateUserProfileRequest } from '../../services/userProfileApi';
+import { compressAvatar } from '../../utils/imageCompress';
 import { Mail, School, Save, Lock, User, GraduationCap } from 'lucide-react';
 import './TutorProfilePage.css';
 
-function toBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+
 
 export function StudentProfileForm() {
   const navigate = useNavigate();
@@ -34,8 +28,10 @@ export function StudentProfileForm() {
   const [grade, setGrade] = useState('');
 
   const initialRef = useRef({
-    avatarBase64: null as string | null, email: '', school: '', grade: '',
+    avatarBase64: null as string | null, email: '', school: '', grade: '', phone: '',
   });
+
+  const isPhoneEditable = !initialRef.current.phone;
 
   useEffect(() => {
     userProfileApi.getMyProfile().then(p => {
@@ -50,6 +46,7 @@ export function StudentProfileForm() {
         email: p.email ?? '',
         school: p.school ?? '',
         grade: p.grade ?? '',
+        phone: p.phone ?? '',
       };
     }).catch(() => setError('Không tải được hồ sơ.'))
       .finally(() => setLoading(false));
@@ -58,16 +55,21 @@ export function StudentProfileForm() {
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { setError('Ảnh tối đa 2MB.'); return; }
-    const b64 = await toBase64(file);
-    setAvatarBase64(b64);
-    setError('');
+    if (file.size > 5 * 1024 * 1024) { setError('Ảnh tối đa 5MB.'); return; }
+    try {
+      const compressed = await compressAvatar(file);
+      setAvatarBase64(compressed);
+      setError('');
+    } catch {
+      setError('Không thể xử lý ảnh.');
+    }
   };
 
   const handleSave = async () => {
     setError(''); setSuccess(''); setSaving(true);
     try {
       const req: UpdateUserProfileRequest = {
+        phone: isPhoneEditable && phone.trim() ? phone.trim() : undefined,
         email: email.trim() || undefined,
         avatarBase64: avatarBase64 ?? undefined,
         school: school.trim() || undefined,
@@ -89,7 +91,8 @@ export function StudentProfileForm() {
     avatarBase64 !== initialRef.current.avatarBase64 ||
     email !== initialRef.current.email ||
     school !== initialRef.current.school ||
-    grade !== initialRef.current.grade;
+    grade !== initialRef.current.grade ||
+    (isPhoneEditable && phone !== initialRef.current.phone);
 
   const initial = fullName.trim().split(' ').pop()?.charAt(0).toUpperCase() ?? '?';
 
@@ -153,22 +156,36 @@ export function StudentProfileForm() {
             </div>
             <div className="tp-identity-item">
               <span className="tp-identity-label">Số điện thoại</span>
-              <span className="tp-identity-value" title="Không thể tự do đổi">{phone}</span>
+              {isPhoneEditable ? (
+                <input
+                  type="tel"
+                  className="tp-input"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Nhập số điện thoại (VD: 0901234567)"
+                  maxLength={10}
+                  style={{ marginTop: '4px', fontSize: '14px' }}
+                />
+              ) : (
+                <span className="tp-identity-value" title="Không thể tự do đổi">{phone}</span>
+              )}
             </div>
           </div>
           <p className="tp-readonly-note">
             <Lock size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
-            Thông tin trên đã xác thực, không thể thay đổi
+            {isPhoneEditable
+              ? 'Họ tên đã xác thực. Bạn có thể bổ sung số điện thoại.'
+              : 'Thông tin trên đã xác thực, không thể thay đổi'}
           </p>
         </div>
 
         {/* Right: editable form */}
         <div className="tp-form" style={{ flex: '2 1 500px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          
+
           {/* Email */}
           <div className="tp-section">
             <div className="tp-section-title">
-              <Mail size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px' }} /> 
+              <Mail size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px' }} />
               Email liên hệ
             </div>
             <input
@@ -183,7 +200,7 @@ export function StudentProfileForm() {
           {/* Trường học */}
           <div className="tp-section">
             <div className="tp-section-title">
-              <School size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px' }} /> 
+              <School size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px' }} />
               Trường học hiện tại
             </div>
             <input
@@ -202,8 +219,8 @@ export function StudentProfileForm() {
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
               {GRADE_OPTIONS.map(g => (
-                <button 
-                  key={g} 
+                <button
+                  key={g}
                   type="button"
                   onClick={() => setGrade(g)}
                   style={{

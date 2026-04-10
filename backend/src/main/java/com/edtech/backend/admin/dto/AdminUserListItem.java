@@ -14,9 +14,11 @@ import com.edtech.backend.auth.enums.UserRole;
 public class AdminUserListItem {
     UUID id;
     String fullName;
+    String username;
     String email;
     String phone;
     UserRole role;
+    String avatarBase64;
     Boolean isActive;
     Boolean isDeleted;
     Instant createdAt;

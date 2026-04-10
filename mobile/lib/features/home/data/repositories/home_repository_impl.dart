@@ -6,6 +6,7 @@ import '../../../../core/error/failures.dart';
 import '../../domain/entities/my_class_entity.dart';
 import '../../domain/entities/upcoming_session_entity.dart';
 import '../../domain/entities/billing_summary_entity.dart';
+import '../../domain/entities/student_entity.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../datasources/home_remote_datasource.dart';
 
@@ -35,5 +36,10 @@ class HomeRepositoryImpl implements HomeRepository {
   @override
   Future<List<BillingSummaryEntity>> getUnpaidBillings() async {
     return remoteDataSource.getUnpaidBillings();
+  }
+
+  @override
+  Future<List<StudentEntity>> getMyChildren() async {
+    return remoteDataSource.getMyChildren();
   }
 }

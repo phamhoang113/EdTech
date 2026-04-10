@@ -675,7 +675,8 @@ export function RequestClassModal({ onClose, onSuccess }: Props) {
 
     setSubmitting(true); setError('');
     try {
-      await parentApi.requestClass({
+      console.log('[RequestClassModal] ▶ Gửi yêu cầu...');
+      const res = await parentApi.requestClass({
         title: buildTitle() || `Lớp ${effectiveSubject}`,
         subject: effectiveSubject,
         grade: form.grade,
@@ -691,8 +692,25 @@ export function RequestClassModal({ onClose, onSuccess }: Props) {
         levelFees: levelFeesJson,
         studentIds: selectedStudentIds.length > 0 ? selectedStudentIds : undefined,
       });
+      console.log('[RequestClassModal] ✅ API thành công:', res);
+      // Toast xanh bottom-right — inject trực tiếp trước khi gọi onSuccess
+      const el = document.createElement('div');
+      el.textContent = '✅ Đã gửi yêu cầu mở lớp thành công! Admin sẽ xem xét sớm.';
+      Object.assign(el.style, {
+        position: 'fixed', bottom: '24px', right: '24px', zIndex: '999999',
+        padding: '14px 24px', borderRadius: '12px', fontWeight: '700', fontSize: '0.92rem',
+        background: '#ecfdf5', color: '#065f46',
+        border: '1.5px solid rgba(5,150,105,0.4)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+        transition: 'opacity 0.3s', opacity: '0',
+        fontFamily: 'Inter, sans-serif',
+      });
+      document.body.appendChild(el);
+      requestAnimationFrame(() => { el.style.opacity = '1'; });
+      setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 5000);
       onSuccess();
     } catch (e: unknown) {
+      console.error('[RequestClassModal] ❌ API lỗi:', e);
       const err = e as { response?: { data?: { message?: string } } };
       setError(err?.response?.data?.message ?? 'Gửi yêu cầu thất bại. Vui lòng thử lại.');
     } finally {
@@ -860,6 +878,30 @@ export function RequestClassModal({ onClose, onSuccess }: Props) {
             <div className="rcm-field">
               <label className="rcm-label">Loại gia sư & học phí GS nhận</label>
               <LevelFeesEditor rows={levelFees} onChange={setLevelFees} tutorLevels={filters.tutorLevels}/>
+              {levelFees.length > 0 && (
+                <div style={{
+                  marginTop: 10, padding: '10px 14px', borderRadius: 10,
+                  background: 'rgba(99, 102, 241, 0.06)', border: '1px solid rgba(99, 102, 241, 0.15)',
+                  fontSize: '0.82rem', lineHeight: 1.6, color: 'var(--color-text)'
+                }}>
+                  <div style={{ fontWeight: 700, marginBottom: 4, color: '#6366f1' }}>💡 Ước tính học phí ({form.sessionsPerWeek} buổi/tuần × 4 tuần)</div>
+                  {levelFees.map(lf => {
+                    const sessionsPerMonth = form.sessionsPerWeek * 4;
+                    const feePerSession = Math.round(lf.fee / sessionsPerMonth);
+                    return (
+                      <div key={lf.level} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                        <span>{lf.level}:</span>
+                        <span style={{ fontWeight: 600 }}>
+                          {fmtCurrency(feePerSession)}/buổi → <strong>{fmtCurrency(lf.fee)}/tháng</strong>
+                        </span>
+                      </div>
+                    );
+                  })}
+                  <div style={{ marginTop: 6, fontSize: '0.76rem', color: 'var(--color-text-muted)' }}>
+                    ※ 1 tháng tính cứng = 4 tuần. Học phí PH trả theo số buổi thực tế học được.
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

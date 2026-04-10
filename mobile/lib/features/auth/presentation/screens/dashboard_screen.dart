@@ -5,11 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
 import 'student_dashboard_screen.dart';
-import 'parent_dashboard_screen.dart';
 import 'tutor_dashboard_screen.dart';
 
-/// DashboardScreen — dispatcher theo role.
-/// Router đã bảo vệ route này bằng redirect guard.
+/// DashboardScreen — dispatcher theo role (legacy, không dùng trong MainShell).
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
@@ -18,7 +16,6 @@ class DashboardScreen extends StatelessWidget {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         if (state is! AuthAuthenticated) {
-          // Không nên xảy ra (router guard lo), nhưng fallback an toàn
           WidgetsBinding.instance.addPostFrameCallback(
             (_) => context.go('/home'),
           );
@@ -33,7 +30,10 @@ class DashboardScreen extends StatelessWidget {
             return const StudentDashboardScreen();
           case 'PARENT':
           default:
-            return const ParentDashboardScreen();
+            // PH giờ dùng HomeScreen qua MainShell
+            return const Scaffold(
+              body: Center(child: Text('Chuyển hướng...')),
+            );
         }
       },
     );

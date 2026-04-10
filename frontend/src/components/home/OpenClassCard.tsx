@@ -91,10 +91,12 @@ export const OpenClassCard = ({ classInfo, onAuthRequired }: OpenClassCardProps)
           <Calendar size={16} className="class-icon" />
           <span>{formatSchedule(classInfo.schedule)}</span>
         </div>
+        {classInfo.timeFrame && (
         <div className="class-info-item">
           <Clock size={16} className="class-icon" />
           <span>{classInfo.timeFrame}</span>
         </div>
+        )}
       </div>
 
       <div className="class-footer">

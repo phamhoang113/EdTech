@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, GraduationCap, FileCheck, BookOpen, ClipboardList, CreditCard, BarChart3, Settings, LogOut, Search, Sun, Moon, Menu, X, UserIcon, ClipboardCheck, CalendarDays, ClockAlert, MessageSquare, PhoneCall } from 'lucide-react';
+import { LayoutDashboard, Users, GraduationCap, FileCheck, BookOpen, ClipboardList, CreditCard, BarChart3, Settings, LogOut, Search, Sun, Moon, Menu, X, UserIcon, ClipboardCheck, CalendarDays, ClockAlert, MessageSquare, PhoneCall, MailQuestion } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 
@@ -11,6 +11,7 @@ import './AdminLayout.css';
 const NAV_ITEMS = [
   { to: '/admin/dashboard',          icon: LayoutDashboard, label: 'Tổng quan' },
   { to: '/admin/leads',              icon: PhoneCall,       label: 'Khách tiềm năng' },
+  { to: '/admin/contact-messages',   icon: MailQuestion,    label: 'Tin nhắn liên hệ' },
   { to: '/admin/users',              icon: Users,           label: 'Người dùng' },
   { to: '/admin/tutors',             icon: GraduationCap,   label: 'Gia sư' },
   { to: '/admin/verification',       icon: FileCheck,       label: 'Xác minh',           badgeKey: 'pendingVerifications' },
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
 const PAGE_TITLES: Record<string, string> = {
   '/admin/dashboard':          'Tổng quan',
   '/admin/leads':              'Khách tiềm năng',
+  '/admin/contact-messages':   'Tin nhắn liên hệ',
   '/admin/users':              'Người dùng',
   '/admin/tutors':             'Gia sư',
   '/admin/verification':       'Xác minh',

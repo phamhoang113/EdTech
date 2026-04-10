@@ -1,4 +1,4 @@
-import { GraduationCap, Phone, MapPin, Trash2, Search, CheckCircle, XCircle, Clock, AlertTriangle, X, BookOpen, DollarSign, ChevronRight, User, FileText, Calendar } from 'lucide-react';
+import { GraduationCap, Phone, MapPin, Trash2, Search, CheckCircle, XCircle, Clock, AlertTriangle, X, BookOpen, DollarSign, ChevronRight, User, FileText } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 
 import { adminApi } from '../../services/adminApi';
@@ -90,9 +90,16 @@ function TutorDetailDrawer({
       <aside className="at-drawer" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="at-drawer-header">
-          <div className="at-drawer-avatar">{tutor.fullName.trim().split(' ').pop()?.charAt(0).toUpperCase()}</div>
+          <div className="at-drawer-avatar">
+            {tutor.avatarBase64 ? (
+              <img src={tutor.avatarBase64} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              tutor.fullName.trim().split(' ').pop()?.charAt(0).toUpperCase()
+            )}
+          </div>
           <div className="at-drawer-title">
             <h2>{tutor.fullName}</h2>
+            {tutor.username && <div style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>@{tutor.username}</div>}
             <div className="at-drawer-badges">
               <VerificationBadge status={tutor.verificationStatus} />
               {tutor.isDeleted && <span className="at-badge at-badge-deleted"><Trash2 size={10}/> Đã xóa</span>}
@@ -102,18 +109,27 @@ function TutorDetailDrawer({
         </div>
 
         <div className="at-drawer-body">
-          {/* Basic info */}
+          {/* Contact info */}
           <section className="at-drawer-section">
-            <h3><User size={14}/> Thông tin cơ bản</h3>
+            <h3><User size={14}/> Thông tin liên hệ</h3>
             <div className="at-drawer-grid">
-              <div className="at-drawer-field"><span>SĐT</span><strong>{tutor.phone}</strong></div>
+              <div className="at-drawer-field"><span>SĐT</span><strong>{tutor.phone || '—'}</strong></div>
+              <div className="at-drawer-field"><span>Email</span><strong>{tutor.email ?? '—'}</strong></div>
+              <div className="at-drawer-field"><span>Ngày sinh</span><strong>{tutor.dateOfBirth ? new Date(tutor.dateOfBirth).toLocaleDateString('vi-VN') : '—'}</strong></div>
+              <div className="at-drawer-field"><span>Ngày đăng ký</span><strong>{tutor.createdAt ? new Date(tutor.createdAt).toLocaleDateString('vi-VN') : '—'}</strong></div>
+            </div>
+          </section>
+
+          {/* Teaching profile */}
+          <section className="at-drawer-section">
+            <h3><GraduationCap size={14}/> Hồ sơ giảng dạy</h3>
+            <div className="at-drawer-grid">
               <div className="at-drawer-field"><span>Loại GS</span><strong>{tutor.tutorType ?? '—'}</strong></div>
+              <div className="at-drawer-field"><span>Kinh nghiệm</span><strong>{tutor.experienceYears != null ? `${tutor.experienceYears} năm` : '—'}</strong></div>
               <div className="at-drawer-field"><span>Khu vực</span><strong>{tutor.location ?? '—'}</strong></div>
-              <div className="at-drawer-field"><span>Đang dạy</span><strong>{tutor.activeClassCount} lớp</strong></div>
-              <div className="at-drawer-field">
-                <span>Thu nhập/tháng</span>
-                <strong className="at-green at-big">{formatVnd(tutor.estimatedMonthlyEarnings)}</strong>
-              </div>
+              <div className="at-drawer-field"><span>Hình thức</span><strong>{tutor.teachingMode === 'ONLINE' ? 'Online' : tutor.teachingMode === 'OFFLINE' ? 'Offline' : tutor.teachingMode === 'BOTH' ? 'Online & Offline' : '—'}</strong></div>
+              <div className="at-drawer-field"><span>Giá/giờ</span><strong>{tutor.hourlyRate ? formatVnd(tutor.hourlyRate) : '—'}</strong></div>
+              <div className="at-drawer-field"><span>Đánh giá</span><strong>{tutor.rating != null ? `${Number(tutor.rating).toFixed(1)}/5.0 (${tutor.ratingCount ?? 0} lượt)` : '—'}</strong></div>
             </div>
           </section>
 
@@ -127,29 +143,82 @@ function TutorDetailDrawer({
             </section>
           )}
 
+          {/* Teaching levels */}
+          {tutor.teachingLevels && tutor.teachingLevels.length > 0 && (
+            <section className="at-drawer-section">
+              <h3><BookOpen size={14}/> Cấp dạy</h3>
+              <div className="at-card-subjects">
+                {tutor.teachingLevels.map(l => <span key={l} className="at-subject-tag">{l}</span>)}
+              </div>
+            </section>
+          )}
+
+          {/* Admin stats */}
+          <section className="at-drawer-section">
+            <h3><DollarSign size={14}/> Thống kê hoạt động</h3>
+            <div className="at-drawer-grid">
+              <div className="at-drawer-field"><span>Đang dạy</span><strong>{tutor.activeClassCount} lớp</strong></div>
+              <div className="at-drawer-field">
+                <span>Thu nhập/tháng</span>
+                <strong className="at-green at-big">{formatVnd(tutor.estimatedMonthlyEarnings)}</strong>
+              </div>
+              <div className="at-drawer-field">
+                <span>Phí nền tảng/tháng</span>
+                <strong>{formatVnd(tutor.platformFeePerMonth)}</strong>
+              </div>
+            </div>
+          </section>
+
           {/* Verification detail */}
           {detail && (
             <>
               <section className="at-drawer-section">
                 <h3><FileText size={14}/> Hồ sơ xác minh</h3>
                 <div className="at-drawer-grid">
-                  <div className="at-drawer-field"><span>Ngày sinh</span><strong>{detail.dob}</strong></div>
                   <div className="at-drawer-field"><span>CCCD</span><strong>{detail.idCardNumber ?? '—'}</strong></div>
-                  <div className="at-drawer-field"><span>Trình độ</span><strong>{detail.degree}</strong></div>
                   <div className="at-drawer-field"><span>Cơ sở đào tạo</span><strong>{detail.university}</strong></div>
-                  <div className="at-drawer-field"><span>Kinh nghiệm</span><strong>{detail.experience}</strong></div>
-                  <div className="at-drawer-field"><span>Cấp dạy</span><strong>{detail.levels}</strong></div>
                 </div>
               </section>
 
+              {/* Bằng cấp / Chứng chỉ */}
+              {detail.docs && detail.docs.length > 0 && (
+                <section className="at-drawer-section">
+                  <h3><GraduationCap size={14}/> Bằng cấp / Chứng chỉ</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {detail.docs.map((doc, i) => (
+                      <div key={i} style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+                        <div style={{ padding: '6px 10px', background: 'var(--color-surface-raised)', fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>{doc.icon}</span> <span>{doc.name}</span>
+                        </div>
+                        <img
+                          src={doc.url}
+                          alt={doc.name}
+                          style={{ width: '100%', maxHeight: 400, objectFit: 'contain', background: '#f8f8fa', cursor: 'pointer' }}
+                          onClick={() => window.open(doc.url, '_blank')}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
             </>
           )}
 
-          {/* Registration date */}
-          <section className="at-drawer-section">
-            <h3><Calendar size={14}/> Ngày đăng ký</h3>
-            <p className="at-drawer-date">{tutor.createdAt ? new Date(tutor.createdAt).toLocaleDateString('vi-VN') : '—'}</p>
-          </section>
+          {/* Bio */}
+          {tutor.bio && (
+            <section className="at-drawer-section">
+              <h3><User size={14}/> Giới thiệu</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>{tutor.bio}</p>
+            </section>
+          )}
+
+          {/* Achievements */}
+          {tutor.achievements && (
+            <section className="at-drawer-section">
+              <h3><GraduationCap size={14}/> Thành tích</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>{tutor.achievements}</p>
+            </section>
+          )}
         </div>
 
         {/* Footer actions */}
@@ -189,14 +258,20 @@ function TutorCard({
       onKeyDown={e => e.key === 'Enter' && onClick(tutor)}
     >
       <div className="at-card-main">
-        <div className={`at-avatar ${tutor.isDeleted ? 'at-avatar--deleted' : ''}`}>{initial}</div>
+      <div className={`at-avatar ${tutor.isDeleted ? 'at-avatar--deleted' : ''}`}>
+            {tutor.avatarBase64 ? (
+              <img src={tutor.avatarBase64 ?? undefined} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              initial
+            )}
+          </div>
         <div className="at-card-info">
           <div className="at-card-name-row">
             <span className="at-card-name">{tutor.fullName}</span>
             {tutor.isDeleted && <span className="at-badge at-badge-deleted"><Trash2 size={10} /> Đã xóa</span>}
           </div>
           <div className="at-card-meta">
-            <span><Phone size={12} />{tutor.phone}</span>
+            {tutor.phone ? <span><Phone size={12} />{tutor.phone}</span> : tutor.username ? <span style={{ color: 'var(--color-text-muted)' }}>@{tutor.username}</span> : null}
             {tutor.location && <span><MapPin size={12} />{tutor.location}</span>}
             {tutor.tutorType && <span><GraduationCap size={12} />{tutor.tutorType}</span>}
             {tutor.activeClassCount > 0 && (
@@ -301,6 +376,7 @@ export function AdminTutors() {
       const q = search.trim().toLowerCase();
       list = list.filter(t =>
         t.fullName.toLowerCase().includes(q) ||
+        (t.username ?? '').toLowerCase().includes(q) ||
         t.phone.includes(q) ||
         (t.tutorType ?? '').toLowerCase().includes(q) ||
         (t.subjects ?? []).some(s => s.toLowerCase().includes(q))

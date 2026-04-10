@@ -180,6 +180,11 @@ function MyClassesPanel({ classes, loading, onViewTutors, onManageStudents }: { 
             <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: 2, whiteSpace: 'normal', wordBreak: 'break-word' }}>
               {cls.subject} • {cls.grade}{cls.parentFee > 0 ? ` • ${fmtCurrency(cls.parentFee)}/tháng` : ''} • {fmtDate(cls.createdAt)}
             </div>
+            {cls.tutorName && (
+              <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: 4, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <GraduationCap size={12}/> Gia sư: {cls.tutorName}
+              </div>
+            )}
           </div>
           <div className="dash-my-class-actions">
             <StatusBadge status={cls.status}/>
@@ -214,8 +219,8 @@ function MyClassesPanel({ classes, loading, onViewTutors, onManageStudents }: { 
 export const ParentDashboard = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
-  const [studentsCount, setStudentsCount] = useState<number>(0);
-  const [hasTutor, setHasTutor] = useState<boolean>(false);
+  const [studentsCount, setStudentsCount] = useState<number | null>(null);
+  const [hasTutor, setHasTutor] = useState<boolean | null>(null);
   const [showRequestClass, setShowRequestClass] = useState(false);
   const [tutorsModal, setTutorsModal] = useState<ParentClass | null>(null);
   const [manageStudentsModal, setManageStudentsModal] = useState<ParentClass | null>(null);
@@ -250,17 +255,36 @@ export const ParentDashboard = () => {
     }).catch(() => {});
   }, [classesKey]);
 
-  const hasLinkedStudent = studentsCount > 0;
+  const dataLoaded = studentsCount !== null && hasTutor !== null;
+  const hasLinkedStudent = (studentsCount ?? 0) > 0;
 
   const showToast = (type: 'success' | 'error', msg: string) => {
     setToast({ type, msg });
-    setTimeout(() => setToast(null), 3500);
+    setTimeout(() => setToast(null), 5000);
+    // Backup: inject DOM toast trực tiếp để đảm bảo user thấy
+    const el = document.createElement('div');
+    el.textContent = msg;
+    Object.assign(el.style, {
+      position: 'fixed', bottom: '24px', right: '24px', zIndex: '999999',
+      padding: '14px 24px', borderRadius: '12px', fontWeight: '700', fontSize: '0.92rem',
+      background: type === 'success' ? '#ecfdf5' : '#fef2f2',
+      color: type === 'success' ? '#065f46' : '#b91c1c',
+      border: `1.5px solid ${type === 'success' ? 'rgba(5,150,105,0.4)' : 'rgba(239,68,68,0.4)'}`,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+      transition: 'opacity 0.3s', opacity: '0',
+      fontFamily: 'Inter, sans-serif',
+    });
+    document.body.appendChild(el);
+    requestAnimationFrame(() => { el.style.opacity = '1'; });
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 5000);
   };
 
   const handleRequestSuccess = () => {
+    showToast('success', '✅ Đã gửi yêu cầu mở lớp thành công! Admin sẽ xem xét sớm.');
     setShowRequestClass(false);
     setClassesKey(k => k + 1);
-    showToast('success', 'Đã gửi yêu cầu mở lớp! Admin sẽ xem xét sớm.');
+    // Force notification dropdown to refetch (FCM sẽ trigger nhưng đây là backup)
+    window.dispatchEvent(new CustomEvent('refresh-notifications'));
   };
 
   const handleSelectTutor = async (applicationId: string, tutorName: string) => {
@@ -308,7 +332,7 @@ export const ParentDashboard = () => {
       </div>
 
       {/* Onboarding banners */}
-      {(!hasLinkedStudent || !hasTutor) && (
+      {dataLoaded && (!hasLinkedStudent || !hasTutor) && (
         <div className="onboard-banners">
           {!hasLinkedStudent && (
             <div className="onboard-card onboard-student" onClick={() => navigate('/parent/children')}>
@@ -341,7 +365,7 @@ export const ParentDashboard = () => {
       <section>
         <div className="dash-stats-grid">
           {[
-            { val: `${studentsCount}`, lbl: 'Con em đang học', icon: <Users size={20}/>,      cls: 'color-indigo'  },
+            { val: `${studentsCount ?? 0}`, lbl: 'Con em đang học', icon: <Users size={20}/>,      cls: 'color-indigo'  },
             { val: `${activeClasses.length}`, lbl: 'Lớp học',  icon: <Calendar size={20}/>,   cls: 'color-violet'  },
             { val: totalFeeFormatted,     lbl: 'Chi phí tháng',  icon: <TrendingUp size={20}/>, cls: 'color-amber'   },
             { val: `${upcomingSessions.length}`, lbl: 'Buổi sắp tới', icon: <Award size={20}/>,      cls: 'color-emerald' },
@@ -420,14 +444,16 @@ export const ParentDashboard = () => {
       {/* Toast */}
       {toast && (
         <div style={{
-          position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
-          padding: '10px 20px', borderRadius: 12, fontWeight: 600, fontSize: '0.88rem',
+          position: 'fixed', top: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999,
+          padding: '14px 28px', borderRadius: 14, fontWeight: 700, fontSize: '0.95rem',
           background: toast.type === 'success' ? '#ecfdf5' : '#fef2f2',
           color: toast.type === 'success' ? '#065f46' : '#b91c1c',
-          border: `1px solid ${toast.type === 'success' ? 'rgba(5,150,105,0.3)' : 'rgba(239,68,68,0.3)'}`,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+          border: `1.5px solid ${toast.type === 'success' ? 'rgba(5,150,105,0.4)' : 'rgba(239,68,68,0.4)'}`,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+          animation: 'slideDown 0.3s ease-out',
+          maxWidth: '90vw',
         }}>
-          {toast.type === 'success' ? '✓ ' : '✕ '}{toast.msg}
+          {toast.msg}
         </div>
       )}
 

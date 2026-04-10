@@ -146,12 +146,13 @@ public class ParentBillingService {
                 }
             }
 
-            int sessionsPerMonth = cls.getSessionsPerWeek() != null && cls.getSessionsPerWeek() > 0 
+            int expectedSessions = cls.getSessionsPerWeek() != null && cls.getSessionsPerWeek() > 0
                 ? cls.getSessionsPerWeek() * 4 : 4;
 
             BigDecimal estFee = BigDecimal.ZERO;
             if (cls.getParentFee() != null) {
-                BigDecimal parentFeePerSession = cls.getParentFee().divide(BigDecimal.valueOf(sessionsPerMonth), 0, RoundingMode.HALF_UP);
+                BigDecimal parentFeePerSession = cls.getParentFee()
+                        .divide(BigDecimal.valueOf(expectedSessions), 0, RoundingMode.HALF_UP);
                 estFee = parentFeePerSession.multiply(BigDecimal.valueOf(completed));
             }
 

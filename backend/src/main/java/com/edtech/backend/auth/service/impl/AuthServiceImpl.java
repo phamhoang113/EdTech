@@ -39,6 +39,7 @@ import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.auth.service.AuthService;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.core.util.ImageCompressUtil;
 import com.edtech.backend.security.jwt.JwtService;
 
 @Slf4j
@@ -92,11 +93,18 @@ public class AuthServiceImpl implements AuthService {
                 phone = "0" + phone.substring(3);
             }
 
-            Optional<UserEntity> userOpt = userRepository.findByPhoneAndIsDeletedFalse(phone);
+            Optional<UserEntity> userOpt = userRepository.findByIdentifierAndIsDeletedFalse(phone);
             UserEntity user;
 
             if (userOpt.isPresent()) {
                 user = userOpt.get(); // Existing user -> Login
+                
+                // Nếu tìm thấy qua username (do PH tạo dùng SĐT làm username) thì tự động link luôn cột phone
+                if (user.getPhone() == null) {
+                    user.setPhone(phone);
+                    userRepository.save(user);
+                }
+                
                 log.info("Firebase Auth successful for existing user: {}", phone);
             } else {
                 // New User -> Register
@@ -105,10 +113,11 @@ public class AuthServiceImpl implements AuthService {
                 }
                 user = UserEntity.builder()
                         .phone(phone)
+                        .username(phone)
                         .passwordHash(passwordEncoder.encode(request.getPassword()))
                         .fullName(request.getFullName())
                         .role(request.getRole())
-                        .isActive(true) // Authenticated by Firebase immediately
+                        .isActive(true)
                         .isDeleted(false)
                         .failedAttempts(0)
                         .build();
@@ -182,7 +191,10 @@ public class AuthServiceImpl implements AuthService {
             identifier = "0" + identifier.substring(3);
         }
 
-        UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(identifier)
+        // Cho phép tìm bằng cả username lẫn SĐT (vì user có thể nhập SĐT khi quên MK)
+        final String lookupId = identifier;
+        UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(lookupId)
+                .or(() -> userRepository.findByPhoneAndIsDeletedFalse(lookupId))
                 .orElseThrow(() -> new BusinessRuleException("Không tìm thấy tài khoản."));
 
         if (user.getPhone() == null || user.getPhone().isBlank()) {
@@ -228,7 +240,9 @@ public class AuthServiceImpl implements AuthService {
             identifier = "0" + identifier.substring(3);
         }
 
-        UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(identifier)
+        final String lookupId = identifier;
+        UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(lookupId)
+                .or(() -> userRepository.findByPhoneAndIsDeletedFalse(lookupId))
                 .orElseThrow(() -> new BusinessRuleException("Không tìm thấy tài khoản."));
 
         if (!phone.equals(user.getPhone())) {
@@ -266,7 +280,7 @@ public class AuthServiceImpl implements AuthService {
     // ─────────── Private Helpers ───────────
 
     private TokenResponse generateTokenResponse(UserEntity user) {
-        String subject = user.getPhone() != null ? user.getPhone() : user.getUsername();
+        String subject = user.getUsername();
         User userDetails =
                 new User(
                         subject,
@@ -297,7 +311,7 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(refreshTokenStr)
                 .role(user.getRole())
                 .fullName(user.getFullName())
-                .avatarBase64(user.getAvatarBase64())
+                .avatarBase64(ImageCompressUtil.decompress(user.getAvatarBase64()))
                 .isActive(user.getIsActive())
                 .mustChangePassword(user.getMustChangePassword())
                 .build();

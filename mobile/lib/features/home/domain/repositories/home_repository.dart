@@ -4,6 +4,7 @@ import '../../../../core/error/failures.dart';
 import '../entities/my_class_entity.dart';
 import '../entities/upcoming_session_entity.dart';
 import '../entities/billing_summary_entity.dart';
+import '../entities/student_entity.dart';
 
 abstract class HomeRepository {
   /// Load classes cho phụ huynh hoặc học sinh dựa trên role.
@@ -14,4 +15,7 @@ abstract class HomeRepository {
 
   /// Load hóa đơn chưa thanh toán (chỉ PH).
   Future<List<BillingSummaryEntity>> getUnpaidBillings();
+
+  /// Load danh sách con em (chỉ PH).
+  Future<List<StudentEntity>> getMyChildren();
 }

@@ -15,6 +15,7 @@ import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.core.exception.EdTechException;
 import com.edtech.backend.core.service.SystemSettingsService;
+import com.edtech.backend.core.util.ImageCompressUtil;
 import com.edtech.backend.tutor.dto.response.TutorPublicResponse;
 import com.edtech.backend.tutor.entity.TutorProfileEntity;
 import com.edtech.backend.tutor.enums.VerificationStatus;
@@ -68,7 +69,7 @@ public class PublicTutorService {
                 .teachingLevels(entity.getTeachingLevels())
                 .achievements(entity.getAchievements())
                 .experienceYears(entity.getExperienceYears())
-                .avatarBase64(avatarBase64)
+                .avatarBase64(ImageCompressUtil.decompress(avatarBase64))
                 .tutorType(entity.getTutorType() != null ? entity.getTutorType().name() : null)
                 .build();
     }

@@ -19,7 +19,7 @@ export const Footer = () => {
             <a href="https://facebook.com" target="_blank" rel="noreferrer" className="footer-social-icon" aria-label="Facebook">
               <Facebook size={18} />
             </a>
-            <a href="https://zalo.me/0336652085" target="_blank" rel="noreferrer" className="footer-social-icon" aria-label="Zalo">
+            <a href="https://zalo.me/0345851204" target="_blank" rel="noreferrer" className="footer-social-icon" aria-label="Zalo">
               Z
             </a>
             <a href="https://youtube.com" target="_blank" rel="noreferrer" className="footer-social-icon" aria-label="YouTube">

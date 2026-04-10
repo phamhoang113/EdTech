@@ -35,4 +35,7 @@ public interface StudentService {
 
     /** (Student) Từ chối liên kết do phụ huynh gửi */
     void rejectParentLink(UUID studentId, UUID linkId);
+
+    /** (Parent) Đặt lại mật khẩu cho con em */
+    void resetChildPassword(UUID studentProfileId, UUID parentId, String newPassword);
 }

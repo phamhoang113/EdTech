@@ -477,7 +477,7 @@ public class AdminClassService {
      *  platformFee (TT giữ) = parentFee - tutorFee.
      *  feePercentage = % phí nhận lớp 1 lần dưới khi GS nhận lớp. */
     @Transactional
-    public void approveClassRequest(UUID classId, BigDecimal tutorFee, String levelFees, String tutorProposals, Integer feePercentage) {
+    public void approveClassRequest(UUID classId, String title, BigDecimal tutorFee, String levelFees, String tutorProposals, Integer feePercentage) {
         ClassEntity cls = classRepository.findById(classId)
                 .orElseThrow(() -> new EntityNotFoundException(ERR_CLASS_NOT_FOUND));
 
@@ -486,6 +486,11 @@ public class AdminClassService {
         }
 
         cls.setStatus(ClassStatus.OPEN);
+
+        if (title != null && !title.isBlank()) {
+            cls.setTitle(title);
+        }
+
 
         cls.setStartDate(LocalDate.now());
         cls.setEndDate(LocalDate.now().plusMonths(SEARCH_DEADLINE_MONTHS));

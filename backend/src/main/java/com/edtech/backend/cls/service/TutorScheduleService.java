@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,8 +39,13 @@ import com.edtech.backend.cls.enums.SessionType;
 import com.edtech.backend.cls.enums.WeekDay;
 import com.edtech.backend.cls.repository.ClassRepository;
 import com.edtech.backend.cls.repository.SessionRepository;
+import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.enums.UserRole;
+import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.notification.entity.NotificationType;
+import com.edtech.backend.notification.service.NotificationService;
 
 @Service
 @RequiredArgsConstructor
@@ -69,6 +76,8 @@ public class TutorScheduleService {
     private final SessionRepository sessionRepository;
     private final ClassRepository classRepository;
     private final ObjectMapper objectMapper;
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     // ─── Set/Update Class Schedule ──────────────────────────────────
 
@@ -101,7 +110,20 @@ public class TutorScheduleService {
         log.info("[SET_SCHEDULE] tutorId={}, classId={}, oldSchedule={}, newSchedule={}",
                 tutorId, classId, oldSchedule, cls.getSchedule());
 
-        // TODO: Gửi notification cho Admin + PH về thay đổi lịch
+        // Notify Admin + PH về thay đổi lịch dạy
+        UserEntity tutor = userRepository.findById(tutorId).orElse(null);
+        String tutorName = tutor != null ? tutor.getFullName() : "Gia sư";
+        String body = String.format("%s đã cập nhật lịch dạy lớp %s.", tutorName, cls.getTitle());
+
+        userRepository.findByRoleAndIsDeletedFalseOrderByCreatedAtDesc(UserRole.ADMIN)
+                .forEach(admin -> notificationService.sendNotification(
+                        admin.getId(), NotificationType.SCHEDULE_UPDATED,
+                        "Cập nhật lịch dạy", body, "CLASS", cls.getId()));
+
+        if (cls.getParentId() != null) {
+            notificationService.sendNotification(cls.getParentId(), NotificationType.SCHEDULE_UPDATED,
+                    "Lịch học được cập nhật", body, "SESSION", cls.getId());
+        }
 
         return ClassDTO.fromEntity(cls);
     }
@@ -139,19 +161,7 @@ public class TutorScheduleService {
         if (request.getStartTime() != null || request.getEndTime() != null || request.getSessionDate() != null) {
             validateTimeRange(newStart, newEnd);
             checkTimeConflict(tutorId, session.getSessionDate(), newStart, newEnd, sessionId);
-            
-            // Cleanup overlapping CANCELLED sessions for the same class
-            List<SessionEntity> sameDaySessions = sessionRepository.findByTutorIdAndDateBetween(
-                    tutorId, session.getSessionDate(), session.getSessionDate(), Sort.by(Sort.Direction.ASC, "startTime"));
-            for (SessionEntity existing : sameDaySessions) {
-                if (existing.getStatus() == SessionStatus.CANCELLED && existing.getCls().getId().equals(session.getCls().getId()) && !existing.getId().equals(sessionId)) {
-                    boolean isOverlapping = newStart.isBefore(existing.getEndTime()) && newEnd.isAfter(existing.getStartTime());
-                    if (isOverlapping) {
-                        sessionRepository.delete(existing);
-                        log.info("[UPDATE_DRAFT] Deleted overlapping CANCELLED session {}", existing.getId());
-                    }
-                }
-            }
+            cleanupOverlappingCancelledSessions(tutorId, session.getSessionDate(), newStart, newEnd, session.getCls().getId(), sessionId);
 
             session.setStartTime(newStart);
             session.setEndTime(newEnd);
@@ -229,7 +239,16 @@ public class TutorScheduleService {
         log.info("[CONFIRM_DRAFTS] tutorId={}, confirmedCount={}, cancelledCount={}, week={}/{}",
                 tutorId, confirmedCount, cancelledCount, targetMonday, targetSunday);
 
-        // TODO: Gửi notification cho PH
+        // Notify PH của các lớp có lịch được xác nhận
+        Set<UUID> notifiedParents = new HashSet<>();
+        for (SessionEntity s : drafts) {
+            UUID parentId = s.getCls().getParentId();
+            if (parentId != null && notifiedParents.add(parentId)) {
+                String body = String.format("Gia sư đã xác nhận lịch dạy tuần %s - %s.", targetMonday, targetSunday);
+                notificationService.sendNotification(parentId, NotificationType.SCHEDULE_CONFIRMED,
+                        "Lịch học tuần mới", body, "SESSION", s.getCls().getId());
+            }
+        }
 
         return Map.of(
                 "confirmedCount", confirmedCount,
@@ -269,47 +288,16 @@ public class TutorScheduleService {
         LocalDate nextMonday = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY));
         LocalDate nextSunday = nextMonday.plusDays(6);
 
-        List<ClassEntity> activeClasses = classRepository.findByStatusAndIsDeletedFalse(ClassStatus.ACTIVE);
+        List<ClassEntity> activeClasses = classRepository.findByStatusAndIsDeletedFalse(ClassStatus.ACTIVE)
+                .stream()
+                .filter(cls -> cls.getStatus() != ClassStatus.SUSPENDED)
+                .filter(cls -> cls.getTutorId() != null)
+                .filter(this::hasValidSchedule)
+                .collect(Collectors.toList());
+
         int totalCreated = 0;
-
         for (ClassEntity cls : activeClasses) {
-            if (cls.getStatus() == ClassStatus.SUSPENDED) {
-                continue;
-            }
-            if (cls.getTutorId() == null || cls.getSchedule() == null || "[]".equals(cls.getSchedule())) {
-                continue;
-            }
-
-            List<ScheduleSlotDTO> slots = parseSchedule(cls.getSchedule());
-            for (ScheduleSlotDTO slot : slots) {
-                DayOfWeek dayOfWeek = WeekDay.resolve(slot.getDayOfWeek());
-                if (dayOfWeek == null) {
-                    log.warn("Unknown dayOfWeek '{}' in class {}", slot.getDayOfWeek(), cls.getId());
-                    continue;
-                }
-
-                LocalDate sessionDate = nextMonday.with(TemporalAdjusters.nextOrSame(dayOfWeek));
-                if (sessionDate.isAfter(nextSunday)) continue;
-
-                LocalTime startTime = LocalTime.parse(slot.getStartTime());
-                LocalTime endTime = LocalTime.parse(slot.getEndTime());
-
-                // Skip nếu đã tồn tại
-                boolean exists = sessionRepository.existsByClsIdAndSessionDateAndStartTime(
-                        cls.getId(), sessionDate, startTime);
-                if (exists) continue;
-
-                SessionEntity session = SessionEntity.builder()
-                        .cls(cls)
-                        .sessionDate(sessionDate)
-                        .startTime(startTime)
-                        .endTime(endTime)
-                        .status(SessionStatus.DRAFT)
-                        .build();
-
-                sessionRepository.save(session);
-                totalCreated++;
-            }
+            totalCreated += generateDraftsFromSchedule(cls, nextMonday, nextSunday);
         }
 
         log.info("[GENERATE_DRAFTS] totalCreated={}, week={}/{}", totalCreated, nextMonday, nextSunday);
@@ -393,18 +381,7 @@ public class TutorScheduleService {
                 .sessionType(sessionType)
                 .build();
 
-        // Cleanup overlapping CANCELLED sessions for the same class so they don't clutter the UI
-        List<SessionEntity> sameDaySessions = sessionRepository.findByTutorIdAndDateBetween(
-                tutorId, sessionDate, sessionDate, Sort.by(Sort.Direction.ASC, "startTime"));
-        for (SessionEntity existing : sameDaySessions) {
-            if (existing.getStatus() == SessionStatus.CANCELLED && existing.getCls().getId().equals(cls.getId())) {
-                boolean isOverlapping = startTime.isBefore(existing.getEndTime()) && endTime.isAfter(existing.getStartTime());
-                if (isOverlapping) {
-                    sessionRepository.delete(existing);
-                    log.info("[CREATE_SINGLE_DRAFT] Deleted overlapping CANCELLED session {}", existing.getId());
-                }
-            }
-        }
+        cleanupOverlappingCancelledSessions(tutorId, sessionDate, startTime, endTime, cls.getId(), null);
 
         session = sessionRepository.save(session);
         log.info("[CREATE_SINGLE_DRAFT] tutorId={}, classId={}, date={}, time={}-{}",
@@ -427,55 +404,24 @@ public class TutorScheduleService {
         List<ClassEntity> allTutorClasses = classRepository.findByTutorIdAndStatusAndIsDeletedFalse(
                 tutorId, ClassStatus.ACTIVE);
 
-        // Tách lớp có schedule và lớp chưa set schedule
         List<String> skippedClassNames = allTutorClasses.stream()
-                .filter(c -> c.getSchedule() == null || "[]".equals(c.getSchedule()))
+                .filter(c -> !hasValidSchedule(c))
                 .map(ClassEntity::getTitle)
                 .collect(Collectors.toList());
 
         List<ClassEntity> tutorClasses = allTutorClasses.stream()
-                .filter(c -> c.getSchedule() != null && !"[]".equals(c.getSchedule()))
+                .filter(this::hasValidSchedule)
                 .collect(Collectors.toList());
 
         int totalCreated = 0;
-
         for (ClassEntity cls : tutorClasses) {
-            List<ScheduleSlotDTO> slots = parseSchedule(cls.getSchedule());
-            for (ScheduleSlotDTO slot : slots) {
-                DayOfWeek dayOfWeek = WeekDay.resolve(slot.getDayOfWeek());
-                if (dayOfWeek == null) {
-                    log.warn("[GENERATE_DRAFTS_TUTOR] Unknown dayOfWeek '{}' in class {}",
-                            slot.getDayOfWeek(), cls.getId());
-                    continue;
-                }
-
-                LocalDate sessionDate = targetMonday.with(TemporalAdjusters.nextOrSame(dayOfWeek));
-                if (sessionDate.isAfter(targetSunday)) continue;
-
-                LocalTime startTime = LocalTime.parse(slot.getStartTime());
-                LocalTime endTime = LocalTime.parse(slot.getEndTime());
-
-                boolean exists = sessionRepository.existsByClsIdAndSessionDateAndStartTime(
-                        cls.getId(), sessionDate, startTime);
-                if (exists) continue;
-
-                SessionEntity session = SessionEntity.builder()
-                        .cls(cls)
-                        .sessionDate(sessionDate)
-                        .startTime(startTime)
-                        .endTime(endTime)
-                        .status(SessionStatus.DRAFT)
-                        .build();
-
-                sessionRepository.save(session);
-                totalCreated++;
-            }
+            totalCreated += generateDraftsFromSchedule(cls, targetMonday, targetSunday);
         }
 
         log.info("[GENERATE_DRAFTS_TUTOR] tutorId={}, totalCreated={}, skipped={}, week={}/{}",
                 tutorId, totalCreated, skippedClassNames.size(), targetMonday, targetSunday);
 
-        Map<String, Object> result = new java.util.HashMap<>();
+        Map<String, Object> result = new HashMap<>();
         result.put("createdCount", totalCreated);
         result.put("weekStart", targetMonday.toString());
         result.put("weekEnd", targetSunday.toString());
@@ -617,7 +563,105 @@ public class TutorScheduleService {
         }
     }
 
+    private boolean hasValidSchedule(ClassEntity cls) {
+        return cls.getSchedule() != null && !"[]".equals(cls.getSchedule());
+    }
+
+    /**
+     * Tạo draft sessions từ schedule của 1 class trong khoảng tuần [monday, sunday].
+     * @return số draft được tạo
+     */
+    private int generateDraftsFromSchedule(ClassEntity cls, LocalDate monday, LocalDate sunday) {
+        List<ScheduleSlotDTO> slots = parseSchedule(cls.getSchedule());
+        int created = 0;
+
+        for (ScheduleSlotDTO slot : slots) {
+            DayOfWeek dayOfWeek = WeekDay.resolve(slot.getDayOfWeek());
+            if (dayOfWeek == null) {
+                log.warn("[GENERATE_DRAFTS] Unknown dayOfWeek '{}' in class {}", slot.getDayOfWeek(), cls.getId());
+                continue;
+            }
+
+            LocalDate sessionDate = monday.with(TemporalAdjusters.nextOrSame(dayOfWeek));
+            if (sessionDate.isAfter(sunday)) continue;
+
+            LocalTime startTime = LocalTime.parse(slot.getStartTime());
+            LocalTime endTime = LocalTime.parse(slot.getEndTime());
+
+            boolean exists = sessionRepository.existsByClsIdAndSessionDateAndStartTime(
+                    cls.getId(), sessionDate, startTime);
+            if (exists) continue;
+
+            SessionEntity session = SessionEntity.builder()
+                    .cls(cls)
+                    .sessionDate(sessionDate)
+                    .startTime(startTime)
+                    .endTime(endTime)
+                    .status(SessionStatus.DRAFT)
+                    .build();
+
+            sessionRepository.save(session);
+            created++;
+        }
+        return created;
+    }
+
+    /**
+     * Xoá các session CANCELLED bị overlap khi GS tạo/sửa draft cùng lớp.
+     */
+    private void cleanupOverlappingCancelledSessions(UUID tutorId, LocalDate date,
+            LocalTime startTime, LocalTime endTime, UUID classId, UUID excludeSessionId) {
+        List<SessionEntity> sameDaySessions = sessionRepository.findByTutorIdAndDateBetween(
+                tutorId, date, date, Sort.by(Sort.Direction.ASC, "startTime"));
+
+        for (SessionEntity existing : sameDaySessions) {
+            if (existing.getStatus() != SessionStatus.CANCELLED) continue;
+            if (!existing.getCls().getId().equals(classId)) continue;
+            if (excludeSessionId != null && existing.getId().equals(excludeSessionId)) continue;
+
+            boolean isOverlapping = startTime.isBefore(existing.getEndTime()) && endTime.isAfter(existing.getStartTime());
+            if (isOverlapping) {
+                sessionRepository.delete(existing);
+                log.info("[CLEANUP_CANCELLED] Deleted overlapping CANCELLED session {}", existing.getId());
+            }
+        }
+    }
+
+    private boolean isCancelledStatus(SessionStatus status) {
+        return status == SessionStatus.CANCELLED
+                || status == SessionStatus.CANCELLED_BY_TUTOR
+                || status == SessionStatus.CANCELLED_BY_STUDENT;
+    }
+
+    /**
+     * Nếu quota chưa đủ REGULAR mà có EXTRA → chuyển EXTRA thành REGULAR.
+     * @return mảng [regular, extra] sau khi auto-promote
+     */
+    private long[] autoPromoteExtraToRegular(UUID classId, String classCode,
+            int target, long regular, long extra, List<SessionEntity> weekSessions) {
+        if (target <= 0 || regular >= target || extra <= 0) {
+            return new long[]{regular, extra};
+        }
+
+        long needToPromote = Math.min(extra, target - regular);
+        for (SessionEntity s : weekSessions) {
+            if (needToPromote <= 0) break;
+            if (s.getCls().getId().equals(classId)
+                    && s.getSessionType() == SessionType.EXTRA
+                    && !isCancelledStatus(s.getStatus())) {
+                s.setSessionType(SessionType.REGULAR);
+                sessionRepository.save(s);
+                log.info("[AUTO_FIX_TYPE] session {} EXTRA->REGULAR for class {}", s.getId(), classCode);
+                regular++;
+                extra--;
+                needToPromote--;
+            }
+        }
+        return new long[]{regular, extra};
+    }
+
     // ─── Quota Tracking ────────────────────────────────────────────────
+
     @Transactional
     public List<ClassQuotaDTO> getWeeklyQuotaStatus(UUID tutorId, LocalDate weekOf) {
         LocalDate monday = weekOf.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
@@ -629,7 +673,6 @@ public class TutorScheduleService {
         return classes.stream().map(cls -> {
             int target = cls.getSessionsPerWeek() != null ? cls.getSessionsPerWeek() : 0;
 
-            // Chưa set ngày bắt đầu học hoặc tuần này trước ngày bắt đầu -> không tính quota
             if (cls.getLearningStartDate() == null || sunday.isBefore(cls.getLearningStartDate())) {
                 target = 0;
             }
@@ -639,38 +682,18 @@ public class TutorScheduleService {
             long extra = 0;
 
             for (SessionEntity s : weekSessions) {
-                boolean isCancelled = s.getStatus() == SessionStatus.CANCELLED ||
-                                      s.getStatus() == SessionStatus.CANCELLED_BY_TUTOR ||
-                                      s.getStatus() == SessionStatus.CANCELLED_BY_STUDENT;
-
-                if (s.getCls().getId().equals(cls.getId()) && !isCancelled) {
+                if (s.getCls().getId().equals(cls.getId()) && !isCancelledStatus(s.getStatus())) {
                     if (s.getSessionType() == SessionType.REGULAR) regular++;
                     else if (s.getSessionType() == SessionType.MAKEUP) makeup++;
-                    else if (s.getSessionType() == SessionType.EXTRA) extra++;;
+                    else if (s.getSessionType() == SessionType.EXTRA) extra++;
                 }
             }
 
-            // Auto-fix: nếu quota chưa đủ REGULAR mà có EXTRA -> chuyển EXTRA thành REGULAR
-            if (target > 0 && regular < target && extra > 0) {
-                long needToPromote = Math.min(extra, target - regular);
-                for (SessionEntity s : weekSessions) {
-                    if (needToPromote <= 0) break;
-                    if (s.getCls().getId().equals(cls.getId())
-                            && s.getSessionType() == SessionType.EXTRA
-                            && s.getStatus() != SessionStatus.CANCELLED
-                            && s.getStatus() != SessionStatus.CANCELLED_BY_TUTOR
-                            && s.getStatus() != SessionStatus.CANCELLED_BY_STUDENT) {
-                        s.setSessionType(SessionType.REGULAR);
-                        sessionRepository.save(s);
-                        log.info("[AUTO_FIX_TYPE] session {} EXTRA->REGULAR for class {}", s.getId(), cls.getClassCode());
-                        regular++;
-                        extra--;
-                        needToPromote--;
-                    }
-                }
-            }
+            long[] promoted = autoPromoteExtraToRegular(
+                    cls.getId(), cls.getClassCode(), target, regular, extra, weekSessions);
+            regular = promoted[0];
+            extra = promoted[1];
 
-            // Tất cả buổi active (regular + makeup + extra) đều được tính vào quota
             long totalActive = regular + makeup + extra;
             int missing = (int) Math.max(0, target - totalActive);
             int excess = (int) Math.max(0, totalActive - target);

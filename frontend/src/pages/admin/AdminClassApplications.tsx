@@ -90,17 +90,18 @@ function ApproveModal({
 }: {
   app: ClassApplicationItem;
   defaultSalary: number | null;
-  onConfirm: (id: string, salary: number) => Promise<void>;
+  onConfirm: (id: string, salary: number, note: string) => Promise<void>;
   onCancel: () => void;
 }) {
   const [salary, setSalary] = useState<string>(defaultSalary != null ? String(defaultSalary) : '');
+  const [note, setNote] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
 
   const handleConfirm = async () => {
     const parsed = parseInt(salary.replace(/[^0-9]/g, ''), 10);
     if (!parsed || parsed <= 0) return;
     setSubmitting(true);
-    await onConfirm(app.applicationId, parsed);
+    await onConfirm(app.applicationId, parsed, note);
     setSubmitting(false);
   };
 
@@ -131,6 +132,16 @@ function ApproveModal({
           {defaultSalary != null && (
             <p className="aca-modal-hint">Mặc định theo trình độ: {defaultSalary.toLocaleString('vi-VN')}đ/tháng</p>
           )}
+
+          <label className="aca-modal-label" style={{ marginTop: 16 }}>Ghi chú gửi Phụ huynh (tùy chọn)</label>
+          <textarea
+            className="aca-modal-input"
+            rows={2}
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            placeholder="Khuyên dùng, v.v..."
+            style={{ resize: 'vertical' }}
+          />
         </div>
         <div className="aca-modal-footer">
           <button className="aca-btn aca-btn-ghost" onClick={onCancel}>Huỷ</button>
@@ -157,7 +168,7 @@ function ClassApplicationDetail({
 }: {
   applications: ClassApplicationItem[];
   onBack: () => void;
-  onApprove: (id: string, salary: number) => Promise<void>;
+  onApprove: (id: string, salary: number, note?: string) => Promise<void>;
   onReject: (id: string) => Promise<void>;
   submittingId: string | null;
 }) {
@@ -200,7 +211,7 @@ function ClassApplicationDetail({
       <ApproveModal
         app={pendingApproveApp}
         defaultSalary={getDefaultSalary(pendingApproveApp)}
-        onConfirm={async (id, salary) => { await onApprove(id, salary); setPendingApproveApp(null); }}
+        onConfirm={async (id, salary, note) => { await onApprove(id, salary, note); setPendingApproveApp(null); }}
         onCancel={() => setPendingApproveApp(null)}
       />
     )}
@@ -510,11 +521,11 @@ export function AdminClassApplications() {
 
   useEffect(() => { fetchApplications(); }, [filter]);
 
-  const handleApprove = async (applicationId: string, actualSalary: number) => {
+  const handleApprove = async (applicationId: string, actualSalary: number, note?: string) => {
     if (submittingId) return;
     setSubmittingId(applicationId);
     try {
-      await adminApi.approveClassApplication(applicationId, actualSalary || undefined);
+      await adminApi.approveClassApplication(applicationId, actualSalary || undefined, note);
       showToast('success', 'Đã duyệt đơn và giao lớp cho gia sư!');
       window.dispatchEvent(new Event('refetchBadgeCounts'));
       await fetchApplications();

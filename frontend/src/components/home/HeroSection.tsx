@@ -60,7 +60,7 @@ export const HeroSection = ({}: HeroSectionProps) => {
                 <Button size="lg" onClick={() => navigate('/classes')} style={{ padding: '0 28px', fontSize: '1rem', fontWeight: 700, boxShadow: '0 10px 25px rgba(99,102,241,0.35)' }}>
                   Xem Lớp Hiện Có
                 </Button>
-                <a href="https://zalo.me/0336652085" target="_blank" rel="noreferrer" style={{ 
+                <a href="https://zalo.me/0345851204" target="_blank" rel="noreferrer" style={{ 
                   display: 'inline-flex', alignItems: 'center', gap: 10, 
                   background: 'linear-gradient(135deg, #007bff, #0056b3)', color: '#fff', 
                   padding: '0 24px', height: '100%', minHeight: 48, borderRadius: 12, 

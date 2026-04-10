@@ -110,4 +110,30 @@ public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
             @Param("endDate") LocalDate endDate
     );
 
+    /** Đếm số buổi GS nghỉ (CANCELLED_BY_TUTOR) theo class trong khoảng thời gian */
+    @Query("SELECT s.cls.id, COUNT(s.id) " +
+           "FROM SessionEntity s " +
+           "WHERE s.status = :status " +
+           "AND s.sessionDate >= :startDate AND s.sessionDate <= :endDate " +
+           "GROUP BY s.cls.id")
+    List<Object[]> countSessionsByStatusAndClassAndDateRange(
+            @Param("status") SessionStatus status,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    /** Đếm số buổi tăng cường (EXTRA) đã COMPLETED theo class trong khoảng thời gian */
+    @Query("SELECT s.cls.id, COUNT(s.id) " +
+           "FROM SessionEntity s " +
+           "WHERE s.sessionType = :sessionType " +
+           "AND s.status IN :statuses " +
+           "AND s.sessionDate >= :startDate AND s.sessionDate <= :endDate " +
+           "GROUP BY s.cls.id")
+    List<Object[]> countSessionsByTypeAndStatusesAndClassAndDateRange(
+            @Param("sessionType") com.edtech.backend.cls.enums.SessionType sessionType,
+            @Param("statuses") List<SessionStatus> statuses,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
 }

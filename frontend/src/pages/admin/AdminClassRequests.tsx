@@ -309,7 +309,7 @@ export function AdminClassRequests() {
   const handleApprove = async () => {
     if (!approveTarget) return;
     try {
-      await adminApi.approveClassRequest(approveTarget.id, approveTarget.tutorFee, approveTarget.levelFees, approveTarget.tutorProposals, approveTarget.platformPct);
+      await adminApi.approveClassRequest(approveTarget.id, approveTarget.title, approveTarget.tutorFee, approveTarget.levelFees, approveTarget.tutorProposals, approveTarget.platformPct);
       showToast('success', 'Đã duyệt! Lớp đã được mở cho gia sư đăng ký.');
       window.dispatchEvent(new Event('refetchBadgeCounts'));
       fetchRequests();
@@ -366,9 +366,18 @@ export function AdminClassRequests() {
             <h3 style={{ margin: '0 0 10px', fontSize: '1.05rem', fontWeight: 800, color: '#059669', display: 'flex', alignItems: 'center', gap: 8 }}>
               <CheckCircle size={22} style={{ strokeWidth: 2.5 }} /> Xác nhận mở lớp
             </h3>
-            <p style={{ margin: '14px 0 24px', fontSize: '0.92rem', color: 'var(--color-text)', lineHeight: 1.6 }}>
+            <p style={{ margin: '14px 0 12px', fontSize: '0.92rem', color: 'var(--color-text)', lineHeight: 1.6 }}>
               Bạn có chắc chắn muốn duyệt và mở lớp <strong>{approveTarget.title}</strong> này không? Yêu cầu này sẽ được đưa lên sàn ngay lập tức để các gia sư đăng ký ứng tuyển.
             </p>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 6, fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text)' }}>Chỉnh sửa tiêu đề lớp (nếu cần):</label>
+              <input
+                type="text"
+                value={approveTarget.title}
+                onChange={e => setApproveTarget({ ...approveTarget, title: e.target.value })}
+                style={{ width: '100%', borderRadius: 8, border: '1.5px solid var(--color-border)', padding: '10px 12px', fontSize: '0.9rem' }}
+              />
+            </div>
             <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
               <button
                 onClick={handleApprove}

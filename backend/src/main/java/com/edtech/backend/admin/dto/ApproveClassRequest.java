@@ -9,4 +9,4 @@ import java.math.BigDecimal;
  * @param levelFees     JSON array [{level, tutor_fee}] đã được admin chỉnh sửa. Nếu null → giữ nguyên.
  * @param feePercentage % TT nhận trên lương GS thấy. Nếu null → giữ giá trị hiện tại.
  */
-public record ApproveClassRequest(BigDecimal tutorFee, String levelFees, String tutorProposals, Integer feePercentage) {}
+public record ApproveClassRequest(String title, BigDecimal tutorFee, String levelFees, String tutorProposals, Integer feePercentage) {}

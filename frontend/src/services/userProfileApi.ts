@@ -12,6 +12,7 @@ export interface UserProfileResponse {
 }
 
 export interface UpdateUserProfileRequest {
+  phone?: string;
   email?: string;
   avatarBase64?: string;
   address?: string;

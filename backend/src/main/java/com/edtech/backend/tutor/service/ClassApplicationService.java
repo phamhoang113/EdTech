@@ -127,7 +127,7 @@ public class ClassApplicationService {
      * @param actualSalary Lương thực tế admin đặt (nếu null → tự tính từ levelFees)
      */
     @Transactional
-    public ClassApplicationResponse approveApplication(UUID applicationId, BigDecimal actualSalary) {
+    public ClassApplicationResponse approveApplication(UUID applicationId, BigDecimal actualSalary, String note) {
         ClassApplicationEntity application = findApplicationOrThrow(applicationId);
 
         if (application.getStatus() != ApplicationStatus.PENDING) {
@@ -136,9 +136,6 @@ public class ClassApplicationService {
 
         ClassEntity classEntity = findOpenClassOrThrow(application.getClassId());
 
-        // Ghi lương admin đề xuất vào đơn (lưu tạm vào classEntity.tutorFee chỉ khi PH chọn)
-        // Tính lương theo levelFees hoặc dùng actualSalary để lưu vào note/response —
-        // lớp CHƯA được giao, lương sẽ được set chính thức khi PH confirm.
         BigDecimal proposedSalary = actualSalary;
         if (proposedSalary == null) {
             proposedSalary = resolveSalaryFromLevelFees(classEntity, application.getTutorId());
@@ -146,6 +143,9 @@ public class ClassApplicationService {
 
         // Chỉ đổi status đơn, KHÔNG ASSIGN lớp
         application.setStatus(ApplicationStatus.APPROVED);
+        if (note != null && !note.isBlank()) {
+            application.setNote(note);
+        }
         applicationRepository.save(application);
 
         // Cập nhật JSON tutor_proposals trên lớp

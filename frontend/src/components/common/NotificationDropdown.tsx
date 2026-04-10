@@ -1,4 +1,4 @@
-import { Bell, Check, Users, BookOpen, CreditCard, ClockAlert, MessageSquare } from 'lucide-react';
+import { Bell, Check, Users, BookOpen, CreditCard, MessageSquare, CalendarCheck, CalendarX } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -51,6 +51,25 @@ export function NotificationDropdown() {
   useEffect(() => {
     checkDailyReset().then(() => fetchInitialData());
     
+    // FCM foreground listener — nhận push notification real-time
+    let unsubFcm: (() => void) | null = null;
+    import('../../firebase').then(({ onForegroundMessage }) => {
+      unsubFcm = onForegroundMessage((payload) => {
+        // Khi nhận FCM push ở foreground → refresh notification data ngay
+        fetchInitialData();
+        // Hiện OS notification nếu tab không focus
+        if (document.visibilityState !== 'visible' && payload.notification) {
+          import('../../services/pushNotificationService').then(({ showBrowserNotification }) => {
+            showBrowserNotification(
+              payload.notification?.title || 'Thông báo mới',
+              payload.notification?.body || '',
+              payload.data?.entityType
+            );
+          });
+        }
+      });
+    });
+
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsOpen(false);
@@ -66,9 +85,15 @@ export function NotificationDropdown() {
     };
     navigator.serviceWorker?.addEventListener('message', handleSwMessage);
 
+    // Lắng nghe custom event refresh-notifications (khi tạo lớp, gửi form...)
+    const handleRefresh = () => fetchInitialData();
+    window.addEventListener('refresh-notifications', handleRefresh);
+
     return () => {
+      unsubFcm?.();
       document.removeEventListener('mousedown', handleClickOutside);
       navigator.serviceWorker?.removeEventListener('message', handleSwMessage);
+      window.removeEventListener('refresh-notifications', handleRefresh);
     };
   }, []);
 
@@ -79,9 +104,14 @@ export function NotificationDropdown() {
         notificationApi.getUnreadCount(),
         messagingApi.getUnreadCount()
       ]);
-      setNotifications(notifRes.data.content || []);
-      setUnreadCount(countRes.data.count || 0);
-      useNotificationStore.getState().setUnreadMessages(msgCountRes.data.count || 0);
+
+      const notifData = (notifRes as any).data;
+      const countData = (countRes as any).data;
+      const msgCountData = (msgCountRes as any).data;
+
+      setNotifications(notifData?.content || []);
+      setUnreadCount(countData?.count || 0);
+      useNotificationStore.getState().setUnreadMessages(msgCountData?.count || 0);
     } catch (error) {
       console.error('Lỗi khi tải thông báo:', error);
     }
@@ -166,7 +196,13 @@ export function NotificationDropdown() {
         return <CreditCard size={16} className="text-green-500" />;
       case 'SESSION_REMINDER':
       case 'MEET_LINK_SET':
-        return <ClockAlert size={16} className="text-orange-500" />;
+      case 'SCHEDULE_UPDATED':
+      case 'SCHEDULE_CONFIRMED':
+        return <CalendarCheck size={16} className="text-orange-500" />;
+      case 'ABSENCE_REQUESTED':
+      case 'ABSENCE_APPROVED':
+      case 'ABSENCE_REJECTED':
+        return <CalendarX size={16} className="text-red-500" />;
       case 'NEW_MESSAGE':
         return <MessageSquare size={16} className="text-indigo-500" />;
       default:

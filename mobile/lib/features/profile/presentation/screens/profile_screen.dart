@@ -1,17 +1,53 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme_cubit.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/services/web_launcher_service.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 
 /// Tab "Tôi" — Profile + Settings + Links web.
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String? _avatarBase64;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAvatar();
+  }
+
+  Future<void> _loadAvatar() async {
+    try {
+      final dio = getIt<DioClient>().dio;
+      final response = await dio.get('/api/v1/users/profile/me');
+      final data = response.data['data'] as Map<String, dynamic>? ?? {};
+      if (mounted) {
+        setState(() => _avatarBase64 = data['avatarBase64']?.toString());
+      }
+    } catch (_) {
+      // Silently fail — avatar just stays as initial
+    }
+  }
+
+  Future<void> _navigateToEditProfile() async {
+    final result = await context.push<bool>('/edit-profile');
+    if (result == true) {
+      _loadAvatar();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +69,19 @@ class ProfileScreen extends StatelessWidget {
           padding: const EdgeInsets.only(top: 24, bottom: 80),
           children: [
             // ── Avatar + Info ──
-            _buildProfileHeader(context, theme, user.name ?? 'Người dùng', role),
+            _buildProfileHeader(context, theme, user.name ?? 'Người dùng', role, _avatarBase64),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
+
+            // ── Edit profile ──
+            _buildActionTile(
+              context, theme,
+              icon: Icons.edit_outlined,
+              label: 'Chỉnh sửa hồ sơ',
+              onTap: _navigateToEditProfile,
+            ),
+
+            const SizedBox(height: 16),
 
             // ── Quick Links (role-based, mở web) ──
             if (isParentOrIndependent) ...[
@@ -67,19 +113,58 @@ class ProfileScreen extends StatelessWidget {
 
             if (isTutor) ...[
               _buildSectionTitle(theme, '📋 Quản lý'),
-              _buildWebLink(
+              _buildActionTile(
                 context, theme,
-                icon: Icons.dashboard_outlined,
-                label: 'Dashboard chi tiết',
-                subtitle: 'Xem thống kê trên web',
-                webPath: '/tutor/dashboard',
+                icon: Icons.person_outline,
+                label: 'Hồ sơ gia sư',
+                onTap: () => getIt<WebLauncherService>().openWithToken('/tutor/dashboard'),
               ),
-              _buildWebLink(
+              _buildActionTile(
+                context, theme,
+                icon: Icons.chat_bubble_outline,
+                label: 'Tin nhắn',
+                onTap: () => getIt<WebLauncherService>().openWithToken('/tutor/messages'),
+              ),
+              _buildActionTile(
                 context, theme,
                 icon: Icons.monetization_on_outlined,
-                label: 'Thu nhập',
-                subtitle: 'Xem chi tiết doanh thu',
-                webPath: '/tutor/revenue',
+                label: 'Chi tiết thu nhập',
+                onTap: () => getIt<WebLauncherService>().openWithToken('/tutor/revenue'),
+              ),
+              _buildActionTile(
+                context, theme,
+                icon: Icons.bar_chart_outlined,
+                label: 'Thống kê giảng dạy',
+                onTap: () => getIt<WebLauncherService>().openWithToken('/tutor/dashboard'),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            if (role == 'ADMIN') ...[
+              _buildSectionTitle(theme, '🛡️ Quản trị'),
+              _buildActionTile(
+                context, theme,
+                icon: Icons.verified_user_outlined,
+                label: 'Quản lý gia sư',
+                onTap: () => getIt<WebLauncherService>().openWithToken('/admin/tutors'),
+              ),
+              _buildActionTile(
+                context, theme,
+                icon: Icons.class_outlined,
+                label: 'Quản lý lớp học',
+                onTap: () => getIt<WebLauncherService>().openWithToken('/admin/classes'),
+              ),
+              _buildActionTile(
+                context, theme,
+                icon: Icons.monetization_on_outlined,
+                label: 'Quản lý billing',
+                onTap: () => getIt<WebLauncherService>().openWithToken('/admin/billing'),
+              ),
+              _buildActionTile(
+                context, theme,
+                icon: Icons.people_outline,
+                label: 'Quản lý người dùng',
+                onTap: () => getIt<WebLauncherService>().openWithToken('/admin/users'),
               ),
               const SizedBox(height: 16),
             ],
@@ -175,7 +260,7 @@ class ProfileScreen extends StatelessWidget {
   }
 
   // ── Profile header ──
-  Widget _buildProfileHeader(BuildContext context, ThemeData theme, String name, String role) {
+  Widget _buildProfileHeader(BuildContext context, ThemeData theme, String name, String role, String? avatarBase64) {
     final roleLabels = {
       'PARENT': 'Phụ huynh',
       'STUDENT': 'Học sinh',
@@ -191,6 +276,7 @@ class ProfileScreen extends StatelessWidget {
     };
 
     final color = roleColors[role] ?? theme.colorScheme.primary;
+    final hasAvatar = avatarBase64 != null && avatarBase64.contains('base64,');
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -201,18 +287,27 @@ class ProfileScreen extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: hasAvatar ? null : LinearGradient(
                 colors: [color, color.withAlpha(180)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               shape: BoxShape.circle,
             ),
-            child: Center(
-              child: Text(
-                name.isNotEmpty ? name[0].toUpperCase() : '?',
-                style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
-              ),
+            child: ClipOval(
+              child: hasAvatar
+                  ? Image.memory(
+                      base64Decode(avatarBase64!.split('base64,').last),
+                      fit: BoxFit.cover,
+                      width: 64,
+                      height: 64,
+                    )
+                  : Center(
+                      child: Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : '?',
+                        style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                      ),
+                    ),
             ),
           ),
           const SizedBox(width: 16),

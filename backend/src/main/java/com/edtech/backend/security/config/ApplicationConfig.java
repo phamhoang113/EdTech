@@ -25,7 +25,7 @@ public class ApplicationConfig {
     public UserDetailsService userDetailsService() {
         return identifier -> userRepository.findByIdentifierAndIsDeletedFalse(identifier)
                 .map(user -> User.builder()
-                        .username(user.getPhone() != null ? user.getPhone() : user.getUsername())
+                        .username(user.getUsername())
                         .password(user.getPasswordHash())
                         .roles(user.getRole().name())
                         .build())

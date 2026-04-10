@@ -103,6 +103,7 @@ public class AdminClassController {
             @RequestBody(required = false) ApproveClassRequest body) {
         adminClassService.approveClassRequest(
                 id,
+                body != null ? body.title() : null,
                 body != null ? body.tutorFee() : null,
                 body != null ? body.levelFees() : null,
                 body != null ? body.tutorProposals() : null,

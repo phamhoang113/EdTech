@@ -19,6 +19,7 @@ import com.edtech.backend.cls.enums.ClassStatus;
 import com.edtech.backend.cls.repository.ClassRepository;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.core.util.ImageCompressUtil;
 import com.edtech.backend.student.dto.ParentLinkResponse;
 import com.edtech.backend.student.dto.StudentRequest;
 import com.edtech.backend.student.dto.StudentResponse;
@@ -43,7 +44,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public StudentResponse lookupByPhone(String phone) {
-        Optional<UserEntity> studentUser = userRepository.findByPhoneAndRoleAndIsDeletedFalse(phone, UserRole.STUDENT);
+        Optional<UserEntity> studentUser = userRepository.findByIdentifierAndRoleAndIsDeletedFalse(phone, UserRole.STUDENT);
 
         if (studentUser.isEmpty()) {
             assertPhoneNotUsedByOtherRole(phone);
@@ -73,22 +74,27 @@ public class StudentServiceImpl implements StudentService {
 
     private StudentResponse addExistingOrPhoneChild(StudentRequest request, UUID parentId) {
         Optional<UserEntity> existingStudent = userRepository
-                .findByPhoneAndRoleAndIsDeletedFalse(request.phone(), UserRole.STUDENT);
+                .findByIdentifierAndRoleAndIsDeletedFalse(request.phone(), UserRole.STUDENT);
 
         if (existingStudent.isEmpty()) {
             assertPhoneNotUsedByOtherRole(request.phone());
-            UserEntity newStudent = createNewStudentUser(request, request.phone(), null);
-            StudentProfileEntity profile = buildStudentProfile(newStudent, parentId, request, "ACCEPTED");
-            return toResponseEx(studentProfileRepository.save(profile), null, null);
-        } else {
-            UserEntity studentUser = existingStudent.get();
-            boolean linkedToMe = studentProfileRepository.findByUserIdAndParentId(studentUser.getId(), parentId).isPresent();
-            if (linkedToMe) {
-                throw new BusinessRuleException(ERROR_ALREADY_LINKED);
-            }
-            StudentProfileEntity profile = buildStudentProfile(studentUser, parentId, request, "PENDING");
-            return toResponseEx(studentProfileRepository.save(profile), null, null);
+            // SĐT chưa có trong hệ thống → yêu cầu HS tự đăng ký
+            throw new BusinessRuleException(
+                    "Không tìm thấy tài khoản học sinh với SĐT này. "
+                  + "Vui lòng yêu cầu học sinh đăng ký tài khoản trên ứng dụng trước, "
+                  + "sau đó quay lại liên kết bằng SĐT.");
         }
+
+        UserEntity studentUser = existingStudent.get();
+        boolean linkedToMe = studentProfileRepository.findByUserIdAndParentId(studentUser.getId(), parentId).isPresent();
+        if (linkedToMe) {
+            throw new BusinessRuleException(ERROR_ALREADY_LINKED);
+        }
+
+        // Tạo yêu cầu liên kết PENDING — HS phải chấp nhận
+        StudentProfileEntity profile = buildStudentProfile(studentUser, parentId, request, "PENDING");
+        profile.setInitiatedBy("PARENT");
+        return toResponseEx(studentProfileRepository.save(profile), null, null);
     }
 
     private StudentResponse addNewPhonelessChild(StudentRequest request, UUID parentId) {
@@ -186,7 +192,7 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public void requestParentLink(UUID studentId, String parentPhone) {
-        UserEntity parent = userRepository.findByPhoneAndRoleAndIsDeletedFalse(parentPhone, UserRole.PARENT)
+        UserEntity parent = userRepository.findByIdentifierAndRoleAndIsDeletedFalse(parentPhone, UserRole.PARENT)
                 .orElseThrow(() -> new BusinessRuleException("Không tìm thấy phụ huynh với số điện thoại này."));
 
         UserEntity student = userRepository.findById(studentId)
@@ -264,11 +270,21 @@ public class StudentServiceImpl implements StudentService {
         userRepository.save(user);
     }
 
+    @Override
+    @Transactional
+    public void resetChildPassword(UUID studentProfileId, UUID parentId, String newPassword) {
+        StudentProfileEntity profile = findProfileOrThrow(studentProfileId, parentId);
+        UserEntity studentUser = profile.getUser();
+
+        studentUser.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(studentUser);
+    }
+
     private StudentResponse toBasicResponse(UserEntity user) {
         return StudentResponse.builder()
                 .userId(user.getId())
                 .fullName(user.getFullName())
-                .avatarBase64(user.getAvatarBase64())
+                .avatarBase64(ImageCompressUtil.decompress(user.getAvatarBase64()))
                 .build();
     }
 
@@ -285,7 +301,7 @@ public class StudentServiceImpl implements StudentService {
                 .phone(user.getPhone())
                 .grade(profile.getGrade())
                 .school(profile.getSchool())
-                .avatarBase64(user.getAvatarBase64())
+                .avatarBase64(ImageCompressUtil.decompress(user.getAvatarBase64()))
                 .createdAt(profile.getCreatedAt())
                 .username(username != null ? username : user.getUsername())
                 .defaultPassword(defaultPassword)

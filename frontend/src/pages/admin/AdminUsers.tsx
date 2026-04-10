@@ -144,11 +144,14 @@ function UserDetailDrawer({ userId, onClose, onRefresh }: UserDetailDrawerProps)
         ) : detail ? (
           <div className="admin-drawer__content">
             <div className="admin-drawer__user-header">
-              <div className="admin-drawer__avatar" style={{ background: avatarColor(detail.fullName) }}>
-                {initials(detail.fullName)}
+              <div className="admin-drawer__avatar" style={{ background: detail.avatarBase64 ? 'transparent' : avatarColor(detail.fullName), overflow: 'hidden' }}>
+                {detail.avatarBase64 ? (
+                  <img src={detail.avatarBase64} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                ) : initials(detail.fullName)}
               </div>
               <div>
                 <div className="admin-drawer__name">{detail.fullName}</div>
+                {detail.username && <div style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', marginBottom: 4 }}>@{detail.username}</div>}
                 <div className="admin-drawer__tags">
                   <span className={`admin-role-badge admin-role-badge--${detail.role.toLowerCase()}`}>
                     {ROLE_LABEL[detail.role]}
@@ -287,6 +290,61 @@ function UserDetailDrawer({ userId, onClose, onRefresh }: UserDetailDrawerProps)
               </section>
             )}
 
+            {/* ── Con em (PARENT only) ── */}
+            {detail.role === 'PARENT' && detail.children && detail.children.length > 0 && (
+              <section>
+                <div className="admin-drawer__section-title">Con em ({detail.children.length})</div>
+                <div className="admin-drawer__info-list">
+                  {detail.children.map(child => (
+                    <div key={child.profileId} className="admin-drawer__info-item" style={{ alignItems: 'flex-start' }}>
+                      <User size={15} className="admin-drawer__info-icon" style={{ marginTop: 2 }}/>
+                      <div style={{ flex: 1 }}>
+                        <div className="admin-drawer__info-value" style={{ fontWeight: 600 }}>{child.fullName}</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', display: 'flex', flexWrap: 'wrap', gap: '6px 12px', marginTop: 2 }}>
+                          {child.phone && <span>📞 {child.phone}</span>}
+                          {child.username && <span>@{child.username}</span>}
+                          {child.grade && <span>📚 {child.grade}</span>}
+                          {child.school && <span>🏫 {child.school}</span>}
+                        </div>
+                        <span style={{
+                          display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 600,
+                          background: child.linkStatus === 'ACCEPTED' ? '#dcfce7' : child.linkStatus === 'PENDING' ? '#fef3c7' : '#fee2e2',
+                          color: child.linkStatus === 'ACCEPTED' ? '#16a34a' : child.linkStatus === 'PENDING' ? '#d97706' : '#ef4444',
+                        }}>
+                          {child.linkStatus === 'ACCEPTED' ? 'Đã liên kết' : child.linkStatus === 'PENDING' ? 'Đang chờ' : child.linkStatus}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ── Phụ huynh liên kết (STUDENT only) ── */}
+            {detail.role === 'STUDENT' && detail.parentLinks && detail.parentLinks.length > 0 && (
+              <section>
+                <div className="admin-drawer__section-title">Phụ huynh liên kết ({detail.parentLinks.length})</div>
+                <div className="admin-drawer__info-list">
+                  {detail.parentLinks.map(link => (
+                    <div key={link.profileId} className="admin-drawer__info-item">
+                      <User size={15} className="admin-drawer__info-icon"/>
+                      <div style={{ flex: 1 }}>
+                        <div className="admin-drawer__info-value" style={{ fontWeight: 600 }}>{link.parentName}</div>
+                        {link.parentPhone && <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>📞 {link.parentPhone}</div>}
+                      </div>
+                      <span style={{
+                        padding: '2px 8px', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 600,
+                        background: link.linkStatus === 'ACCEPTED' ? '#dcfce7' : link.linkStatus === 'PENDING' ? '#fef3c7' : '#fee2e2',
+                        color: link.linkStatus === 'ACCEPTED' ? '#16a34a' : link.linkStatus === 'PENDING' ? '#d97706' : '#ef4444',
+                      }}>
+                        {link.linkStatus === 'ACCEPTED' ? 'Đã liên kết' : link.linkStatus === 'PENDING' ? 'Đang chờ' : link.linkStatus}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )
+
             <div className="admin-drawer__actions">
               {newPassword ? (
                 <div className="admin-drawer__confirm-box" style={{ width: '100%', borderColor: '#10b981', background: '#ecfdf5' }}>
@@ -389,7 +447,7 @@ export function AdminUsers() {
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return users.filter(u => {
-      if (q && !u.fullName.toLowerCase().includes(q) && !(u.email ?? '').toLowerCase().includes(q) && !u.phone.includes(q)) return false;
+      if (q && !u.fullName.toLowerCase().includes(q) && !(u.username ?? '').toLowerCase().includes(q) && !(u.email ?? '').toLowerCase().includes(q) && !u.phone.includes(q)) return false;
       if (statusFilter === 'ACTIVE' && !u.isActive) return false;
       if (statusFilter === 'LOCKED' && u.isActive) return false;
       return true;
@@ -479,10 +537,15 @@ export function AdminUsers() {
                 >
                   <td>
                     <div className="admin-users__user-cell">
-                      <div className="admin-users__user-avatar" style={{ background: avatarColor(u.fullName) }}>
-                        {initials(u.fullName)}
+                      <div className="admin-users__user-avatar" style={{ background: u.avatarBase64 ? 'transparent' : avatarColor(u.fullName), overflow: 'hidden' }}>
+                        {u.avatarBase64 ? (
+                          <img src={u.avatarBase64} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                        ) : initials(u.fullName)}
                       </div>
-                      {u.fullName}
+                      <div>
+                        <div style={{ fontWeight: 500 }}>{u.fullName}</div>
+                        {u.username && <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>@{u.username}</div>}
+                      </div>
                     </div>
                   </td>
                   <td>{u.email ?? '—'}</td>
@@ -550,11 +613,14 @@ export function AdminUsers() {
                 onClick={() => setSelectedUserId(u.id)}
               >
                 <div className="admin-users__card-top">
-                  <div className="admin-users__user-avatar" style={{ background: avatarColor(u.fullName) }}>
-                    {initials(u.fullName)}
+                  <div className="admin-users__user-avatar" style={{ background: u.avatarBase64 ? 'transparent' : avatarColor(u.fullName), overflow: 'hidden' }}>
+                    {u.avatarBase64 ? (
+                      <img src={u.avatarBase64} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : initials(u.fullName)}
                   </div>
                   <div className="admin-users__card-info">
                     <div className="admin-users__card-name">{u.fullName}</div>
+                    {u.username && <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>@{u.username}</div>}
                     <div className="admin-users__card-phone">{u.phone}</div>
                   </div>
                   <span className={`admin-role-badge admin-role-badge--${u.role.toLowerCase()}`}>

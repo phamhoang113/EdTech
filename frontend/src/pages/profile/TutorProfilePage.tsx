@@ -4,6 +4,7 @@ import { User } from 'lucide-react';
 import { tutorApi, type UpdateTutorProfileRequest } from '../../services/tutorApi';
 import { classApi } from '../../services/classApi';
 import { useAuthStore } from '../../store/useAuthStore';
+import { compressAvatar } from '../../utils/imageCompress';
 import './TutorProfilePage.css';
 
 const TEACHING_MODES = [
@@ -14,14 +15,7 @@ const TEACHING_MODES = [
 
 const MAX_SELECT = 5;
 
-function toBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+
 
 export default function TutorProfilePage() {
   const navigate = useNavigate();
@@ -122,10 +116,14 @@ export default function TutorProfilePage() {
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { setError('Ảnh tối đa 2MB.'); return; }
-    const b64 = await toBase64(file);
-    setAvatarBase64(b64);
-    setError('');
+    if (file.size > 5 * 1024 * 1024) { setError('Ảnh tối đa 5MB.'); return; }
+    try {
+      const compressed = await compressAvatar(file);
+      setAvatarBase64(compressed);
+      setError('');
+    } catch {
+      setError('Không thể xử lý ảnh.');
+    }
   };
 
   const handleSave = async () => {

@@ -370,6 +370,13 @@ export const router = createBrowserRouter([
         },
       },
       {
+        path: 'contact-messages',
+        lazy: async () => {
+          const { AdminContactMessages } = await import('../pages/admin/AdminContactMessages');
+          return { Component: AdminContactMessages };
+        },
+      },
+      {
         path: 'verification',
         lazy: async () => {
           const { AdminVerification } = await import('../pages/admin/AdminVerification');

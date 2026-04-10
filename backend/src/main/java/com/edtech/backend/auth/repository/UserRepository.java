@@ -17,8 +17,10 @@ import com.edtech.backend.auth.enums.UserRole;
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     Optional<UserEntity> findByPhoneAndIsDeletedFalse(String phone);
     boolean existsByPhoneAndIsDeletedFalse(String phone);
+    Optional<UserEntity> findByUsernameAndIsDeletedFalse(String username);
 
-    @Query("SELECT u FROM UserEntity u WHERE (u.phone = :identifier OR u.username = :identifier) AND u.isDeleted = false")
+    /** Tìm user theo username (định danh đăng nhập duy nhất) */
+    @Query("SELECT u FROM UserEntity u WHERE u.username = :identifier AND u.isDeleted = false")
     Optional<UserEntity> findByIdentifierAndIsDeletedFalse(@Param("identifier") String identifier);
 
     long countByIsDeletedFalse();
@@ -34,8 +36,9 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     /** Lấy user theo role, chưa xóa, mới nhất trước */
     List<UserEntity> findByRoleAndIsDeletedFalseOrderByCreatedAtDesc(UserRole role);
 
-    /** Tìm học sinh theo SĐT (dùng khi PH liên kết con qua SĐT) */
-    Optional<UserEntity> findByPhoneAndRoleAndIsDeletedFalse(String phone, UserRole role);
+    /** Tìm user theo username + role */
+    @Query("SELECT u FROM UserEntity u WHERE u.username = :identifier AND u.role = :role AND u.isDeleted = false")
+    Optional<UserEntity> findByIdentifierAndRoleAndIsDeletedFalse(@Param("identifier") String identifier, @Param("role") UserRole role);
 
     /** Tìm user theo keyword (tên hoặc SĐT chứa keyword) */
     @Query("SELECT u FROM UserEntity u WHERE u.isDeleted = false AND u.role = :role " +

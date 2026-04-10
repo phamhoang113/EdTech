@@ -3,17 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { userProfileApi } from '../../services/userProfileApi';
 import type { UpdateUserProfileRequest } from '../../services/userProfileApi';
-import { Mail, MapPin, Save, Lock, User } from 'lucide-react';
+import { compressAvatar } from '../../utils/imageCompress';
+import { Mail, MapPin, Save, Lock, User, Phone } from 'lucide-react';
 import './TutorProfilePage.css';
 
-function toBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+
 
 export function ParentProfileForm() {
   const navigate = useNavigate();
@@ -33,8 +27,11 @@ export function ParentProfileForm() {
   const [address, setAddress] = useState('');
 
   const initialRef = useRef({
-    avatarBase64: null as string | null, email: '', address: '',
+    avatarBase64: null as string | null, email: '', address: '', phone: '',
   });
+
+  // Phone chỉ editable khi chưa có
+  const isPhoneEditable = !initialRef.current.phone;
 
   useEffect(() => {
     userProfileApi.getMyProfile().then(p => {
@@ -47,6 +44,7 @@ export function ParentProfileForm() {
         avatarBase64: p.avatarBase64 ?? null,
         email: p.email ?? '',
         address: p.address ?? '',
+        phone: p.phone ?? '',
       };
     }).catch(() => setError('Không thể tải thông tin cá nhân. Vui lòng thử lại.'))
       .finally(() => setLoading(false));
@@ -55,16 +53,21 @@ export function ParentProfileForm() {
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { setError('Ảnh không được vượt quá 2MB.'); return; }
-    const b64 = await toBase64(file);
-    setAvatarBase64(b64);
-    setError('');
+    if (file.size > 5 * 1024 * 1024) { setError('Ảnh không được vượt quá 5MB.'); return; }
+    try {
+      const compressed = await compressAvatar(file);
+      setAvatarBase64(compressed);
+      setError('');
+    } catch {
+      setError('Không thể xử lý ảnh.');
+    }
   };
 
   const handleSave = async () => {
     setError(''); setSuccess(''); setSaving(true);
     try {
       const req: UpdateUserProfileRequest = {
+        phone: isPhoneEditable && phone.trim() ? phone.trim() : undefined,
         email: email.trim() || undefined,
         avatarBase64: avatarBase64 ?? undefined,
         address: address.trim() || undefined,
@@ -84,7 +87,8 @@ export function ParentProfileForm() {
   const isDirty =
     avatarBase64 !== initialRef.current.avatarBase64 ||
     email !== initialRef.current.email ||
-    address !== initialRef.current.address;
+    address !== initialRef.current.address ||
+    (isPhoneEditable && phone !== initialRef.current.phone);
 
   const initial = fullName.trim().split(' ').pop()?.charAt(0).toUpperCase() ?? '?';
 
@@ -142,12 +146,26 @@ export function ParentProfileForm() {
             </div>
             <div className="tp-identity-item">
               <span className="tp-identity-label">Số điện thoại</span>
-              <span className="tp-identity-value" title="Không thể tự do đổi">{phone}</span>
+              {isPhoneEditable ? (
+                <input
+                  type="tel"
+                  className="tp-input"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Nhập số điện thoại (VD: 0901234567)"
+                  maxLength={10}
+                  style={{ marginTop: '4px', fontSize: '14px' }}
+                />
+              ) : (
+                <span className="tp-identity-value" title="Không thể tự do đổi">{phone}</span>
+              )}
             </div>
           </div>
           <p className="tp-readonly-note">
             <Lock size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
-            Thông tin trên đã xác thực, không thể thay đổi
+            {isPhoneEditable
+              ? 'Họ tên đã xác thực. Bạn có thể bổ sung số điện thoại.'
+              : 'Thông tin trên đã xác thực, không thể thay đổi'}
           </p>
         </div>
 

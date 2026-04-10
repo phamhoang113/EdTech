@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../../shared/widgets/mapbox_address_field.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -99,7 +103,7 @@ class _RequestClassScreenState extends State<RequestClassScreen> {
     String? levelFeesJson;
     if (_levelFees.isNotEmpty) {
       final feesData = _levelFees.map((r) => {'level': r.level, 'fee': r.fee}).toList();
-      levelFeesJson = feesData.toString();
+      levelFeesJson = jsonEncode(feesData);
     }
 
     // Compute parent fee from lowest levelFee
@@ -201,15 +205,9 @@ class _RequestClassScreenState extends State<RequestClassScreen> {
                     ),
                     const SizedBox(height: 12),
                     if (_mode == 'OFFLINE')
-                      TextField(
-                        controller: _addressController,
-                        decoration: InputDecoration(
-                          labelText: 'Địa chỉ *',
-                          hintText: 'VD: 123 Nguyễn Văn Cừ, Quận 5, TP.HCM',
-                          prefixIcon: const Icon(Icons.location_on_outlined),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        maxLines: 2,
+                      MapboxAddressField(
+                        value: _addressController.text,
+                        onChanged: (v) => _addressController.text = v,
                       ),
                     const SizedBox(height: 20),
 
@@ -302,7 +300,7 @@ class _RequestClassScreenState extends State<RequestClassScreen> {
       children: [
         Text('Loại gia sư & học phí', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
-        Text('SV ~1.600.000đ · GSTN ~2.200.000đ · GV ~2.800.000đ', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+        Text(_buildFeeHint(), style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
         const SizedBox(height: 8),
         ..._levelFees.asMap().entries.map((entry) {
           final idx = entry.key;
@@ -318,10 +316,11 @@ class _RequestClassScreenState extends State<RequestClassScreen> {
               )),
               const SizedBox(width: 8),
               Expanded(flex: 2, child: TextFormField(
-                initialValue: row.fee.toString(), keyboardType: TextInputType.number,
+                key: ValueKey('fee_${row.level}'),
+                initialValue: _formatVnd(row.fee), keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(isDense: true, suffixText: 'đ', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)), contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10)),
-                onChanged: (v) { final fee = int.tryParse(v) ?? row.fee; setState(() => _levelFees[idx] = _LevelFeeRow(row.level, fee)); },
+                onChanged: (v) { final fee = int.tryParse(v.replaceAll('.', '')) ?? row.fee; setState(() => _levelFees[idx] = _LevelFeeRow(row.level, fee)); },
               )),
               const SizedBox(width: 4),
               IconButton(icon: Icon(Icons.delete_outline, size: 20, color: theme.colorScheme.error), onPressed: () => setState(() => _levelFees.removeAt(idx))),
@@ -337,6 +336,7 @@ class _RequestClassScreenState extends State<RequestClassScreen> {
             },
             icon: const Icon(Icons.add, size: 16), label: const Text('Thêm loại gia sư'),
           ),
+        if (_levelFees.isNotEmpty) _buildFeeEstimation(theme),
       ],
     );
   }
@@ -346,6 +346,70 @@ class _RequestClassScreenState extends State<RequestClassScreen> {
     if (lower.contains('sinh viên') || lower.contains('sv')) return 1600000;
     if (lower.contains('giáo viên') || lower.contains('gv')) return 2800000;
     return 2200000;
+  }
+
+  String _formatVnd(int amount) {
+    final str = amount.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) buffer.write('.');
+      buffer.write(str[i]);
+    }
+    return buffer.toString();
+  }
+
+  Widget _buildFeeEstimation(ThemeData theme) {
+    const weeksPerMonth = 4;
+    final sessionsPerMonth = _sessionsPerWeek * weeksPerMonth;
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withAlpha(15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: theme.colorScheme.primary.withAlpha(40)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '💡 Ước tính ($_sessionsPerWeek buổi/tuần × $weeksPerMonth tuần)',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: theme.colorScheme.primary),
+          ),
+          const SizedBox(height: 8),
+          ..._levelFees.map((lf) {
+            final feePerSession = (lf.fee / sessionsPerMonth).round();
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(lf.level, style: const TextStyle(fontSize: 13)),
+                  Text(
+                    '${_formatVnd(feePerSession)}đ/buổi → ${_formatVnd(lf.fee)}đ/tháng',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 6),
+          Text(
+            '※ 1 tháng tính cứng = 4 tuần. Học phí PH trả theo số buổi thực tế.',
+            style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _buildFeeHint() {
+    final levels = _tutorLevels;
+    if (levels.isEmpty) return 'SV ~1.600.000đ · GSTN ~2.200.000đ · GV ~2.800.000đ';
+    return levels.map((l) {
+      final shortName = l.length > 4 ? l.substring(0, 4) : l;
+      return '$shortName ~${_formatVnd(_getDefaultFee(l))}đ';
+    }).join(' · ');
   }
 }
 

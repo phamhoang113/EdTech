@@ -20,9 +20,11 @@ public class AdminUserDetail {
     // ── Basic user info ────────────────────────────────────────────────────
     UUID id;
     String fullName;
+    String username;
     String email;
     String phone;
     UserRole role;
+    String avatarBase64;
     Boolean isActive;
     Boolean isDeleted;
     Instant createdAt;
@@ -41,4 +43,31 @@ public class AdminUserDetail {
     Integer experienceYears;
     LocalDate dateOfBirth;
     String achievements;
+
+    // ── Parent → children (chỉ có khi role = PARENT) ──────────────────────
+    List<LinkedChild> children;
+
+    // ── Student → parents (chỉ có khi role = STUDENT) ─────────────────────
+    List<LinkedParent> parentLinks;
+
+    @Getter
+    @Builder
+    public static class LinkedChild {
+        String profileId;
+        String fullName;
+        String phone;
+        String username;
+        String grade;
+        String school;
+        String linkStatus;
+    }
+
+    @Getter
+    @Builder
+    public static class LinkedParent {
+        String profileId;
+        String parentName;
+        String parentPhone;
+        String linkStatus;
+    }
 }

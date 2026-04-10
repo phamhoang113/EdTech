@@ -98,7 +98,7 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
           )}
 
           <div className="form-group">
-            <label htmlFor="phone">Số điện thoại hoặc Tên đăng nhập</label>
+            <label htmlFor="phone">Tài khoản</label>
             <input
               id="phone"
               type="text"

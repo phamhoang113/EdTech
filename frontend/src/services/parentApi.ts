@@ -101,6 +101,12 @@ export const parentApi = {
     return res.data;
   },
 
+  /** PH xóa lớp đã hủy */
+  deleteClass: async (classId: string): Promise<ApiResponse<void>> => {
+    const res = await apiClient.delete(`/api/v1/parent/classes/${classId}`);
+    return res.data;
+  },
+
   /** Lấy danh sách con em */
   getMyChildren: async (): Promise<ApiResponse<Student[]>> => {
     const res = await apiClient.get('/api/v1/parent/students');
@@ -122,6 +128,12 @@ export const parentApi = {
   /** Xoá con em */
   deleteChild: async (id: string): Promise<ApiResponse<null>> => {
     const res = await apiClient.delete(`/api/v1/parent/students/${id}`);
+    return res.data;
+  },
+
+  /** Đặt lại mật khẩu cho con em */
+  resetChildPassword: async (id: string, newPassword: string): Promise<ApiResponse<null>> => {
+    const res = await apiClient.post(`/api/v1/parent/students/${id}/reset-password`, { newPassword });
     return res.data;
   },
 

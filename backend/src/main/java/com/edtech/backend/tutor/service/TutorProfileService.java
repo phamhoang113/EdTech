@@ -13,6 +13,7 @@ import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.core.exception.EntityNotFoundException;
 import com.edtech.backend.core.service.StorageService;
+import com.edtech.backend.core.util.ImageCompressUtil;
 import com.edtech.backend.tutor.dto.request.UpdateTutorProfileRequest;
 import com.edtech.backend.tutor.dto.response.TutorProfileResponse;
 import com.edtech.backend.tutor.entity.TutorProfileEntity;
@@ -50,7 +51,7 @@ public class TutorProfileService {
         // Update UserEntity fields
         if (req.getEmail() != null) user.setEmail(req.getEmail().isBlank() ? null : req.getEmail().trim());
         if (req.getAvatarBase64() != null && !req.getAvatarBase64().isBlank()) {
-            user.setAvatarBase64(req.getAvatarBase64());
+            user.setAvatarBase64(ImageCompressUtil.compress(req.getAvatarBase64()));
         }
         userRepository.save(user);
 
@@ -117,7 +118,7 @@ public class TutorProfileService {
 
         if (degree != null && !degree.isEmpty()) {
             String degreeBase64 = storageService.upload(degree, "tutors/degrees");
-            profile.setCertBase64s(new String[]{degreeBase64});
+            profile.setCertBase64s(ImageCompressUtil.compressArray(new String[]{degreeBase64}));
         }
 
         profile.setVerificationStatus(VerificationStatus.PENDING);
@@ -132,7 +133,7 @@ public class TutorProfileService {
         return TutorProfileResponse.builder()
                 .fullName(user.getFullName())
                 .email(user.getEmail())
-                .avatarBase64(user.getAvatarBase64())
+                .avatarBase64(ImageCompressUtil.decompress(user.getAvatarBase64()))
                 .bio(profile.getBio())
                 .subjects(profile.getSubjects())
                 .teachingLevels(profile.getTeachingLevels())
@@ -141,7 +142,7 @@ public class TutorProfileService {
                 .rating(profile.getRating())
                 .ratingCount(profile.getRatingCount())
                 .idCardNumber(profile.getIdCardNumber())
-                .certBase64s(profile.getCertBase64s())
+                .certBase64s(ImageCompressUtil.decompressArray(profile.getCertBase64s()))
                 .verificationStatus(profile.getVerificationStatus())
                 .tutorType(profile.getTutorType())
                 .dateOfBirth(profile.getDateOfBirth())

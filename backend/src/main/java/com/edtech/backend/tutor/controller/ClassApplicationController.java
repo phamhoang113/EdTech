@@ -86,10 +86,11 @@ public class ClassApplicationController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ClassApplicationResponse>> approve(
             @PathVariable UUID applicationId,
-            @RequestParam(required = false) BigDecimal actualSalary) {
+            @RequestParam(required = false) BigDecimal actualSalary,
+            @RequestParam(required = false) String note) {
 
         return ResponseEntity.ok(ApiResponse.ok(
-                classApplicationService.approveApplication(applicationId, actualSalary),
+                classApplicationService.approveApplication(applicationId, actualSalary, note),
                 "Đã duyệt đơn và giao lớp thành công!"));
     }
 

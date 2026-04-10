@@ -14,10 +14,11 @@ const FMT_VND = (n: number | null | undefined) => {
 const FMT_PERIOD = (m: number, y: number) => `T${m}/${y}`;
 
 /* ── Status config ── */
-const BILLING_STATUS_CONFIG: Record<BillingStatusType, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
+const BILLING_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon?: React.ReactNode }> = {
   DRAFT:     { label: 'Bản nháp',    color: '#64748b', bg: '#f1f5f9', icon: <FileText size={13}/> },
   UNPAID:    { label: 'Chưa TT',     color: '#dc2626', bg: '#fef2f2', icon: <AlertTriangle size={13}/> },
   VERIFYING: { label: 'Chờ xác nhận', color: '#d97706', bg: '#fffbeb', icon: <Clock size={13}/> },
+  PENDING_VERIFICATION: { label: 'Chờ xác nhận', color: '#d97706', bg: '#fffbeb', icon: <Clock size={13}/> },
   PAID:      { label: 'Đã TT',       color: '#059669', bg: '#ecfdf5', icon: <CheckCircle size={13}/> },
 };
 
@@ -37,7 +38,8 @@ function Toast({ type, msg }: { type: 'success' | 'error'; msg: string }) {
 }
 
 /* ── Status Badge ── */
-function StatusBadge({ config }: { config: { label: string; color: string; bg: string; icon?: React.ReactNode } }) {
+function StatusBadge({ config }: { config?: { label: string; color: string; bg: string; icon?: React.ReactNode } }) {
+  if (!config) return <span className="ab-status-badge" style={{ background: '#f1f5f9', color: '#64748b' }}>Trạng thái lạ</span>;
   return (
     <span className="ab-status-badge" style={{ background: config.bg, color: config.color }}>
       {config.icon} {config.label}

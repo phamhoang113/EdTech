@@ -133,23 +133,36 @@ export function SharedTutorDetailModal({ tutor, onClose, onSelect, classStatus }
             </div>
           )}
 
-          {/* 🖼️ Ảnh bằng cấp */}
-          {tutor.certBase64s && tutor.certBase64s.length > 0 && (
-            <div style={{ margin: '16px 0' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#6366f1', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Award size={14}/> Hình ảnh bằng cấp ({tutor.certBase64s.length})
+          {tutor.note && (
+            <div className="ap-note-box" style={{ borderColor: '#10b981', padding: 12, borderRadius: 12, border: '1px solid #10b981', background: '#ecfdf5', marginTop: 16 }}>
+              <div className="ap-note-label" style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: '0.8rem', marginBottom: 8 }}>
+                Lời nhắn từ Admin trung tâm
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8 }}>
-                {tutor.certBase64s.map((img, idx) => (
-                  <button key={idx} onClick={() => setZoomImg(toSrc(img))}
-                    style={{ padding: 0, border: '1.5px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', cursor: 'zoom-in', aspectRatio: '4/3', background: '#f9fafb' }}>
-                    <img src={toSrc(img)} alt={`Bằng cấp ${idx + 1}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}/>
-                  </button>
-                ))}
-              </div>
+              <p className="ap-note-text" style={{ margin: 0, fontSize: '0.9rem', color: '#065f46', lineHeight: 1.5 }}>{tutor.note}</p>
             </div>
           )}
+
+          {/* 🖼️ Ảnh bằng cấp */}
+          {(() => {
+            const validCerts = (tutor.certBase64s || []).filter(img => img && img.trim().length > 50);
+            if (validCerts.length === 0) return null;
+            return (
+              <div style={{ margin: '16px 0' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#6366f1', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Award size={14}/> Hình ảnh bằng cấp ({validCerts.length})
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8 }}>
+                  {validCerts.map((img, idx) => (
+                    <button key={idx} onClick={() => setZoomImg(toSrc(img))}
+                      style={{ padding: 0, border: '1.5px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', cursor: 'zoom-in', aspectRatio: '4/3', background: '#f9fafb' }}>
+                      <img src={toSrc(img)} alt={`Bằng cấp ${idx + 1}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}/>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {error && (
             <div className="ap-error" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#dc2626', background: '#fef2f2', padding: 10, borderRadius: 8, fontSize: '0.85rem', marginTop: 12 }}>

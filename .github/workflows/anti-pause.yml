@@ -1,0 +1,46 @@
+# ============================================
+# Anti-Pause Supabase Free Tier
+# ============================================
+# Supabase tự động pause database free-tier sau 7 ngày không hoạt động.
+# Workflow này chạy mỗi 5 ngày để giữ DB active.
+#
+# Cách hoạt động:
+#   1. Gọi REST API Supabase (SELECT 1) để "touch" database
+#   2. Supabase reset bộ đếm inactivity
+#
+# Secrets cần cấu hình trong GitHub:
+#   - SUPABASE_URL: https://xxx.supabase.co
+#   - SUPABASE_ANON_KEY: eyJ...
+# ============================================
+name: Anti-Pause Supabase
+
+on:
+  schedule:
+    - cron: '0 6 */5 * *'  # Chạy lúc 6 AM UTC mỗi 5 ngày
+  workflow_dispatch:         # Cho phép chạy manual
+
+jobs:
+  ping:
+    name: Ping Supabase Database
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          echo "Pinging Supabase to prevent free-tier auto-pause..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/users?select=id&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+
+          echo "HTTP Status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 401 ]; then
+            echo "✅ Supabase is alive!"
+          else
+            echo "⚠️ Unexpected response: $HTTP_STATUS"
+            exit 1
+          fi
+
+      - name: Ping Health Endpoint
+        run: |
+          echo "Pinging backend health endpoint..."
+          curl -s "${{ secrets.WORKER_URL }}/health" || echo "Backend health check skipped"

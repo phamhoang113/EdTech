@@ -17,6 +17,7 @@ import com.edtech.backend.auth.enums.UserRole;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.core.exception.EdTechException;
 import com.edtech.backend.core.service.StorageService;
+import com.edtech.backend.core.util.ImageCompressUtil;
 import com.edtech.backend.messaging.dto.ConversationResponseDTO;
 import com.edtech.backend.messaging.dto.MessageResponseDTO;
 import com.edtech.backend.messaging.dto.SendMessageRequest;
@@ -270,7 +271,7 @@ public class MessagingService {
                 .id(entity.getId())
                 .userId(entity.getUser().getId())
                 .userFullName(entity.getUser().getFullName())
-                .userAvatarBase64(entity.getUser().getAvatarBase64())
+                .userAvatarBase64(ImageCompressUtil.decompress(entity.getUser().getAvatarBase64()))
                 .userRole(entity.getUserRole())
                 .lastMessagePreview(entity.getLastMessagePreview())
                 .lastMessageSenderName(entity.getLastMessageSenderName())

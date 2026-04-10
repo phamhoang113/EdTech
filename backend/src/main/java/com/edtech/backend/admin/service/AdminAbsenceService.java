@@ -23,6 +23,8 @@ import com.edtech.backend.cls.repository.AbsenceRequestRepository;
 import com.edtech.backend.cls.repository.SessionRepository;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.notification.entity.NotificationType;
+import com.edtech.backend.notification.service.NotificationService;
 
 @Service
 @Slf4j
@@ -33,6 +35,7 @@ public class AdminAbsenceService {
     private final AbsenceRequestRepository absenceRequestRepository;
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<AdminAbsenceRequestDTO> getAllRequests() {
@@ -131,6 +134,38 @@ public class AdminAbsenceService {
 
         absenceRequestRepository.save(request);
         log.info("[ADMIN_ABSENCE] Admin {} processed absence request {} -> {}", adminId, requestId, request.getStatus());
+
+        // Notify người yêu cầu về kết quả duyệt
+        notifyAbsenceResult(request, isApproved);
+    }
+
+    /**
+     * Thông báo người yêu cầu về kết quả duyệt đơn nghỉ.
+     * Tutor leave → notify tutor. Student leave → notify student + parent.
+     */
+    private void notifyAbsenceResult(AbsenceRequestEntity request, boolean isApproved) {
+        NotificationType type = isApproved ? NotificationType.ABSENCE_APPROVED : NotificationType.ABSENCE_REJECTED;
+        String title = isApproved ? "Đơn xin nghỉ được duyệt" : "Đơn xin nghỉ bị từ chối";
+        SessionEntity session = request.getSession();
+        String classTitle = session.getCls() != null ? session.getCls().getTitle() : "";
+        String body = String.format("Đơn xin nghỉ buổi ngày %s (%s) đã %s.",
+                session.getSessionDate(), classTitle, isApproved ? "được duyệt" : "bị từ chối");
+
+        if (request.getRequestType() == AbsenceRequestType.TUTOR_LEAVE) {
+            UUID tutorId = session.getCls().getTutorId();
+            if (tutorId != null) {
+                notificationService.sendNotification(tutorId, type, title, body, "ABSENCE", request.getId());
+            }
+        } else {
+            // Student leave → notify parent + students
+            if (session.getCls().getParentId() != null) {
+                notificationService.sendNotification(session.getCls().getParentId(), type, title, body, "ABSENCE", request.getId());
+            }
+            if (session.getCls().getStudents() != null) {
+                session.getCls().getStudents().forEach(student ->
+                        notificationService.sendNotification(student.getId(), type, title, body, "ABSENCE", request.getId()));
+            }
+        }
     }
 
     private UUID resolveAdminId() {

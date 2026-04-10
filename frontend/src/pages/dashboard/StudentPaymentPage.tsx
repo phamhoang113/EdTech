@@ -232,7 +232,7 @@ export const StudentPaymentPage = () => {
                                     Mã: {b.classCode} {b.studentNames && ` • HS: ${b.studentNames}`}
                                   </div>
                                 </td>
-                                <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)' }}>{b.totalSessions}</td>
+                                <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)' }}>{b.totalSessions} buổi</td>
                                 <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)', textAlign: 'right', fontWeight: 600, color: 'var(--color-indigo)' }}>
                                   {b.parentFeeAmount.toLocaleString('vi-VN')} ₫
                                 </td>
