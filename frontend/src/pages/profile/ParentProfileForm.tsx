@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { userProfileApi } from '../../services/userProfileApi';
 import type { UpdateUserProfileRequest } from '../../services/userProfileApi';
 import { compressAvatar } from '../../utils/imageCompress';
-import { Mail, MapPin, Save, Lock, User, Phone } from 'lucide-react';
+import { Mail, MapPin, Save, Lock, User } from 'lucide-react';
 import './TutorProfilePage.css';
 
 
