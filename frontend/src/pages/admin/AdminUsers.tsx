@@ -343,7 +343,7 @@ function UserDetailDrawer({ userId, onClose, onRefresh }: UserDetailDrawerProps)
                   ))}
                 </div>
               </section>
-            )
+            )}
 
             <div className="admin-drawer__actions">
               {newPassword ? (
