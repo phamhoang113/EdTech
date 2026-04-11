@@ -209,14 +209,21 @@ class _MainShellState extends State<MainShell> {
               ],
             ),
 
-      body: widget.navigationShell,
-      extendBody: true,
-
-      // ── Floating Bottom Navigation (Mockup) ──
-      bottomNavigationBar: FloatingBottomNav(
-        currentIndex: currentVisualIndex,
-        onTap: _onTabTapped,
-        items: _buildNavItems(),
+      body: Stack(
+        children: [
+          widget.navigationShell,
+          // ── Floating Bottom Navigation (Mockup) ──
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: FloatingBottomNav(
+              currentIndex: currentVisualIndex,
+              onTap: _onTabTapped,
+              items: _buildNavItems(),
+            ),
+          ),
+        ],
       ),
     );
   }

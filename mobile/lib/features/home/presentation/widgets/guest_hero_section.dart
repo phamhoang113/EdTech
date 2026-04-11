@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+
+import '../../../../app/router.dart';
 
 import '../../../../app/theme.dart';
 import '../../../../shared/widgets/animated_counter.dart';
@@ -75,7 +76,7 @@ class GuestHeroSection extends StatelessWidget {
 
   Widget _buildCtaButton(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/class-search'),
+      onTap: () => showAuthGuard(context, onSuccess: () {}),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
@@ -92,10 +93,10 @@ class GuestHeroSection extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.search_rounded, size: 18, color: AppTheme.primary),
+            Icon(Icons.person_add_rounded, size: 18, color: AppTheme.primary),
             const SizedBox(width: 8),
             Text(
-              'TÌM GIA SƯ NGAY',
+              'ĐĂNG KÝ NGAY',
               style: TextStyle(
                 color: AppTheme.primary,
                 fontWeight: FontWeight.w700,
@@ -165,36 +166,31 @@ class _StatBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? AppTheme.borderDark : AppTheme.borderLight,
-        ),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+        color: isDark ? const Color(0xFF1E2334) : const Color(0xFF2D2B55),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: AnimatedCounter(
         targetValue: value,
         suffix: suffix,
         label: label,
-        valueStyle: TextStyle(
-          fontSize: 22,
+        valueStyle: const TextStyle(
+          fontSize: 24,
           fontWeight: FontWeight.w800,
-          color: isDark ? AppTheme.textPrimaryDark : AppTheme.textPrimaryLight,
+          color: Colors.white,
         ),
         labelStyle: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight,
+          color: Colors.white.withValues(alpha: 0.7),
         ),
       ),
     );
