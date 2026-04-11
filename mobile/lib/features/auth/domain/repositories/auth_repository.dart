@@ -22,4 +22,7 @@ abstract class AuthRepository {
 
   Future<void> logout();
   Future<UserEntity?> getAuthenticatedUser();
+
+  /// Check if phone number is already registered — call BEFORE OTP
+  Future<Either<Failure, bool>> checkPhoneExists(String phone);
 }

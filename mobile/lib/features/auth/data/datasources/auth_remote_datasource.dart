@@ -24,6 +24,9 @@ abstract class AuthRemoteDataSource {
 
   /// Refresh expired access token
   Future<AuthResponseModel> refreshToken(String refreshToken);
+
+  /// Check if phone number already registered — call BEFORE OTP generation
+  Future<bool> checkPhoneExists(String phone);
 }
 
 @Injectable(as: AuthRemoteDataSource)
@@ -96,5 +99,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       data: {'refreshToken': refreshToken},
     );
     return AuthResponseModel.fromJson(_unwrap(response) as Map<String, dynamic>);
+  }
+
+  @override
+  Future<bool> checkPhoneExists(String phone) async {
+    final response = await _client.dio.get(
+      '/api/v1/auth/check-phone',
+      queryParameters: {'phone': phone},
+    );
+    final data = _unwrap(response) as Map<String, dynamic>;
+    return data['exists'] as bool? ?? false;
   }
 }

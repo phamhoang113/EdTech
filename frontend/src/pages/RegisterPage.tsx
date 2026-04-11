@@ -1,7 +1,7 @@
 import { Eye, EyeOff, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { firebaseAuthApi } from '../services/authApi';
+import { firebaseAuthApi, checkPhoneApi } from '../services/authApi';
 import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useAuthStore } from '../store/useAuthStore';
@@ -91,6 +91,14 @@ export const RegisterPage = () => {
 
     setIsLoading(true);
     try {
+      // Check trùng SĐT TRƯỚC khi gen OTP → tiết kiệm chi phí SMS
+      const phoneExists = await checkPhoneApi(formattedPhone);
+      if (phoneExists) {
+        setError('Số điện thoại này đã được đăng ký. Vui lòng đăng nhập hoặc sử dụng số khác.');
+        setIsLoading(false);
+        return;
+      }
+
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         // BYPASS: Môi trường Local/SIT bỏ qua gọi Firebase thật để tránh block IP
         setConfirmationResult({

@@ -94,9 +94,22 @@ public class AuthServiceImpl implements AuthService {
             }
 
             Optional<UserEntity> userOpt = userRepository.findByIdentifierAndIsDeletedFalse(phone);
+            // Nếu chưa tìm thấy qua username → thử tìm theo cột phone
+            if (userOpt.isEmpty()) {
+                userOpt = userRepository.findByPhoneAndIsDeletedFalse(phone);
+            }
             UserEntity user;
 
+            boolean isRegistrationRequest = request.getPassword() != null
+                    && request.getFullName() != null
+                    && request.getRole() != null;
+
             if (userOpt.isPresent()) {
+                // Nếu đây là request đăng ký (có đầy đủ thông tin) → reject vì SĐT đã tồn tại
+                if (isRegistrationRequest) {
+                    throw new BusinessRuleException("Số điện thoại này đã được đăng ký. Vui lòng đăng nhập hoặc sử dụng số khác.");
+                }
+
                 user = userOpt.get(); // Existing user -> Login
                 
                 // Nếu tìm thấy qua username (do PH tạo dùng SĐT làm username) thì tự động link luôn cột phone
@@ -108,7 +121,7 @@ public class AuthServiceImpl implements AuthService {
                 log.info("Firebase Auth successful for existing user: {}", phone);
             } else {
                 // New User -> Register
-                if (request.getPassword() == null || request.getFullName() == null || request.getRole() == null) {
+                if (!isRegistrationRequest) {
                     throw new BusinessRuleException("Số điện thoại chưa đăng ký. Vui lòng cung cấp mật khẩu, Họ và tên và Quyền (role) để hoàn tất đăng ký.");
                 }
                 user = UserEntity.builder()
@@ -275,6 +288,20 @@ public class AuthServiceImpl implements AuthService {
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         user.setMustChangePassword(false);
         userRepository.save(user);
+    }
+
+    // ─────────── Public Methods ───────────
+
+    @Override
+    public boolean checkPhoneExists(String phone) {
+        if (phone == null || phone.isBlank()) return false;
+        String normalized = phone.trim();
+        if (normalized.startsWith("+84")) {
+            normalized = "0" + normalized.substring(3);
+        }
+        // Check cả username (vì username = phone khi đăng ký) lẫn cột phone
+        return userRepository.existsByPhoneAndIsDeletedFalse(normalized)
+                || userRepository.findByIdentifierAndIsDeletedFalse(normalized).isPresent();
     }
 
     // ─────────── Private Helpers ───────────

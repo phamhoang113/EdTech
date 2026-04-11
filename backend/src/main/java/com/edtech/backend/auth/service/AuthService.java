@@ -10,7 +10,7 @@ import com.edtech.backend.auth.dto.request.ForgotPasswordInitRequest;
 import com.edtech.backend.auth.dto.request.ForgotPasswordResetRequest;
 import com.edtech.backend.auth.dto.response.ForgotPasswordInitResponse;
 import com.edtech.backend.auth.dto.response.ForgotPasswordResetResponse;
-import com.edtech.backend.core.dto.ApiResponse;
+
 
 public interface AuthService {
     TokenResponse verifyFirebaseAuth(FirebaseAuthRequest request);
@@ -20,4 +20,7 @@ public interface AuthService {
     ForgotPasswordInitResponse initForgotPassword(ForgotPasswordInitRequest request);
     ForgotPasswordResetResponse resetPassword(ForgotPasswordResetRequest request);
     void changePassword(ChangePasswordRequest request, String identifier);
+
+    /** Check if phone number already exists (for pre-OTP validation) */
+    boolean checkPhoneExists(String phone);
 }

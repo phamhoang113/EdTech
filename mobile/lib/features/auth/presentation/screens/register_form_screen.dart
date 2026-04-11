@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme.dart';
+import '../../../../core/di/injection.dart';
+import '../../domain/repositories/auth_repository.dart';
 
 class RegisterFormScreen extends StatefulWidget {
   final String role;
@@ -20,6 +22,8 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
   final _confirmPasswordCtrl = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  bool _isCheckingPhone = false;
+  String? _phoneError;
 
   String get _roleLabel {
     switch (widget.role) {
@@ -52,18 +56,57 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    // Navigate to OTP screen — API is called AFTER OTP mock verification
-    context.push(
-      '/register-otp',
-      extra: {
-        'phone': _phoneCtrl.text.trim(),
-        'fullName': _nameCtrl.text.trim(),
-        'password': _passwordCtrl.text,
-        'role': widget.role,
-      },
-    );
+    if (_isCheckingPhone) return;
+
+    setState(() {
+      _isCheckingPhone = true;
+      _phoneError = null;
+    });
+
+    try {
+      // Check trùng SĐT TRƯỚC khi gen OTP → tiết kiệm chi phí SMS
+      final authRepo = getIt<AuthRepository>();
+      final result = await authRepo.checkPhoneExists(_phoneCtrl.text.trim());
+
+      if (!mounted) return;
+
+      result.fold(
+        (failure) {
+          setState(() {
+            _phoneError = failure.message;
+            _isCheckingPhone = false;
+          });
+        },
+        (exists) {
+          if (exists) {
+            setState(() {
+              _phoneError = 'Số điện thoại này đã được đăng ký. Vui lòng đăng nhập hoặc sử dụng số khác.';
+              _isCheckingPhone = false;
+            });
+          } else {
+            setState(() => _isCheckingPhone = false);
+            // SĐT chưa tồn tại → chuyển sang OTP screen
+            context.push(
+              '/register-otp',
+              extra: {
+                'phone': _phoneCtrl.text.trim(),
+                'fullName': _nameCtrl.text.trim(),
+                'password': _passwordCtrl.text,
+                'role': widget.role,
+              },
+            );
+          }
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _phoneError = 'Lỗi kiểm tra số điện thoại. Vui lòng thử lại.';
+        _isCheckingPhone = false;
+      });
+    }
   }
 
   @override
@@ -108,6 +151,30 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 28),
+
+                  // ── Phone Error Banner ──
+                  if (_phoneError != null)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.error.withAlpha(20),
+                        border: Border.all(color: AppTheme.error.withAlpha(60)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: AppTheme.error, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _phoneError!,
+                              style: const TextStyle(color: AppTheme.error, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
                   // ── Họ và tên ──
                   _buildField(
@@ -208,20 +275,25 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
                   // ── Submit ──
                   Container(
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                      ),
+                      gradient: _isCheckingPhone
+                          ? null
+                          : const LinearGradient(
+                              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                            ),
+                      color: _isCheckingPhone ? Colors.grey[400] : null,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF6366F1).withAlpha(60),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      boxShadow: _isCheckingPhone
+                          ? []
+                          : [
+                              BoxShadow(
+                                color: const Color(0xFF6366F1).withAlpha(60),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                     ),
                     child: ElevatedButton(
-                      onPressed: _submit,
+                      onPressed: _isCheckingPhone ? null : _submit,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
@@ -229,10 +301,16 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text(
-                        'Đăng Ký & Nhận OTP',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
+                      child: _isCheckingPhone
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Text(
+                              'Đăng Ký & Nhận OTP',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 16),

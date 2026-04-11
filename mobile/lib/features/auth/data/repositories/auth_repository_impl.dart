@@ -150,6 +150,20 @@ class AuthRepositoryImpl implements AuthRepository {
     );
   }
 
+  // ─── Public Methods ───
+
+  @override
+  Future<Either<Failure, bool>> checkPhoneExists(String phone) async {
+    try {
+      final exists = await _remoteDataSource.checkPhoneExists(phone);
+      return Right(exists);
+    } on DioException catch (e) {
+      return Left(ServerFailure(_extractMessage(e, 'Kiểm tra số điện thoại thất bại')));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
   // ─── Helpers ───
 
   Future<void> _saveSession({
