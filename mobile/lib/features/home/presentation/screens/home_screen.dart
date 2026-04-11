@@ -1564,30 +1564,14 @@ class _TutorHomeState extends State<_TutorHome> {
         child: ListView(
           padding: const EdgeInsets.only(top: 16, bottom: 100),
           children: [
-            // ── Greeting ──
+            // ── Greeting (Mockup 07) ──
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('$greeting 👋', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-                        const SizedBox(height: 2),
-                        Text(name, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF8B5CF6).withAlpha(20),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text('🎓 Gia sư', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                  ),
-                ],
+              child: GradientHeroCard(
+                greeting: '$greeting 👋',
+                userName: name,
+                roleLabel: 'Gia sư',
+                roleIcon: Icons.school,
               ),
             ),
             const SizedBox(height: 16),
@@ -1664,25 +1648,38 @@ class _TutorHomeState extends State<_TutorHome> {
           // ── Alert: Lương chờ xác nhận ──
           ..._buildPayoutAlerts(theme),
 
-          // ── Stats grid ──
-          Row(
+          // ── Stats grid (Mockup 07) ──
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1.8,
             children: [
-              _TutorStatChip(emoji: '📚', value: '${data.classes.length}', label: 'Lớp dạy', color: const Color(0xFF6366F1)),
-              const SizedBox(width: 8),
-              _TutorStatChip(emoji: '📅', value: '${data.upcomingSessions.length}', label: 'Sắp tới', color: const Color(0xFF8B5CF6)),
-              const SizedBox(width: 8),
-              _TutorStatChip(
-                emoji: '⭐',
+              StatCard(
+                value: '${data.classes.length}',
+                label: 'Lớp đang dạy',
+                icon: const Icon(Icons.menu_book_rounded, size: 16, color: Color(0xFF6366F1)),
+                iconBackground: const Color(0xFF6366F1).withValues(alpha: 0.1),
+              ),
+              StatCard(
+                value: '${data.upcomingSessions.length}',
+                label: 'Buổi sắp tới',
+                icon: const Icon(Icons.calendar_month_rounded, size: 16, color: Color(0xFF8B5CF6)),
+                iconBackground: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+              ),
+              StatCard(
                 value: data.profile.rating > 0 ? data.profile.rating.toStringAsFixed(1) : '—',
                 label: 'Đánh giá',
-                color: const Color(0xFFF59E0B),
+                icon: const Icon(Icons.star_rounded, size: 16, color: Color(0xFFF59E0B)),
+                iconBackground: const Color(0xFFF59E0B).withValues(alpha: 0.1),
               ),
-              const SizedBox(width: 8),
-              _TutorStatChip(
-                emoji: '💰',
+              StatCard(
                 value: _formatCurrency(data.totalRevenue),
-                label: 'Thu nhập',
-                color: const Color(0xFF10B981),
+                label: 'Thu nhập/tháng',
+                icon: const Icon(Icons.account_balance_wallet_rounded, size: 16, color: Color(0xFF10B981)),
+                iconBackground: const Color(0xFF10B981).withValues(alpha: 0.1),
               ),
             ],
           ),
