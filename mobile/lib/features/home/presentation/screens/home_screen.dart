@@ -18,6 +18,7 @@ import '../widgets/featured_tutors_section.dart';
 import '../widgets/guest_hero_section.dart';
 import '../../../../shared/widgets/gradient_hero_card.dart';
 import '../../../../shared/widgets/stat_card.dart';
+import '../../../../shared/widgets/shimmer_loading.dart';
 import '../../domain/entities/my_class_entity.dart';
 import '../../domain/entities/upcoming_session_entity.dart';
 import '../../domain/entities/billing_summary_entity.dart';
@@ -132,9 +133,17 @@ class _ParentStudentContent extends StatelessWidget {
           BlocBuilder<MyClassesBloc, MyClassesState>(
             builder: (context, state) {
               if (state is MyClassesLoading || state is MyClassesInitial) {
-                return const Padding(
-                  padding: EdgeInsets.all(40),
-                  child: Center(child: CircularProgressIndicator()),
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      const ShimmerLoading.card(),
+                      const SizedBox(height: 12),
+                      const ShimmerLoading.card(height: 80),
+                      const SizedBox(height: 12),
+                      const ShimmerLoading.card(height: 80),
+                    ],
+                  ),
                 );
               }
               if (state is MyClassesError) {
@@ -1580,9 +1589,17 @@ class _TutorHomeState extends State<_TutorHome> {
             BlocBuilder<TutorProfileBloc, TutorProfileState>(
               builder: (context, state) {
                 if (state is TutorProfileLoading || state is TutorProfileInitial) {
-                  return const Padding(
-                    padding: EdgeInsets.all(40),
-                    child: Center(child: CircularProgressIndicator()),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        const ShimmerLoading.card(),
+                        const SizedBox(height: 12),
+                        const ShimmerLoading.card(height: 80),
+                        const SizedBox(height: 12),
+                        const ShimmerLoading.card(height: 80),
+                      ],
+                    ),
                   );
                 }
                 if (state is TutorProfileError) {
