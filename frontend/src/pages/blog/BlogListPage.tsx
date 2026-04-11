@@ -46,6 +46,14 @@ const ARTICLES: BlogArticle[] = [
     date: '03/04/2026',
     readTime: '7 phút',
   },
+  {
+    slug: 'tai-sao-chon-gia-su-tinh-hoa',
+    title: 'Tại Sao Hàng Ngàn Phụ Huynh Chọn Gia Sư Tinh Hoa? 6 Lợi Ích Vượt Trội',
+    excerpt: 'Phân tích chi tiết 6 lợi ích và bảng so sánh minh bạch giữa Gia Sư Tinh Hoa với trung tâm truyền thống và tự tìm gia sư.',
+    tag: 'Dịch vụ',
+    date: '12/04/2026',
+    readTime: '12 phút',
+  },
 ];
 
 const PAGE_SCHEMA = {

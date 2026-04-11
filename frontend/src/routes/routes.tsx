@@ -127,6 +127,13 @@ export const router = createBrowserRouter([
               return { Component: LoiIchHoc1Kem1Page };
             },
           },
+          {
+            path: '/bai-viet/tai-sao-chon-gia-su-tinh-hoa',
+            lazy: async () => {
+              const { TaiSaoChonGSTHPage } = await import('../pages/blog/TaiSaoChonGSTHPage');
+              return { Component: TaiSaoChonGSTHPage };
+            },
+          },
         ]
       },
       {

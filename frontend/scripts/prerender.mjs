@@ -25,6 +25,7 @@ const SEO_ROUTES = [
   '/bai-viet/phuong-phap-day-con-hoc-tai-nha',
   '/bai-viet/cach-chon-gia-su-gioi',
   '/bai-viet/loi-ich-hoc-1-kem-1',
+  '/bai-viet/tai-sao-chon-gia-su-tinh-hoa',
   '/tutors',
   '/classes',
   '/about',
