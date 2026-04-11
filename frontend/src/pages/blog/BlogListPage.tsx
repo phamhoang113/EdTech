@@ -53,7 +53,7 @@ const PAGE_SCHEMA = {
   '@type': 'CollectionPage',
   name: 'Blog Gia Sư Tinh Hoa — Kiến thức giáo dục & gia sư',
   description: 'Tổng hợp các bài viết chia sẻ kiến thức giáo dục, phương pháp học tập hiệu quả và hướng dẫn chọn gia sư phù hợp.',
-  url: 'https://giasutinhhoa.com/bai-viet',
+  url: 'https://giasutinhhoa.com/bai-viet/',
 };
 
 export const BlogListPage = () => {

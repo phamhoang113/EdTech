@@ -23,7 +23,7 @@ const ARTICLE_SCHEMA = {
   author: { '@type': 'Organization', name: 'Gia Sư Tinh Hoa' },
   publisher: { '@type': 'Organization', name: 'Gia Sư Tinh Hoa', url: 'https://giasutinhhoa.com' },
   datePublished: '2026-04-03',
-  mainEntityOfPage: 'https://giasutinhhoa.com/bai-viet/cach-chon-gia-su-gioi',
+  mainEntityOfPage: 'https://giasutinhhoa.com/bai-viet/cach-chon-gia-su-gioi/',
 };
 
 export const CachChonGiaSuPage = () => {

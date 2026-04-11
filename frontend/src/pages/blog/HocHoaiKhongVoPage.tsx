@@ -23,7 +23,7 @@ const ARTICLE_SCHEMA = {
   publisher: { '@type': 'Organization', name: 'Gia Sư Tinh Hoa', url: 'https://giasutinhhoa.com' },
   datePublished: '2026-04-03',
   dateModified: '2026-04-03',
-  mainEntityOfPage: 'https://giasutinhhoa.com/bai-viet/tai-sao-con-hoc-hoai-khong-vo',
+  mainEntityOfPage: 'https://giasutinhhoa.com/bai-viet/tai-sao-con-hoc-hoai-khong-vo/',
 };
 
 export const HocHoaiKhongVoPage = () => {

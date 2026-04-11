@@ -24,7 +24,7 @@ const ARTICLE_SCHEMA = {
   publisher: { '@type': 'Organization', name: 'Gia Sư Tinh Hoa', url: 'https://giasutinhhoa.com' },
   datePublished: '2026-04-03',
   dateModified: '2026-04-03',
-  mainEntityOfPage: 'https://giasutinhhoa.com/bai-viet/phuong-phap-day-con-hoc-tai-nha',
+  mainEntityOfPage: 'https://giasutinhhoa.com/bai-viet/phuong-phap-day-con-hoc-tai-nha/',
 };
 
 export const DayConHocTaiNhaPage = () => {

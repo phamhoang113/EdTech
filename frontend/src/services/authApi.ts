@@ -54,5 +54,5 @@ export const changePasswordApi = async (payload: { oldPassword: string; newPassw
 /** Check if phone number already registered — call BEFORE generating OTP */
 export const checkPhoneApi = async (phone: string): Promise<boolean> => {
   const res = await apiClient.get('/api/v1/auth/check-phone', { params: { phone } });
-  return unwrap(res).exists;
+  return unwrap<{ exists: boolean }>(res).exists;
 };

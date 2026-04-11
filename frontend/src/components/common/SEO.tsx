@@ -14,6 +14,23 @@ interface SEOProps {
   schema?: Record<string, any>;
 }
 
+/**
+ * Ensures URL has trailing slash for non-root paths.
+ * Nginx auto-redirects directory URLs (from prerender) with 308,
+ * so canonical must match the final served URL to avoid SEO errors.
+ */
+function normalizeTrailingSlash(rawUrl: string): string {
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.pathname !== '/' && !parsed.pathname.endsWith('/')) {
+      parsed.pathname += '/';
+    }
+    return parsed.toString();
+  } catch {
+    return rawUrl;
+  }
+}
+
 export const SEO: React.FC<SEOProps> = ({
   title,
   description = 'Nền tảng Gia Sư Tinh Hoa kết nối nhanh chóng, uy tín giữa Phụ huynh, Học sinh và các Gia sư giỏi, sinh viên xuất sắc trên toàn quốc.',
@@ -24,7 +41,8 @@ export const SEO: React.FC<SEOProps> = ({
   schema,
 }) => {
   const { pathname } = useLocation();
-  const canonicalUrl = url || `${BASE_URL}${pathname}`;
+  const rawCanonical = url || `${BASE_URL}${pathname}`;
+  const canonicalUrl = normalizeTrailingSlash(rawCanonical);
   const absoluteImage = image.startsWith('http') ? image : `${BASE_URL}${image}`;
 
   return (
