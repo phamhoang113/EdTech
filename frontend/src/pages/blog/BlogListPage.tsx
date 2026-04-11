@@ -48,9 +48,9 @@ const ARTICLES: BlogArticle[] = [
   },
   {
     slug: 'tai-sao-chon-gia-su-tinh-hoa',
-    title: 'Tại Sao Hàng Ngàn Phụ Huynh Chọn Gia Sư Tinh Hoa? 6 Lợi Ích Vượt Trội',
-    excerpt: 'Phân tích chi tiết 6 lợi ích và bảng so sánh minh bạch giữa Gia Sư Tinh Hoa với trung tâm truyền thống và tự tìm gia sư.',
-    tag: 'Dịch vụ',
+    title: 'Ba Mẹ Trả Tiền Gia Sư Mỗi Tháng — Nhưng Có Biết Con Học Đến Đâu Không?',
+    excerpt: 'Phân tích thực trạng phụ huynh bận rộn không theo dõi được con học. Gia Sư Tinh Hoa giải quyết nỗi đau này bằng hệ thống báo cáo sau mỗi buổi.',
+    tag: 'Dành cho phụ huynh',
     date: '12/04/2026',
     readTime: '12 phút',
   },
