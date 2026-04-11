@@ -24,6 +24,42 @@ class AppTheme {
   static const Color textSecondaryDark = Color(0xFFB0B8C8);
   static const Color borderDark = Color(0xFF3D4455);
 
+  // ─── Gradient Presets ───
+  static const List<Color> heroGradient = [
+    Color(0xFF4F46E5),
+    Color(0xFF7C3AED),
+    Color(0xFFA855F7),
+  ];
+  static const List<Color> ctaGradient = [primary, secondary];
+  static const List<Color> successGradient = [Color(0xFF059669), success];
+
+  // ─── Spacing Rhythm ───
+  static const double spacingXs = 4;
+  static const double spacingSm = 8;
+  static const double spacingMd = 16;
+  static const double spacingLg = 24;
+  static const double spacingXl = 32;
+  static const double spacing2xl = 48;
+  static const double sectionGap = 32;
+  static const double cardGap = 12;
+
+  // ─── Typography Helpers ───
+  static const TextStyle displayStyle = TextStyle(
+    fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: -0.5,
+  );
+  static const TextStyle headlineStyle = TextStyle(
+    fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: -0.3,
+  );
+  static const TextStyle titleStyle = TextStyle(
+    fontSize: 18, fontWeight: FontWeight.w700,
+  );
+  static const TextStyle captionStyle = TextStyle(
+    fontSize: 12, fontWeight: FontWeight.w500,
+  );
+  static const TextStyle overlineStyle = TextStyle(
+    fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.5,
+  );
+
   static ThemeData light() {
     return ThemeData(
       useMaterial3: true,

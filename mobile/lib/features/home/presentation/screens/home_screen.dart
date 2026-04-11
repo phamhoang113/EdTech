@@ -15,6 +15,9 @@ import '../../../tutor_profile/data/datasources/tutor_payout_datasource.dart';
 import '../../../admin/data/datasources/admin_dashboard_datasource.dart';
 import '../widgets/open_classes_section.dart';
 import '../widgets/featured_tutors_section.dart';
+import '../widgets/guest_hero_section.dart';
+import '../../../../shared/widgets/gradient_hero_card.dart';
+import '../../../../shared/widgets/stat_card.dart';
 import '../../domain/entities/my_class_entity.dart';
 import '../../domain/entities/upcoming_session_entity.dart';
 import '../../domain/entities/billing_summary_entity.dart';
@@ -43,7 +46,7 @@ class HomeScreen extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════
-// GUEST HOME
+// GUEST HOME (Mockup 01)
 // ═══════════════════════════════════════════════════════════
 class _GuestHome extends StatelessWidget {
   const _GuestHome();
@@ -54,8 +57,10 @@ class _GuestHome extends StatelessWidget {
       child: Column(
         children: [
           SizedBox(height: 16),
+          GuestHeroSection(),
+          SizedBox(height: 28),
           OpenClassesSection(),
-          SizedBox(height: 32),
+          SizedBox(height: 28),
           FeaturedTutorsSection(),
           SizedBox(height: 40),
         ],
@@ -158,6 +163,47 @@ class _ParentStudentContent extends StatelessWidget {
                         subtitle: 'Xem chi tiết hóa đơn',
                         onTap: () => _showBillingsSheet(context, state.unpaidBillings),
                       ),
+                    // ── Stat Cards Grid (Mockup 04) ──
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: GridView.count(
+                        crossAxisCount: role == 'PARENT' ? 4 : 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: role == 'PARENT' ? 0.85 : 1.5,
+                        children: [
+                          StatCard(
+                            value: '${state.classes.length}',
+                            label: 'Lớp đang học',
+                            icon: const Icon(Icons.menu_book_rounded, size: 16, color: Color(0xFF6366F1)),
+                            iconBackground: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                          ),
+                          StatCard(
+                            value: '${state.upcomingSessions.length}',
+                            label: 'Buổi tháng này',
+                            icon: const Icon(Icons.calendar_month_rounded, size: 16, color: Color(0xFF8B5CF6)),
+                            iconBackground: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                          ),
+                          if (role == 'PARENT') ...[
+                            StatCard(
+                              value: '4.8',
+                              label: 'Đánh giá',
+                              icon: const Icon(Icons.star_rounded, size: 16, color: Color(0xFFF59E0B)),
+                              iconBackground: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                            ),
+                            StatCard(
+                              value: _formatCurrency(state.unpaidBillings),
+                              label: 'Chi phí/tháng',
+                              icon: const Icon(Icons.account_balance_wallet_rounded, size: 16, color: Color(0xFF10B981)),
+                              iconBackground: const Color(0xFF10B981).withValues(alpha: 0.1),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
 
                     // ── Section: Lớp học của tôi (LUÔN CÓ) ──
                     _SectionTitle(icon: '📋', title: 'Lớp học của tôi'),
@@ -258,6 +304,17 @@ class _ParentStudentContent extends StatelessWidget {
     );
   }
 
+  String _formatCurrency(List<BillingSummaryEntity> billings) {
+    final total = billings.fold<double>(0, (sum, b) => sum + b.amount);
+    if (total >= 1000000) {
+      return '${(total / 1000000).toStringAsFixed(1)}M';
+    }
+    if (total >= 1000) {
+      return '${(total / 1000).toStringAsFixed(0)}K';
+    }
+    return '${total.toInt()}';
+  }
+
   void _showApplicantsSheet(BuildContext context, List<MyClassEntity> classes) {
     final classesWithApplicants = classes.where((c) => c.pendingApplicationCount > 0).toList();
     showModalBottomSheet(
@@ -290,43 +347,16 @@ class _GreetingHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final emoji = role == 'PARENT' ? '👋' : '🌟';
+    final roleLabel = role == 'PARENT' ? 'Phụ huynh' : 'Học sinh';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$greeting 👋',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  name,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withAlpha(20),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              role == 'PARENT' ? '👨‍👩‍👧 Phụ huynh' : '📚 Học sinh',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
+      child: GradientHeroCard(
+        greeting: '$greeting $emoji',
+        userName: name,
+        roleLabel: roleLabel,
+        roleIcon: role == 'PARENT' ? Icons.family_restroom : Icons.school,
       ),
     );
   }
