@@ -180,7 +180,30 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                         );
                       }
-                      return _buildNotificationItem(theme, index);
+
+                      // ── Date group header (Mockup 09) ──
+                      final showHeader = index == 0 ||
+                          !_isSameDay(_notifications[index].createdAt, _notifications[index - 1].createdAt);
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (showHeader)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                              child: Text(
+                                _getDateLabel(_notifications[index].createdAt),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.colorScheme.onSurfaceVariant.withAlpha(150),
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          _buildNotificationItem(theme, index),
+                        ],
+                      );
                     },
                   ),
                 ),
@@ -385,5 +408,21 @@ class _NotificationScreenState extends State<NotificationScreen> {
     if (diff.inDays < 7) return '${diff.inDays} ngày trước';
     if (diff.inDays < 30) return '${(diff.inDays / 7).floor()} tuần trước';
     return '${(diff.inDays / 30).floor()} tháng trước';
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  String _getDateLabel(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(date.year, date.month, date.day);
+    final diff = today.difference(target).inDays;
+
+    if (diff == 0) return 'HÔM NAY';
+    if (diff == 1) return 'HÔM QUA';
+    if (diff < 7) return '${diff} NGÀY TRƯỚC';
+    return '${date.day}/${date.month}/${date.year}';
   }
 }
