@@ -11,6 +11,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../notification/data/datasources/notification_datasource.dart';
 import '../../../notification/presentation/screens/notification_screen.dart';
+import '../../../../shared/widgets/floating_bottom_nav.dart';
 
 /// MainShell — Provides fixed AppBar + BottomNavigationBar.
 /// PH/GS/Guest: 4 tabs (Home, Lịch, Blog, Tôi).
@@ -209,88 +210,45 @@ class _MainShellState extends State<MainShell> {
             ),
 
       body: widget.navigationShell,
+      extendBody: true,
 
-      // ── Bottom Navigation Bar — role-aware ──
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: currentVisualIndex,
-        onDestinationSelected: _onTabTapped,
-        backgroundColor: theme.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
-        indicatorColor: theme.colorScheme.primary.withAlpha(30),
-        elevation: 3,
-        shadowColor: isDark ? Colors.black54 : Colors.black12,
-        height: 64,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        destinations: _buildDestinations(),
+      // ── Floating Bottom Navigation (Mockup) ──
+      bottomNavigationBar: FloatingBottomNav(
+        currentIndex: currentVisualIndex,
+        onTap: _onTabTapped,
+        items: _buildNavItems(),
       ),
     );
   }
 
-  List<NavigationDestination> _buildDestinations() {
+  List<FloatingBottomNavItem> _buildNavItems() {
     final role = _userRole;
 
-    // Admin: only Home + Profile
     if (role == 'ADMIN') {
       return const [
-        NavigationDestination(
-          icon: Icon(Icons.dashboard_outlined),
-          selectedIcon: Icon(Icons.dashboard),
-          label: 'Tổng quan',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.person_outline),
-          selectedIcon: Icon(Icons.person),
-          label: 'Tôi',
-        ),
+        FloatingBottomNavItem(icon: Icons.dashboard_outlined, activeIcon: Icons.dashboard, label: 'Tổng quan'),
+        FloatingBottomNavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Tôi'),
       ];
     }
 
-    // Base tabs for non-admin
-    final destinations = <NavigationDestination>[
-      const NavigationDestination(
-        icon: Icon(Icons.home_outlined),
-        selectedIcon: Icon(Icons.home),
-        label: 'Trang chủ',
-      ),
-      const NavigationDestination(
-        icon: Icon(Icons.calendar_month_outlined),
-        selectedIcon: Icon(Icons.calendar_month),
-        label: 'Lịch',
-      ),
-      const NavigationDestination(
-        icon: Icon(Icons.article_outlined),
-        selectedIcon: Icon(Icons.article_rounded),
-        label: 'Blog',
-      ),
+    final items = <FloatingBottomNavItem>[
+      const FloatingBottomNavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home'),
+      const FloatingBottomNavItem(icon: Icons.calendar_month_outlined, activeIcon: Icons.calendar_month, label: 'Lịch'),
+      const FloatingBottomNavItem(icon: Icons.article_outlined, activeIcon: Icons.article_rounded, label: 'Blog'),
     ];
 
-    // Student-only tabs
     if (role == 'STUDENT') {
-      destinations.addAll([
-        const NavigationDestination(
-          icon: Icon(Icons.menu_book_outlined),
-          selectedIcon: Icon(Icons.menu_book_rounded),
-          label: 'Tài liệu',
-        ),
-        const NavigationDestination(
-          icon: Icon(Icons.smart_toy_outlined),
-          selectedIcon: Icon(Icons.smart_toy_rounded),
-          label: 'AI',
-        ),
+      items.addAll(const [
+        FloatingBottomNavItem(icon: Icons.menu_book_outlined, activeIcon: Icons.menu_book_rounded, label: 'Tài liệu'),
+        FloatingBottomNavItem(icon: Icons.smart_toy_outlined, activeIcon: Icons.smart_toy_rounded, label: 'AI'),
       ]);
     }
 
-    // Profile tab (always last)
-    destinations.add(
-      const NavigationDestination(
-        icon: Icon(Icons.person_outline),
-        selectedIcon: Icon(Icons.person),
-        label: 'Tôi',
-      ),
-    );
-
-    return destinations;
+    items.add(const FloatingBottomNavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Tôi'));
+    return items;
   }
+
+
 
   Widget _buildNotificationBell() {
     return Stack(
