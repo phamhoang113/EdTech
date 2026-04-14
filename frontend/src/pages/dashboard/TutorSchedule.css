@@ -398,7 +398,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3000;
+  z-index: 9999;
   animation: tsched-fade-in 0.15s ease;
 }
 
@@ -848,7 +848,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3000;
+  z-index: 9999;
   animation: tsched-fadein 0.15s ease;
 }
 

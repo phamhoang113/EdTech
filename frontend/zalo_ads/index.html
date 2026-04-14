@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zalo Ads — Gia Sư Tinh Hoa</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #1a1a2e; line-height: 1.6; }
+        
+        .header { background: linear-gradient(135deg, #4F46E5, #7C3AED); color: white; padding: 40px 20px; text-align: center; }
+        .header h1 { font-size: 28px; margin-bottom: 8px; }
+        .header p { opacity: 0.85; font-size: 14px; }
+        
+        .container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+        
+        /* Banner Section */
+        .section-title { font-size: 22px; font-weight: 700; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 3px solid #4F46E5; display: inline-block; }
+        .banner-grid { display: grid; gap: 20px; margin-bottom: 32px; }
+        .banner-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        .banner-card img { width: 100%; height: auto; display: block; }
+        .banner-card .banner-label { padding: 12px 16px; font-size: 14px; color: #666; font-weight: 500; }
+        .banner-card .banner-label span { background: #EEF2FF; color: #4F46E5; padding: 2px 10px; border-radius: 20px; font-size: 12px; margin-right: 8px; }
+        
+        /* Variant Cards */
+        .variant { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-left: 4px solid #4F46E5; }
+        .variant-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .variant-num { background: #4F46E5; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+        .variant-tag { font-size: 13px; color: #8B5CF6; background: #F5F3FF; padding: 3px 12px; border-radius: 20px; }
+        
+        .field { margin-bottom: 14px; }
+        .field-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #999; font-weight: 600; margin-bottom: 4px; }
+        .field-value { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; font-size: 14px; }
+        .field-value.title { font-size: 18px; font-weight: 700; color: #1E293B; background: #EEF2FF; border-color: #C7D2FE; }
+        .field-value.caption { font-size: 15px; color: #334155; }
+        .field-value.extended { font-size: 13px; color: #475569; white-space: pre-line; line-height: 1.8; }
+        .char-count { font-size: 11px; color: #94A3B8; text-align: right; margin-top: 2px; }
+        
+        /* Tips Section */
+        .tips { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .tips h3 { color: #4F46E5; margin-bottom: 12px; font-size: 16px; }
+        .tips table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .tips th { background: #F1F5F9; text-align: left; padding: 8px 12px; }
+        .tips td { padding: 8px 12px; border-bottom: 1px solid #F1F5F9; }
+        .tips ul { padding-left: 20px; font-size: 13px; }
+        .tips li { margin-bottom: 6px; }
+        
+        .copy-btn { background: #4F46E5; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; float: right; }
+        .copy-btn:hover { background: #4338CA; }
+        .copy-btn.copied { background: #10B981; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📢 Bộ Nội Dung Quảng Cáo Zalo Ads</h1>
+        <p>Gia Sư Tinh Hoa — 5 Variants A/B Test + 3 Banner</p>
+    </div>
+
+    <div class="container">
+        <!-- BANNERS -->
+        <h2 class="section-title">🖼️ Hình ảnh quảng cáo (Carousel)</h2>
+        <div class="banner-grid">
+            <div class="banner-card">
+                <img src="banner1.png" alt="Banner 1">
+                <div class="banner-label"><span>Slide 1</span> Mẹ bận rộn xem app — gây đồng cảm</div>
+            </div>
+            <div class="banner-card">
+                <img src="banner2.png" alt="Banner 2">
+                <div class="banner-label"><span>Slide 2</span> Trước vs Sau khi dùng Gia Sư Tinh Hoa</div>
+            </div>
+            <div class="banner-card">
+                <img src="banner3.png" alt="Banner 3">
+                <div class="banner-label"><span>Slide 3</span> "Con học gì hôm nay?" — CTA trực tiếp</div>
+            </div>
+        </div>
+
+        <!-- VARIANTS -->
+        <h2 class="section-title">📝 5 Variants A/B Test</h2>
+        <p style="margin-bottom: 20px; color: #64748B; font-size: 14px;">Bấm nút <strong>Copy</strong> để copy nội dung từng field, dán trực tiếp vào Zalo Ads.</p>
+
+        <!-- Variant 1 -->
+        <div class="variant">
+            <div class="variant-header">
+                <div class="variant-num">1</div>
+                <div>
+                    <strong>Pain Point trực diện</strong>
+                    <div class="variant-tag">Đánh vào nỗi đau</div>
+                </div>
+            </div>
+            <div class="field">
+                <div class="field-label">Tiêu đề (max 30 ký tự)</div>
+                <div class="field-value title" id="v1-title">Con học gì ba mẹ có biết?</div>
+                <div class="char-count">24/30 ký tự <button class="copy-btn" onclick="copyField('v1-title', this)">Copy</button></div>
+            </div>
+            <div class="field">
+                <div class="field-label">Chú thích (35-90 ký tự)</div>
+                <div class="field-value caption" id="v1-caption">Trả tiền gia sư mỗi tháng nhưng không biết con tiến bộ chưa? Thử cách này.</div>
+                <div class="char-count">68/90 ký tự <button class="copy-btn" onclick="copyField('v1-caption', this)">Copy</button></div>
+            </div>
+            <div class="field">
+                <div class="field-label">Chú thích mở rộng (90-2000 ký tự)</div>
+                <div class="field-value extended" id="v1-ext">👉 Hàng triệu phụ huynh Việt Nam trả tiền gia sư mỗi tháng — nhưng khi hỏi "con học gì hôm nay?", chỉ nhận được câu "bình thường".
+
+Gia Sư Tinh Hoa giải quyết đúng nỗi đau này:
+✅ Gia sư điền báo cáo SAU MỖI BUỔI: hôm nay học gì, con tiếp thu ra sao
+✅ Phụ huynh mở app xem ngay — đang ở công ty cũng biết
+✅ Xem điểm kiểm tra và biểu đồ tiến bộ
+✅ Biết bài tập về nhà con đã hoàn thành chưa
+✅ Gia sư đã xác thực 4 bước — không lo người không đủ trình độ
+
+🎁 Đăng ký MIỄN PHÍ — không hợp đồng, không ràng buộc.
+Không hài lòng? Đổi gia sư miễn phí.
+
+👇 Bấm XEM THÊM để tìm hiểu ngay</div>
+                <div class="char-count"><button class="copy-btn" onclick="copyField('v1-ext', this)">Copy</button></div>
+            </div>
+        </div>
+
+        <!-- Variant 2 -->
+        <div class="variant">
+            <div class="variant-header">
+                <div class="variant-num">2</div>
+                <div>
+                    <strong>FOMO — Sợ bỏ lỡ</strong>
+                    <div class="variant-tag">Tạo cấp bách</div>
+                </div>
+            </div>
+            <div class="field">
+                <div class="field-label">Tiêu đề (max 30 ký tự)</div>
+                <div class="field-value title" id="v2-title">Đừng chờ đến bảng điểm tệ</div>
+                <div class="char-count">26/30 ký tự <button class="copy-btn" onclick="copyField('v2-title', this)">Copy</button></div>
+            </div>
+            <div class="field">
+                <div class="field-label">Chú thích (35-90 ký tự)</div>
+                <div class="field-value caption" id="v2-caption">78% phụ huynh không biết gia sư dạy con gì mỗi buổi. Bạn có nằm trong số đó?</div>
+                <div class="char-count">73/90 ký tự <button class="copy-btn" onclick="copyField('v2-caption', this)">Copy</button></div>
+            </div>
+            <div class="field">
+                <div class="field-label">Chú thích mở rộng (90-2000 ký tự)</div>
+                <div class="field-value extended" id="v2-ext">⚠️ Bạn có biết: 65% phụ huynh chỉ phát hiện gia sư không phù hợp SAU 2 THÁNG — vì không có cách theo dõi.
+
+Với Gia Sư Tinh Hoa, bạn biết NGAY từ buổi đầu tiên:
+📋 Gia sư báo cáo nội dung dạy sau mỗi buổi
+📊 Biểu đồ điểm kiểm tra — thấy con tiến bộ hay tụt
+📝 Bài tập về nhà — con nộp chưa, đạt bao nhiêu điểm
+🛡️ Gia sư xác thực bằng cấp — chỉ 35% đạt chuẩn
+
+Chi phí chỉ 48.000đ/ngày — ít hơn 1 ly cà phê.
+Đăng ký miễn phí, dừng bất cứ lúc nào.
+
+👇 Bấm để xem chi tiết</div>
+                <div class="char-count"><button class="copy-btn" onclick="copyField('v2-ext', this)">Copy</button></div>
+            </div>
+        </div>
+
+        <!-- Variant 3 -->
+        <div class="variant">
+            <div class="variant-header">
+                <div class="variant-num">3</div>
+                <div>
+                    <strong>Giải pháp cho người bận</strong>
+                    <div class="variant-tag">Đồng cảm</div>
+                </div>
+            </div>
+            <div class="field">
+                <div class="field-label">Tiêu đề (max 30 ký tự)</div>
+                <div class="field-value title" id="v3-title">Bận rộn, vẫn kèm con học</div>
+                <div class="char-count">24/30 ký tự <button class="copy-btn" onclick="copyField('v3-title', this)">Copy</button></div>
+            </div>
+            <div class="field">
+                <div class="field-label">Chú thích (35-90 ký tự)</div>
+                <div class="field-value caption" id="v3-caption">Đi làm 10 tiếng nhưng vẫn biết con học gì hôm nay. App Gia Sư Tinh Hoa giúp bạn.</div>
+                <div class="char-count">76/90 ký tự <button class="copy-btn" onclick="copyField('v3-caption', this)">Copy</button></div>
+            </div>
+            <div class="field">
+                <div class="field-label">Chú thích mở rộng (90-2000 ký tự)</div>
+                <div class="field-value extended" id="v3-ext">💼 Ba mẹ bận rộn — nhưng vẫn muốn đồng hành cùng con?
+
+Gia Sư Tinh Hoa được thiết kế cho phụ huynh như bạn:
+📱 Mở app 10 giây = biết hôm nay con học gì, tiếp thu ra sao
+📊 Biểu đồ điểm qua từng bài kiểm tra — thấy ngay xu hướng
+✏️ Bài tập về nhà: nộp chưa? Đạt bao nhiêu?
+🔔 Nhận thông báo tự động — không cần hỏi ai
+
+Gia sư đã xác thực 4 bước. Không phí ẩn. Không hợp đồng.
+Đăng ký trong 2 phút — hoàn toàn miễn phí.
+
+👇 Xem thêm ngay</div>
+                <div class="char-count"><button class="copy-btn" onclick="copyField('v3-ext', this)">Copy</button></div>
+            </div>
+        </div>
+
+        <!-- Variant 4 -->
+        <div class="variant">
+            <div class="variant-header">
+                <div class="variant-num">4</div>
+                <div>
+                    <strong>So sánh trực tiếp</strong>
+                    <div class="variant-tag">Nổi bật khác biệt</div>
+                </div>
+            </div>
+            <div class="field">
+                <div class="field-label">Tiêu đề (max 30 ký tự)</div>
+                <div class="field-value title" id="v4-title">Khác gì trung tâm gia sư?</div>
+                <div class="char-count">25/30 ký tự <button class="copy-btn" onclick="copyField('v4-title', this)">Copy</button></div>
+            </div>
+            <div class="field">
+                <div class="field-label">Chú thích (35-90 ký tự)</div>
+                <div class="field-value caption" id="v4-caption">Trung tâm giao gia sư rồi biến mất. Gia Sư Tinh Hoa đồng hành liên tục với PH.</div>
+                <div class="char-count">75/90 ký tự <button class="copy-btn" onclick="copyField('v4-caption', this)">Copy</button></div>
+            </div>
+            <div class="field">
+                <div class="field-label">Chú thích mở rộng (90-2000 ký tự)</div>
+                <div class="field-value extended" id="v4-ext">🤔 Trung tâm gia sư truyền thống: thu phí giới thiệu → giao gia sư → XONG. Không ai quan tâm con bạn học thế nào.
+
+Gia Sư Tinh Hoa KHÁC HOÀN TOÀN:
+✅ Báo cáo sau mỗi buổi học — PH biết con học gì
+✅ Điểm kiểm tra có biểu đồ — thấy rõ tiến bộ
+✅ Trạng thái bài tập — con nộp chưa, điểm bao nhiêu
+✅ KHÔNG phí giới thiệu, KHÔNG hợp đồng
+✅ Đổi gia sư miễn phí nếu không hài lòng
+
+Chi phí chỉ ~1.4 triệu/tháng (2 buổi/tuần).
+Trung tâm tính ~2.4 triệu + phí ẩn.
+
+👇 So sánh chi tiết tại đây</div>
+                <div class="char-count"><button class="copy-btn" onclick="copyField('v4-ext', this)">Copy</button></div>
+            </div>
+        </div>
+
+        <!-- Variant 5 -->
+        <div class="variant">
+            <div class="variant-header">
+                <div class="variant-num">5</div>
+                <div>
+                    <strong>Ngắn gọn, CTA mạnh</strong>
+                    <div class="variant-tag">Hiệu quả cao</div>
+                </div>
+            </div>
+            <div class="field">
+                <div class="field-label">Tiêu đề (max 30 ký tự)</div>
+                <div class="field-value title" id="v5-title">Gia sư có báo cáo buổi học</div>
+                <div class="char-count">26/30 ký tự <button class="copy-btn" onclick="copyField('v5-title', this)">Copy</button></div>
+            </div>
+            <div class="field">
+                <div class="field-label">Chú thích (35-90 ký tự)</div>
+                <div class="field-value caption" id="v5-caption">Mỗi buổi dạy xong, gia sư báo cáo con học gì. Phụ huynh xem trên app. Miễn phí.</div>
+                <div class="char-count">78/90 ký tự <button class="copy-btn" onclick="copyField('v5-caption', this)">Copy</button></div>
+            </div>
+            <div class="field">
+                <div class="field-label">Chú thích mở rộng (90-2000 ký tự)</div>
+                <div class="field-value extended" id="v5-ext">Gia Sư Tinh Hoa — nền tảng gia sư ĐẦU TIÊN có hệ thống báo cáo buổi học cho phụ huynh.
+
+🔹 Sau mỗi buổi, gia sư điền: dạy gì, con tiếp thu thế nào
+🔹 Phụ huynh mở app xem ngay — dù đang ở bất cứ đâu
+🔹 Biểu đồ điểm kiểm tra — theo dõi tiến bộ trực quan
+🔹 Bài tập về nhà — biết con hoàn thành chưa
+🔹 Gia sư xác thực bằng cấp, tỉ lệ duyệt chỉ 35%
+
+✅ Đăng ký miễn phí
+✅ Không hợp đồng
+✅ 48.000đ/ngày
+
+👇 Tìm hiểu ngay</div>
+                <div class="char-count"><button class="copy-btn" onclick="copyField('v5-ext', this)">Copy</button></div>
+            </div>
+        </div>
+
+        <!-- TIPS -->
+        <h2 class="section-title">🎯 Hướng dẫn tối ưu chiến dịch</h2>
+        
+        <div class="tips">
+            <h3>📌 Target khuyến nghị</h3>
+            <table>
+                <tr><th>Param</th><th>Giá trị</th></tr>
+                <tr><td>Độ tuổi</td><td><strong>28–45</strong> (phụ huynh có con đi học)</td></tr>
+                <tr><td>Giới tính</td><td><strong>Nữ ưu tiên</strong> (mẹ thường quyết định chuyện học)</td></tr>
+                <tr><td>Khu vực</td><td><strong>TP.HCM, Hà Nội, Đà Nẵng</strong></td></tr>
+                <tr><td>Sở thích</td><td>Giáo dục, nuôi dạy con, trường học</td></tr>
+            </table>
+        </div>
+
+        <div class="tips">
+            <h3>⏰ Thời điểm chạy hiệu quả</h3>
+            <ul>
+                <li><strong>19:00 – 22:00</strong> — PH rảnh sau giờ làm, lướt Zalo → CTR cao nhất</li>
+                <li><strong>12:00 – 13:00</strong> — Giờ nghỉ trưa → tốt cho awareness</li>
+                <li>❌ Tránh 8:00–11:00 (PH bận làm việc, ít click)</li>
+            </ul>
+        </div>
+
+        <div class="tips">
+            <h3>🔄 Cách A/B Test</h3>
+            <ul>
+                <li>Chạy <strong>3 variants</strong> cùng lúc, 50-100k/variant/ngày × 3-5 ngày</li>
+                <li>Sau 3 ngày → xem <strong>CTR (tỉ lệ click)</strong></li>
+                <li>Tắt variant CTR thấp nhất → dồn budget vào variant thắng</li>
+                <li>Landing page: <code>https://giasutinhhoa.com/bai-viet/tai-sao-chon-gia-su-tinh-hoa/</code></li>
+            </ul>
+        </div>
+
+        <div class="tips">
+            <h3>🖼️ Hình ảnh</h3>
+            <ul>
+                <li>Dùng <strong>"Nhiều hình ảnh" (carousel)</strong> — tăng tương tác gấp 1.5x</li>
+                <li>3 slide theo thứ tự: Banner 1 → Banner 2 → Banner 3</li>
+                <li>Logo: dùng logo Gia Sư Tinh Hoa (150×150px)</li>
+                <li>Nút bấm: chọn <strong>"Xem thêm"</strong></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function copyField(elementId, buttonElement) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                buttonElement.textContent = '✓ Copied';
+                buttonElement.classList.add('copied');
+                setTimeout(() => {
+                    buttonElement.textContent = 'Copy';
+                    buttonElement.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

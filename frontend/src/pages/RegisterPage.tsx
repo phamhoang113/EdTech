@@ -236,7 +236,7 @@ export const RegisterPage = () => {
                 id="reg-phone"
                 type="tel"
                 className="form-input"
-                placeholder="Ví dụ: 0901234567"
+                placeholder="Ví dụ: 0345851204"
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
                 required

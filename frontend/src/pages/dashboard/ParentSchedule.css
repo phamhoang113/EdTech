@@ -269,7 +269,7 @@
   inset: 0;
   background: rgba(0,0,0,0.5);
   backdrop-filter: blur(4px);
-  z-index: 3000;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -411,7 +411,9 @@
 
 @media (max-width: 600px) {
   .psched-container {
-    padding: 16px;
+    margin: 0;
+    padding: 0;
+    width: 100%;
   }
   
   .psched-header-section {
@@ -464,4 +466,56 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+/* File Upload Modern UI */
+.file-upload-modern {
+  position: relative;
+  width: 100%;
+  border: 2px dashed var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.file-upload-modern:hover {
+  border-color: var(--color-primary);
+  background: #f8fafc;
+}
+
+.file-upload-input {
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.file-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.file-upload-label .icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.file-upload-label .text {
+  font-weight: 500;
+}
+
+.file-upload-label .file-name {
+  color: var(--color-primary);
+  font-weight: 600;
+  word-break: break-all;
 }

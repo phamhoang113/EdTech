@@ -196,7 +196,7 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
                   _buildField(
                     controller: _phoneCtrl,
                     label: 'Số điện thoại',
-                    hint: '0901234567',
+                    hint: '0345851204',
                     icon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
                     theme: theme,

@@ -355,7 +355,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
         return Icons.chat_bubble_outline;
       case 'ASSESSMENT_PUBLISHED':
       case 'SUBMISSION_GRADED':
+      case 'HOMEWORK_ASSIGNED':
+      case 'HOMEWORK_DEADLINE_REMINDER':
+      case 'HOMEWORK_SUBMITTED':
         return Icons.assignment_outlined;
+      case 'MATERIAL_UPLOADED':
+        return Icons.attach_file_outlined;
+      case 'TEST_SCHEDULED':
+        return Icons.quiz_outlined;
       case 'CONTACT_MESSAGE_RECEIVED':
         return Icons.mail_outline;
       default:
@@ -392,6 +399,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
       case 'ABSENCE_REJECTED':
         return const Color(0xFFEF4444); // red
       case 'NEW_MESSAGE':
+        return const Color(0xFF6366F1); // indigo
+      case 'ASSESSMENT_PUBLISHED':
+      case 'HOMEWORK_ASSIGNED':
+      case 'HOMEWORK_DEADLINE_REMINDER':
+      case 'HOMEWORK_SUBMITTED':
+      case 'SUBMISSION_GRADED':
+      case 'MATERIAL_UPLOADED':
+      case 'TEST_SCHEDULED':
+        return const Color(0xFF8B5CF6); // violet
+      case 'CONTACT_MESSAGE_RECEIVED':
         return const Color(0xFF6366F1); // indigo
       default:
         return const Color(0xFF6B7280); // gray

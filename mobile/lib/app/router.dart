@@ -17,7 +17,7 @@ import '../features/classes/presentation/screens/class_detail_screen.dart';
 import '../features/classes/presentation/screens/class_list_screen.dart';
 import '../features/classes/presentation/screens/request_class_screen.dart';
 import '../features/home/presentation/screens/ai_screen.dart';
-import '../features/home/presentation/screens/blog_screen.dart';
+import '../features/teaching/presentation/screens/teaching_screen.dart';
 import '../features/home/presentation/screens/documents_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/home/presentation/screens/main_shell.dart';
@@ -31,7 +31,7 @@ import '../features/tutor_profile/presentation/screens/tutor_verification_screen
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _homeNavKey = GlobalKey<NavigatorState>(debugLabel: 'home');
 final GlobalKey<NavigatorState> _scheduleNavKey = GlobalKey<NavigatorState>(debugLabel: 'schedule');
-final GlobalKey<NavigatorState> _blogNavKey = GlobalKey<NavigatorState>(debugLabel: 'blog');
+final GlobalKey<NavigatorState> _teachingNavKey = GlobalKey<NavigatorState>(debugLabel: 'teaching');
 final GlobalKey<NavigatorState> _docsNavKey = GlobalKey<NavigatorState>(debugLabel: 'docs');
 final GlobalKey<NavigatorState> _aiNavKey = GlobalKey<NavigatorState>(debugLabel: 'ai');
 final GlobalKey<NavigatorState> _profileNavKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
@@ -68,13 +68,13 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 2: Blog
+        // Tab 2: Giảng dạy / Học tập (thay thế Blog)
         StatefulShellBranch(
-          navigatorKey: _blogNavKey,
+          navigatorKey: _teachingNavKey,
           routes: [
             GoRoute(
-              path: '/blog',
-              builder: (context, state) => const BlogScreen(),
+              path: '/teaching',
+              builder: (context, state) => const TeachingScreen(),
             ),
           ],
         ),

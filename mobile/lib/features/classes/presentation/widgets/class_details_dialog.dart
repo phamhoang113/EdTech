@@ -4,11 +4,11 @@ import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../app/router.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
-import '../../../tutor_profile/presentation/bloc/tutor_profile_bloc.dart';
-import '../../../tutor_profile/presentation/bloc/tutor_profile_state.dart';
 import '../../domain/entities/open_class_entity.dart';
 
 class ClassDetailsDialog extends StatelessWidget {
@@ -224,22 +224,27 @@ class ClassDetailsDialog extends StatelessWidget {
 
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
-        String? userLevel;
         if (authState is AuthAuthenticated && authState.user.role == 'TUTOR') {
-          try {
-            final tutorState = context.read<TutorProfileBloc>().state;
-            if (tutorState is TutorDashboardLoaded) {
-              userLevel = tutorState.profile.level;
-            } else if (tutorState is TutorProfileLoaded) {
-              userLevel = tutorState.profile.level;
-            }
-          } catch (_) {
-            // TutorProfileBloc not in tree
-          }
+          return FutureBuilder<String?>(
+            future: _fetchTutorType(),
+            builder: (context, snapshot) {
+              return _buildFeeList(context, fees, snapshot.data);
+            },
+          );
         }
-        return _buildFeeList(context, fees, userLevel);
+        return _buildFeeList(context, fees, null);
       },
     );
+  }
+
+  Future<String?> _fetchTutorType() async {
+    try {
+      final dioClient = getIt<DioClient>();
+      final response = await dioClient.dio.get('/api/v1/tutors/profile/me');
+      return response.data['data']?['tutorType'] as String?;
+    } catch (_) {
+      return null;
+    }
   }
 
   Widget _buildFeeList(BuildContext context, List<Map<String, dynamic>> fees, String? highlightLevel) {

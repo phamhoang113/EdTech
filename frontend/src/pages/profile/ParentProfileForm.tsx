@@ -152,7 +152,7 @@ export function ParentProfileForm() {
                   className="tp-input"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Nhập số điện thoại (VD: 0901234567)"
+                  placeholder="Nhập số điện thoại (VD: 0345851204)"
                   maxLength={10}
                   style={{ marginTop: '4px', fontSize: '14px' }}
                 />

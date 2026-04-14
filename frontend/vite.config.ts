@@ -35,6 +35,10 @@ const localCacheHeaderPlugin = () => ({
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), localCacheHeaderPlugin()],
+  server: {
+    host: true, // Cho phép truy cập từ LAN/ADB
+    port: 5173,
+  },
   build: {
     rollupOptions: {
       output: {

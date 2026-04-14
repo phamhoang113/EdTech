@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, PlusCircle, Calendar, MessageSquare, BarChart3, LogOut, CreditCard, UserCheck, User } from 'lucide-react';
+import { LayoutDashboard, Users, PlusCircle, Calendar, MessageSquare, BarChart3, LogOut, CreditCard, UserCheck, User, ClipboardList } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useBadgeCounts } from '../../hooks/useBadgeCounts';
@@ -6,7 +6,7 @@ import { useNotificationStore } from '../../store/useNotificationStore';
 import { useSidebarStore } from '../../store/useSidebarStore';
 
 export function ParentSidebar({ active, onRequestClass }: {
-  active: 'overview' | 'children' | 'applicants' | 'schedule' | 'messages' | 'profile' | 'report' | 'payment';
+  active: 'overview' | 'children' | 'applicants' | 'schedule' | 'teaching' | 'messages' | 'profile' | 'report' | 'payment';
   onRequestClass?: () => void;
 }) {
   const navigate = useNavigate();
@@ -68,6 +68,12 @@ export function ParentSidebar({ active, onRequestClass }: {
             onClick={() => handleNav('/parent/schedule')}
           >
             <Calendar size={18}/> Lịch học
+          </button>
+          <button 
+            className={`dash-sidebar-item ${active === 'teaching' ? 'active' : ''}`}
+            onClick={() => handleNav('/parent/teaching')}
+          >
+            <ClipboardList size={18}/> Học tập
           </button>
           <button 
             className={`dash-sidebar-item ${active === 'messages' ? 'active' : ''}`}

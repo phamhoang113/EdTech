@@ -459,7 +459,7 @@ public class ClassApplicationService {
                 .achievements(tutorProfile != null ? tutorProfile.getAchievements() : null)
                 .rating(tutorProfile != null ? tutorProfile.getRating() : null)
                 .ratingCount(tutorProfile != null ? tutorProfile.getRatingCount() : null)
-                .certBase64s(tutorProfile != null ? tutorProfile.getCertBase64s() : null)
+                .certBase64s(tutorProfile != null ? com.edtech.backend.core.util.ImageCompressUtil.decompressArray(tutorProfile.getCertBase64s()) : null)
                 .tutorActiveClassesCount(activeClasses)
                 .tutorPendingApplicationsCount(pendingApps)
                 .parentPhone(parentPhone)

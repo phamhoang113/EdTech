@@ -23,5 +23,12 @@ public enum NotificationType {
     ABSENCE_REJECTED,         // Admin từ chối đơn nghỉ → thông báo người yêu cầu
     SCHEDULE_UPDATED,         // GS thay đổi lịch dạy → thông báo Admin + PH
     SCHEDULE_CONFIRMED,       // GS xác nhận lịch tuần → thông báo PH
-    CONTACT_MESSAGE_RECEIVED  // Khách gửi tin nhắn liên hệ → thông báo Admin
+    CONTACT_MESSAGE_RECEIVED, // Khách gửi tin nhắn liên hệ → thông báo Admin
+
+    // ─── Teaching module ───
+    MATERIAL_UPLOADED,          // GS upload tài liệu → HS
+    HOMEWORK_ASSIGNED,          // GS giao bài tập → HS + PH
+    HOMEWORK_DEADLINE_REMINDER, // Nhắc deadline BT → HS chưa nộp + PH
+    HOMEWORK_SUBMITTED,         // HS nộp bài → GS
+    TEST_SCHEDULED              // GS tạo đề kiểm tra → HS + PH
 }

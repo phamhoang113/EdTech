@@ -2,7 +2,6 @@ package com.edtech.backend.cls.controller;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +23,7 @@ import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.cls.dto.ClassDTO;
 import com.edtech.backend.cls.dto.SessionDTO;
 import com.edtech.backend.cls.service.TutorSessionService;
+import com.edtech.backend.core.dto.ApiResponse;
 import com.edtech.backend.core.exception.EntityNotFoundException;
 
 @RestController
@@ -39,24 +39,24 @@ public class TutorSessionController {
 
     @GetMapping("/sessions")
     @Operation(summary = "Lấy lịch dạy của gia sư", description = "Mặc định ±30 ngày")
-    public ResponseEntity<List<SessionDTO>> getSessions(
+    public ResponseEntity<ApiResponse<List<SessionDTO>>> getSessions(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         UUID tutorId = resolveUserId(userDetails);
         List<SessionDTO> sessions = tutorSessionService.getSessionsByTutor(tutorId, startDate, endDate);
-        return ResponseEntity.ok(sessions);
+        return ResponseEntity.ok(ApiResponse.ok(sessions));
     }
 
     @GetMapping("/classes")
     @Operation(summary = "Lấy danh sách lớp đang dạy")
-    public ResponseEntity<List<ClassDTO>> getMyClasses(
+    public ResponseEntity<ApiResponse<List<ClassDTO>>> getMyClasses(
             @AuthenticationPrincipal UserDetails userDetails) {
 
         UUID tutorId = resolveUserId(userDetails);
         List<ClassDTO> classes = tutorSessionService.getMyClasses(tutorId);
-        return ResponseEntity.ok(classes);
+        return ResponseEntity.ok(ApiResponse.ok(classes));
     }
 
     private UUID resolveUserId(UserDetails userDetails) {

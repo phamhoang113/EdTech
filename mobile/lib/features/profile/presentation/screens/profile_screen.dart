@@ -115,18 +115,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildSectionTitle(theme, '📋 Quản lý'),
               _buildActionTile(
                 context, theme,
-                icon: Icons.person_outline,
-                label: 'Hồ sơ gia sư',
-                onTap: () => getIt<WebLauncherService>().openWithToken('/tutor/dashboard'),
-              ),
-              _buildActionTile(
-                context, theme,
-                icon: Icons.chat_bubble_outline,
-                label: 'Tin nhắn',
-                onTap: () => getIt<WebLauncherService>().openWithToken('/tutor/messages'),
-              ),
-              _buildActionTile(
-                context, theme,
                 icon: Icons.monetization_on_outlined,
                 label: 'Chi tiết thu nhập',
                 onTap: () => getIt<WebLauncherService>().openWithToken('/tutor/revenue'),

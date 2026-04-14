@@ -174,6 +174,14 @@ export function NotificationDropdown() {
       case 'VERIFICATION':
         navigate('/admin/verification');
         break;
+      case 'MATERIAL':
+      case 'ASSESSMENT':
+      case 'SUBMISSION':
+        navigate(`${rolePrefix}/teaching`);
+        break;
+      case 'CONTACT_MESSAGE':
+        navigate('/admin/contact-messages');
+        break;
       default:
         navigate(`${rolePrefix}/dashboard`);
         break;

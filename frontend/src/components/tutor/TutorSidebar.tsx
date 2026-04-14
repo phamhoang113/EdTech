@@ -1,10 +1,10 @@
-import { LayoutDashboard, BookOpen, Calendar, MessageSquare, User, BarChart3, LogOut } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Calendar, MessageSquare, User, BarChart3, LogOut, ClipboardList } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useNotificationStore } from '../../store/useNotificationStore';
 import { useSidebarStore } from '../../store/useSidebarStore';
 
-type SidebarTab = 'overview' | 'classes' | 'schedule' | 'messages' | 'profile' | 'revenue';
+type SidebarTab = 'overview' | 'classes' | 'schedule' | 'teaching' | 'messages' | 'profile' | 'revenue';
 
 interface TutorSidebarProps {
   active: SidebarTab;
@@ -55,6 +55,12 @@ export function TutorSidebar({ active, showScheduleWarning = false, draftCount =
                 {draftCount}
               </span>
             )}
+          </button>
+          <button
+            className={`dash-sidebar-item ${active === 'teaching' ? 'active' : ''}`}
+            onClick={() => handleNav('/tutor/teaching')}
+          >
+            <ClipboardList size={18} /> Giảng dạy
           </button>
           <button 
             className={`dash-sidebar-item ${active === 'messages' ? 'active' : ''}`}

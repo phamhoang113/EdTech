@@ -132,7 +132,7 @@ export function StudentParentsPage() {
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: 6, color: 'var(--color-text-secondary)' }}>Số điện thoại phụ huynh</label>
               <input
                 type="tel"
-                placeholder="VD: 0987654321"
+                placeholder="VD: 0345851204"
                 value={newParentPhone}
                 onChange={e => setNewParentPhone(e.target.value)}
                 style={{ width: '100%', padding: '12px 16px', border: '1.5px solid var(--color-border)', borderRadius: 10, fontSize: '0.95rem', outline: 'none' }}
