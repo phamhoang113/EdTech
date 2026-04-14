@@ -89,14 +89,14 @@ public class StudentClassController {
                 .body(ApiResponse.ok(toItem(saved, null), "Đã gửi yêu cầu mở lớp! Admin sẽ xem xét sớm."));
     }
 
-    /** HS xem tất cả lớp của mình (mà hệ thống coi họ là parent) */
+    /** HS xem tất cả lớp mà họ ĐANG HỌC (phụ thuộc hoặc tự lập) */
     @GetMapping("/classes")
     public ResponseEntity<ApiResponse<List<AdminClassListItem>>> getMyClasses(
             @AuthenticationPrincipal UserDetails userDetails) {
 
         UUID studentId = resolveUser(userDetails.getUsername()).getId();
-        // Querry parentId vì HS đang đóng vai trò parent
-        List<ClassEntity> classes = classRepository.findByParentIdAndIsDeletedFalseOrderByCreatedAtDesc(studentId);
+        // Lấy lớp theo danh sách sinh viên ánh xạ, bao phủ cả HS phụ thuộc và HS tự lập
+        List<ClassEntity> classes = classRepository.findByStudents_IdAndIsDeletedFalseOrderByCreatedAtDesc(studentId);
 
         List<AdminClassListItem> items = classes.stream()
                 .map(c -> toItem(c, null))

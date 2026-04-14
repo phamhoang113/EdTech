@@ -198,7 +198,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           enabled: !_isLoading,
           decoration: InputDecoration(
             labelText: 'SĐT hoặc Tên đăng nhập',
-            hintText: '0901234567',
+            hintText: '0345851204',
             prefixIcon: const Icon(Icons.person_outline),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             enabledBorder: OutlineInputBorder(

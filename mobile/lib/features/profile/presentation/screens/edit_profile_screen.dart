@@ -415,48 +415,100 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   // BUILD
   // ═══════════════════════════════════════════════════
 
+  /// Xử lý khi nhấn back: nếu có thay đổi → hỏi lưu.
+  Future<bool> _onBackPressed() async {
+    if (!_isDirty) return true; // Không thay đổi → thoát luôn
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Lưu thay đổi?'),
+        content: const Text('Bạn có muốn lưu những thay đổi trước khi rời đi không?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, 'discard'),
+            child: Text('Không lưu', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, 'cancel'),
+            child: const Text('Ở lại'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, 'save'),
+            child: const Text('Lưu'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == 'save') {
+      await _saveProfile();
+      return false; // _saveProfile đã pop nếu thành công
+    }
+    return result == 'discard';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        title: const Text('Chỉnh sửa hồ sơ'),
-        centerTitle: true,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final shouldPop = await _onBackPressed();
+        if (shouldPop && mounted) {
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
         backgroundColor: theme.colorScheme.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        titleTextStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w700,
-          color: theme.colorScheme.onSurface,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async {
+              final shouldPop = await _onBackPressed();
+              if (shouldPop && mounted) {
+                Navigator.pop(context);
+              }
+            },
+          ),
+          title: const Text('Chỉnh sửa hồ sơ'),
+          centerTitle: true,
+          backgroundColor: theme.colorScheme.surface,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          titleTextStyle: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                children: [
-                  _buildAvatarSection(theme),
-                  const SizedBox(height: 24),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  children: [
+                    _buildAvatarSection(theme),
+                    const SizedBox(height: 24),
 
-                  if (_isTutor)
-                    _buildTutorForm(theme)
-                  else ...[
-                    _buildInfoSection(theme),
-                    const SizedBox(height: 20),
-                    _buildBasicFormSection(theme),
+                    if (_isTutor)
+                      _buildTutorForm(theme)
+                    else ...[
+                      _buildInfoSection(theme),
+                      const SizedBox(height: 20),
+                      _buildBasicFormSection(theme),
+                    ],
+
+                    const SizedBox(height: 28),
+                    _buildSaveButton(theme),
+                    const SizedBox(height: 40),
                   ],
-
-                  const SizedBox(height: 28),
-                  _buildSaveButton(theme),
-                  const SizedBox(height: 40),
-                ],
+                ),
               ),
-            ),
+      ),
     );
   }
 
@@ -899,7 +951,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_isPhoneEditable)
-          _buildField(theme, controller: _phoneController, label: 'Số điện thoại', hint: '0901234567', icon: Icons.phone_outlined, keyboardType: TextInputType.phone,
+          _buildField(theme, controller: _phoneController, label: 'Số điện thoại', hint: '0345851204', icon: Icons.phone_outlined, keyboardType: TextInputType.phone,
             validator: (v) {
               if (v == null || v.trim().isEmpty) return null;
               if (!RegExp(r'^0\d{9}$').hasMatch(v.trim())) return '10 số, bắt đầu bằng 0';

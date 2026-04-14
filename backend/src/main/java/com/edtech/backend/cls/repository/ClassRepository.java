@@ -34,6 +34,9 @@ public interface ClassRepository extends JpaRepository<ClassEntity, UUID> {
     /** Tìm lớp đang được giao cho 1 gia sư theo trạng thái */
     List<ClassEntity> findByTutorIdAndStatusAndIsDeletedFalse(UUID tutorId, ClassStatus status);
 
+    /** Tất cả lớp của GS (chưa xóa) — dùng cho schedule events + teaching screen */
+    List<ClassEntity> findByTutorIdAndIsDeletedFalseOrderByCreatedAtDesc(UUID tutorId);
+
     // ─── Admin queries ───────────────────────────────────────────────────────
 
     /** Tất cả lớp (chưa xóa) sắp xếp mới nhất trước */
@@ -47,6 +50,9 @@ public interface ClassRepository extends JpaRepository<ClassEntity, UUID> {
 
     /** Lấy tất cả lớp của 1 phụ huynh (chưa xóa) */
     List<ClassEntity> findByParentIdAndIsDeletedFalseOrderByCreatedAtDesc(UUID parentId);
+
+    /** Lấy tất cả lớp mà học sinh ĐANG HỌC (chưa xóa) */
+    List<ClassEntity> findByStudents_IdAndIsDeletedFalseOrderByCreatedAtDesc(UUID studentId);
 
     /** Tìm lớp OPEN đã hết hạn endDate (dùng cho scheduler auto-close) */
     List<ClassEntity> findByStatusAndEndDateBeforeAndIsDeletedFalse(ClassStatus status, LocalDate date);

@@ -48,7 +48,7 @@ class GuestHeroSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Tìm Gia Sư\nTinh Hoa',
+              'Gia Sư\nTinh Hoa',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 28,

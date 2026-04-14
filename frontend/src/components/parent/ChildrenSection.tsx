@@ -233,7 +233,7 @@ function ChildFormModal({ child, levels, onClose, onSaved }: {
                     style={{ paddingLeft: 34 }}
                     value={form.phone ?? ''}
                     onChange={e => handlePhoneChange(e.target.value)}
-                    placeholder="Vd: 0912345678"
+                    placeholder="Vd: 0345851204"
                     autoFocus
                     maxLength={11}
                   />

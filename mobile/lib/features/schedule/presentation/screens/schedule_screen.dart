@@ -6,6 +6,8 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../home/data/datasources/home_remote_datasource.dart';
 import '../../../home/domain/entities/upcoming_session_entity.dart';
+import '../../../teaching/data/datasources/teaching_datasource.dart';
+import '../../domain/entities/schedule_event_entity.dart';
 
 /// Tab Lịch học — Calendar view cá nhân hóa cho PH/HS.
 class ScheduleScreen extends StatefulWidget {
@@ -19,11 +21,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   DateTime _selectedDate = DateTime.now();
   DateTime _focusedMonth = DateTime.now();
   List<UpcomingSessionEntity> _sessions = [];
+  List<ScheduleEventEntity> _teachingEvents = [];
   bool _loading = true;
   String? _error;
 
   // Cache: month key → sessions
   final Map<String, List<UpcomingSessionEntity>> _cache = {};
+  final Map<String, List<ScheduleEventEntity>> _eventCache = {};
+  final _teachingDataSource = TeachingDataSource();
 
   @override
   void initState() {
@@ -57,13 +62,20 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       final startStr = _formatDateApi(firstDay);
       final endStr = _formatDateApi(lastDay);
 
-      // Reuse datasource logic — gọi API sessions theo khoảng ngày
-      final response = await ds.getUpcomingSessionsRange(role, startStr, endStr);
+      // Load sessions + teaching events in parallel
+      final sessionsFuture = ds.getUpcomingSessionsRange(role, startStr, endStr);
+      final eventsFuture = _loadTeachingEvents(startStr, endStr);
 
-      _cache[key] = response;
+      final results = await Future.wait([sessionsFuture, eventsFuture]);
+      final sessionList = results[0] as List<UpcomingSessionEntity>;
+      final eventList = results[1] as List<ScheduleEventEntity>;
+
+      _cache[key] = sessionList;
+      _eventCache[key] = eventList;
       if (mounted) {
         setState(() {
-          _sessions = response;
+          _sessions = sessionList;
+          _teachingEvents = eventList;
           _loading = false;
           _error = null;
         });
@@ -78,6 +90,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
   }
 
+  Future<List<ScheduleEventEntity>> _loadTeachingEvents(String start, String end) async {
+    try {
+      final rawList = await _teachingDataSource.getScheduleEvents(startDate: start, endDate: end);
+      return rawList.map((e) => ScheduleEventEntity.fromJson(e)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
   String _formatDateApi(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
@@ -86,9 +107,23 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     return _sessions.where((s) => s.sessionDate == dateStr).toList();
   }
 
-  bool _hasSession(DateTime date) {
+  List<ScheduleEventEntity> _eventsForDate(DateTime date) {
     final dateStr = _formatDateApi(date);
-    return _sessions.any((s) => s.sessionDate == dateStr);
+    return _teachingEvents.where((e) => e.date == dateStr).toList();
+  }
+
+  /// Lấy list dot colors cho ngày (multi-colored indicators)
+  List<Color> _dotColors(DateTime date) {
+    final dots = <Color>[];
+    final dateStr = _formatDateApi(date);
+    if (_sessions.any((s) => s.sessionDate == dateStr)) {
+      dots.add(const Color(0xFF6366F1)); // Indigo = session
+    }
+    for (final e in _teachingEvents.where((ev) => ev.date == dateStr)) {
+      final c = Color(e.dotColorValue);
+      if (!dots.contains(c)) dots.add(c);
+    }
+    return dots;
   }
 
   void _onMonthChanged(int delta) {
@@ -135,10 +170,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             )
           else if (_error != null)
             _buildErrorWidget(theme)
-          else if (sessionsToday.isEmpty)
+          else if (sessionsToday.isEmpty && _eventsForDate(_selectedDate).isEmpty)
             _buildEmptyDay(theme)
-          else
+          else ...[
             ...sessionsToday.map((s) => _SessionCard(session: s)),
+            ..._eventsForDate(_selectedDate).map((e) => _TeachingEventCard(event: e)),
+          ],
         ],
       ),
     );
@@ -236,7 +273,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           final isSelected = date.year == _selectedDate.year &&
               date.month == _selectedDate.month &&
               date.day == _selectedDate.day;
-          final hasData = _hasSession(date);
           final dayVal = dayNum;
 
           cells.add(Expanded(
@@ -268,16 +304,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 : null,
                       ),
                     ),
-                    if (hasData && !isSelected)
+                    if (!isSelected && _dotColors(date).isNotEmpty)
                       Positioned(
                         bottom: 4,
-                        child: Container(
-                          width: 6,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            shape: BoxShape.circle,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: _dotColors(date).take(3).map((c) => Container(
+                            width: 5,
+                            height: 5,
+                            margin: const EdgeInsets.symmetric(horizontal: 1),
+                            decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+                          )).toList(),
                         ),
                       ),
                   ],
@@ -297,6 +334,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   Widget _buildDateLabel(ThemeData theme) {
     final label = _formatVietnameseDate(_selectedDate);
     final sessionsCount = _sessionsForDate(_selectedDate).length;
+    final eventsCount = _eventsForDate(_selectedDate).length;
+    final totalCount = sessionsCount + eventsCount;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -307,7 +346,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const Spacer(),
-          if (sessionsCount > 0)
+          if (totalCount > 0)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
@@ -315,7 +354,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                '$sessionsCount buổi',
+                '$totalCount sự kiện',
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.colorScheme.primary),
               ),
             ),
@@ -332,7 +371,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           Icon(Icons.event_busy_outlined, size: 40, color: theme.colorScheme.onSurfaceVariant.withAlpha(120)),
           const SizedBox(height: 8),
           Text(
-            'Không có buổi học nào',
+            'Không có sự kiện nào',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
@@ -499,3 +538,125 @@ class _StatusConfig {
   final Color color;
   const _StatusConfig(this.label, this.color);
 }
+
+// ═══════════════════════════════════════════════════════════
+// TEACHING EVENT CARD (deadline BT / lịch KT)
+// ═══════════════════════════════════════════════════════════
+class _TeachingEventCard extends StatelessWidget {
+  final ScheduleEventEntity event;
+
+  const _TeachingEventCard({required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isExam = event.isExam;
+    final color = Color(event.dotColorValue);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withAlpha(40)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(6),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color.withAlpha(15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                isExam ? Icons.quiz_rounded : Icons.assignment_rounded,
+                color: color,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 14),
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    event.title,
+                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        isExam ? Icons.timer_rounded : Icons.schedule_rounded,
+                        size: 13,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _buildTimeLabel(),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if (event.className != null) ...[
+                        const SizedBox(width: 10),
+                        Icon(Icons.class_rounded, size: 13, color: theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 3),
+                        Flexible(
+                          child: Text(
+                            event.className!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Type badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: color.withAlpha(15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                isExam ? 'Kiểm tra' : 'Deadline',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _buildTimeLabel() {
+    if (event.isExam) {
+      final time = event.startTime ?? '';
+      final dur = event.durationMin != null ? ' • ${event.durationMin}p' : '';
+      return '$time$dur';
+    }
+    return 'Hạn: ${event.startTime ?? 'N/A'}';
+  }
+}
+

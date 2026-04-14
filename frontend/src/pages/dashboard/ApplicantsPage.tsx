@@ -75,7 +75,10 @@ function TutorDetailModal({ tutor, onClose, onSelect, classStatus }: {
     }
   };
 
-  const toSrc = (img: string) => img.startsWith('data:') ? img : `data:image/png;base64,${img}`;
+  const toSrc = (img: string) => {
+    if (img.startsWith('http') || img.startsWith('/')) return img;
+    return img.startsWith('data:') ? img : `data:image/png;base64,${img}`;
+  };
 
   return (
     <div className="ap-overlay" onClick={onClose}>
@@ -89,7 +92,7 @@ function TutorDetailModal({ tutor, onClose, onSelect, classStatus }: {
           </div>
           <div className="ap-modal-meta">
             <h2 className="ap-modal-name">{tutor.tutorName ?? 'Gia sư'}</h2>
-            <div className="ap-modal-badge" style={{ background: st.color + '20', color: st.color }}>
+            <div className="ap-modal-badge" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }}>
               {st.label}
             </div>
           </div>

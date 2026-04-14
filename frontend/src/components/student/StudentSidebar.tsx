@@ -1,4 +1,4 @@
-import { LayoutDashboard, Calendar, User, Users, MessageSquare, CreditCard, LogOut, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Calendar, User, Users, MessageSquare, CreditCard, LogOut, BookOpen, ClipboardList } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -7,7 +7,7 @@ import { useSidebarStore } from '../../store/useSidebarStore';
 import { studentApi } from '../../services/studentApi';
 
 interface StudentSidebarProps {
-  active?: 'overview' | 'schedule' | 'messages' | 'achievements' | 'parents' | 'payments' | 'profile' | 'requests';
+  active?: 'overview' | 'schedule' | 'teaching' | 'messages' | 'achievements' | 'parents' | 'payments' | 'profile' | 'requests';
   hasParent?: boolean;
 }
 
@@ -74,6 +74,12 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
             onClick={() => handleNav('/student/schedule')}
           >
             <Calendar size={18} /> Lịch học
+          </button>
+          <button 
+            className={`dash-sidebar-item ${active === 'teaching' ? 'active' : ''}`}
+            onClick={() => handleNav('/student/teaching')}
+          >
+            <ClipboardList size={18} /> Bài tập & Tài liệu
           </button>
           {!loadingParent && !hasParent && (
             <button 

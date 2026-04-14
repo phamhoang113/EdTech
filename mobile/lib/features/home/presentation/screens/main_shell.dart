@@ -7,6 +7,7 @@ import '../../../../app/router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/di/tutor_verification_notifier.dart';
 import '../../../../core/services/push_notification_service.dart';
+
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../notification/data/datasources/notification_datasource.dart';
@@ -14,8 +15,8 @@ import '../../../notification/presentation/screens/notification_screen.dart';
 import '../../../../shared/widgets/floating_bottom_nav.dart';
 
 /// MainShell — Provides fixed AppBar + BottomNavigationBar.
-/// PH/GS/Guest: 4 tabs (Home, Lịch, Blog, Tôi).
-/// STUDENT: 6 tabs (Home, Lịch, Blog, Tài liệu, AI, Tôi).
+/// PH/GS/Guest: 4 tabs (Home, Lịch, Giảng dạy/Học tập, Tôi).
+/// STUDENT: 6 tabs (Home, Lịch, Học tập, Tài liệu, AI, Tôi).
 class MainShell extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -26,7 +27,7 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
-  /// Total branches in router: 0=Home, 1=Lịch, 2=Blog, 3=Docs, 4=AI, 5=Profile
+  /// Total branches in router: 0=Home, 1=Lịch, 2=Giảng dạy, 3=Docs, 4=AI, 5=Profile
   static const int _totalBranches = 6;
 
   int _unreadCount = 0;
@@ -75,12 +76,22 @@ class _MainShellState extends State<MainShell> {
         }
         break;
       case 'CONVERSATION':
-        // Navigate to messages — go to home and push messages route
-        context.push('/messages');
+        // Chat chỉ có trên web → dẫn tới Profile (có link "Liên hệ hỗ trợ")
+        // KHÔNG tự mở trình duyệt — user tự tap link khi cần
+        widget.navigationShell.goBranch(_profileBranchIndex, initialLocation: true);
         break;
       case 'INVOICE':
+        // Có màn BillingsScreen riêng → dẫn thẳng tới đó
+        context.push('/billings');
+        break;
       case 'VERIFICATION':
-        widget.navigationShell.goBranch(_profileBranchIndex, initialLocation: true);
+        // Có màn TutorVerificationScreen riêng → dẫn thẳng tới đó
+        context.push('/tutor/verify');
+        break;
+      case 'MATERIAL':
+      case 'ASSESSMENT':
+      case 'SUBMISSION':
+        widget.navigationShell.goBranch(2, initialLocation: true); // Teaching
         break;
       default:
         widget.navigationShell.goBranch(0, initialLocation: true);
@@ -90,7 +101,7 @@ class _MainShellState extends State<MainShell> {
   /// Admin tabs: 0=Home, 5=Profile
   static const List<int> _adminBranches = [0, 5];
 
-  /// Non-student tabs: 0=Home, 1=Lịch, 2=Blog, 5=Profile
+  /// Non-student tabs: 0=Home, 1=Lịch, 2=Giảng dạy/Học tập, 5=Profile
   static const List<int> _defaultBranches = [0, 1, 2, 5];
 
   /// Student tabs: all 6
@@ -211,8 +222,12 @@ class _MainShellState extends State<MainShell> {
 
       body: Stack(
         children: [
-          widget.navigationShell,
-          // ── Floating Bottom Navigation (Mockup) ──
+          // Content area — thêm padding bottom để nav bar không che nội dung
+          Padding(
+            padding: const EdgeInsets.only(bottom: 80),
+            child: widget.navigationShell,
+          ),
+          // ── Floating Bottom Navigation ──
           Positioned(
             left: 0,
             right: 0,
@@ -238,10 +253,13 @@ class _MainShellState extends State<MainShell> {
       ];
     }
 
+    // Label thay đổi theo role: GS → "Giảng dạy", HS/PH → "Học tập"
+    final teachingLabel = role == 'TUTOR' ? 'Giảng dạy' : 'Học tập';
+
     final items = <FloatingBottomNavItem>[
       const FloatingBottomNavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home'),
       const FloatingBottomNavItem(icon: Icons.calendar_month_outlined, activeIcon: Icons.calendar_month, label: 'Lịch'),
-      const FloatingBottomNavItem(icon: Icons.article_outlined, activeIcon: Icons.article_rounded, label: 'Blog'),
+      FloatingBottomNavItem(icon: Icons.school_outlined, activeIcon: Icons.school_rounded, label: teachingLabel),
     ];
 
     if (role == 'STUDENT') {

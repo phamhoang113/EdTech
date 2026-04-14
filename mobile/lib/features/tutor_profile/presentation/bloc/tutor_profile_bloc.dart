@@ -35,8 +35,8 @@ class TutorProfileBloc extends Bloc<TutorProfileEvent, TutorProfileState> {
   }
 
   /// Load all dashboard data: profile + classes + sessions.
-  /// Uses Future.any to guarantee state emission within 6s,
-  /// even if Dio/SecureStorage hangs on web.
+  /// Retries once on failure to avoid false UNVERIFIED status
+  /// from transient connection issues (e.g., ADB reverse not ready).
   Future<void> _onLoadDashboard(
     LoadTutorDashboard event,
     Emitter<TutorProfileState> emit,
@@ -50,19 +50,26 @@ class TutorProfileBloc extends Bloc<TutorProfileEvent, TutorProfileState> {
       sessions: [],
     );
 
-    try {
-      // Race: API calls vs 6s deadline
-      final state = await Future.any<TutorDashboardLoaded>([
-        _loadDashboardData(),
-        Future.delayed(const Duration(seconds: 6), () => fallbackState),
-      ]);
+    // Retry up to 2 attempts
+    for (int attempt = 0; attempt < 2; attempt++) {
+      try {
+        final state = await _loadDashboardData()
+            .timeout(const Duration(seconds: 12));
 
-      getIt<TutorVerificationNotifier>().updateStatus(state.profile.verificationStatus);
-      emit(state);
-    } catch (e) {
-      getIt<TutorVerificationNotifier>().updateStatus('UNVERIFIED');
-      emit(fallbackState);
+        getIt<TutorVerificationNotifier>().updateStatus(state.profile.verificationStatus);
+        emit(state);
+        return; // Success — exit
+      } catch (_) {
+        if (attempt == 0) {
+          // Wait briefly before retry
+          await Future.delayed(const Duration(seconds: 2));
+        }
+      }
     }
+
+    // All attempts failed → fallback
+    getIt<TutorVerificationNotifier>().updateStatus('UNVERIFIED');
+    emit(fallbackState);
   }
 
   /// Actual API calls separated from timeout logic.

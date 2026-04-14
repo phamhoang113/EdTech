@@ -140,15 +140,15 @@ export const tutorApi = {
 
   // ─── Dashboard data ──────────────────────────────────────
   getMyClasses: async (): Promise<TutorClassDTO[]> => {
-    const res = await apiClient.get<TutorClassDTO[]>('/api/v1/tutor/classes');
-    return res.data;
+    const res = await apiClient.get('/api/v1/tutor/classes');
+    return unwrap(res);
   },
 
   getMySessions: async (startDate?: string, endDate?: string): Promise<TutorSessionDTO[]> => {
-    const res = await apiClient.get<TutorSessionDTO[]>('/api/v1/tutor/sessions', {
+    const res = await apiClient.get('/api/v1/tutor/sessions', {
       params: { startDate, endDate },
     });
-    return res.data;
+    return unwrap(res);
   },
 
   getPayouts: async (): Promise<TutorPayoutDTO[]> => {

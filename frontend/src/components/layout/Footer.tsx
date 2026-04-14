@@ -52,7 +52,7 @@ export const Footer = () => {
           <p>&copy; {new Date().getFullYear()} Gia Sư Tinh Hoa Platform. All rights reserved.</p>
           <p className="footer-hotline">
             <Phone size={14} />
-            Hotline: 0336 652 085
+            Hotline: 0345 851 204
           </p>
         </div>
       </div>

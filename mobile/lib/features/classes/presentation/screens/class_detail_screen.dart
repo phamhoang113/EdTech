@@ -1,21 +1,181 @@
 import 'package:flutter/material.dart';
 
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../app/router.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
-import '../../../tutor_profile/presentation/bloc/tutor_profile_bloc.dart';
-import '../../../tutor_profile/presentation/bloc/tutor_profile_state.dart';
 import '../../domain/entities/open_class_entity.dart';
 
-class ClassDetailScreen extends StatelessWidget {
+class ClassDetailScreen extends StatefulWidget {
   final OpenClassEntity classItem;
 
   const ClassDetailScreen({super.key, required this.classItem});
+
+  @override
+  State<ClassDetailScreen> createState() => _ClassDetailScreenState();
+}
+
+class _ClassDetailScreenState extends State<ClassDetailScreen> {
+  String? _tutorType;
+  bool _isApplied = false;
+  bool _isApplying = false;
+  bool _isCheckingApplication = true;
+
+  OpenClassEntity get classItem => widget.classItem;
+
+  bool get _isTutor {
+    final authState = context.read<AuthBloc>().state;
+    return authState is AuthAuthenticated && authState.user.role == 'TUTOR';
+  }
+
+  /// GS eligible nếu tutorType nằm trong tutorLevelRequirement của lớp.
+  bool get _isEligible {
+    if (_tutorType == null) return false;
+    if (classItem.tutorLevelRequirement.isEmpty) return true;
+    return classItem.tutorLevelRequirement.contains(_tutorType);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTutorData();
+  }
+
+  /// Load tutorType + kiểm tra đã apply chưa.
+  Future<void> _loadTutorData() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated || authState.user.role != 'TUTOR') {
+      if (mounted) setState(() => _isCheckingApplication = false);
+      return;
+    }
+
+    final dioClient = getIt<DioClient>();
+
+    // Load profile (tutorType) + check my-applications song song
+    try {
+      final results = await Future.wait([
+        dioClient.dio.get('/api/v1/tutors/profile/me'),
+        dioClient.dio.get('/api/v1/classes/my-applications'),
+      ]);
+
+      if (!mounted) return;
+
+      // Parse tutorType
+      final profileData = results[0].data['data'];
+      final tutorType = profileData?['tutorType'] as String?;
+
+      // Check if already applied for this class
+      final applicationsList = results[1].data['data'] as List? ?? [];
+      final alreadyApplied = applicationsList.any(
+        (app) => app['classId'] == classItem.id,
+      );
+
+      setState(() {
+        _tutorType = tutorType;
+        _isApplied = alreadyApplied;
+        _isCheckingApplication = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _isCheckingApplication = false);
+    }
+  }
+
+  /// Show dialog nhập ghi chú rồi gọi API apply.
+  Future<void> _handleApply() async {
+    final note = await _showApplyNoteDialog();
+    if (note == null) return; // User cancelled
+
+    setState(() => _isApplying = true);
+
+    try {
+      final dioClient = getIt<DioClient>();
+      await dioClient.dio.post(
+        '/api/v1/classes/${classItem.id}/apply',
+        data: {'note': note},
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _isApplied = true;
+        _isApplying = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('🎉 Đăng ký nhận lớp thành công! Admin sẽ xem xét sớm.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isApplying = false);
+
+      final message = _extractErrorMessage(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  String _extractErrorMessage(dynamic error) {
+    try {
+      if (error is DioException) {
+        return error.response?.data?['message'] as String? ?? 'Đăng ký thất bại';
+      }
+    } catch (_) {}
+    return 'Đăng ký thất bại, vui lòng thử lại!';
+  }
+
+  /// Dialog nhập ghi chú trước khi apply (giống textarea trên web).
+  Future<String?> _showApplyNoteDialog() {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('📝 Ghi chú cho Admin'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Nhập lời giới thiệu bản thân hoặc ghi chú (không bắt buộc)',
+              style: TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              maxLines: 4,
+              maxLength: 500,
+              decoration: InputDecoration(
+                hintText: 'VD: Em từng dạy IELTS 3 năm, có chứng chỉ 7.5...',
+                hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                contentPadding: const EdgeInsets.all(12),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Huỷ'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: const Text('Gửi Đăng Ký'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +203,12 @@ class ClassDetailScreen extends StatelessWidget {
                   // Title Card
                   _buildTitleCard(context),
                   const SizedBox(height: 20),
+
+                  // Eligibility banner (for tutors)
+                  if (_isTutor && !_isCheckingApplication) ...[
+                    _buildEligibilityBanner(context),
+                    const SizedBox(height: 16),
+                  ],
 
                   // Basic Info
                   _buildSectionCard(
@@ -107,29 +273,146 @@ class ClassDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-          child: FilledButton(
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      bottomNavigationBar: _buildBottomBar(context),
+    );
+  }
+
+  Widget _buildEligibilityBanner(BuildContext context) {
+    if (_isApplied) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.green.withAlpha(25),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.green.withAlpha(80)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: Colors.green, size: 20),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Bạn đã đăng ký nhận lớp này. Admin sẽ xem xét và liên hệ sớm!',
+                style: TextStyle(fontSize: 13, color: Colors.green),
+              ),
             ),
-            onPressed: () {
-              showAuthGuard(
-                context,
-                onSuccess: () {
-                  // Trigger Apply logic
-                },
-              );
-            },
-            child: const Text(
-              'Nhận Lớp Ngay',
+          ],
+        ),
+      );
+    }
+
+    if (!_isEligible && _tutorType != null) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.orange.withAlpha(25),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.orange.withAlpha(80)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Lớp này yêu cầu ${classItem.tutorLevelRequirement.join(", ")}. '
+                'Hồ sơ của bạn ($_tutorType) không đủ điều kiện.',
+                style: const TextStyle(fontSize: 13, color: Colors.orange),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildBottomBar(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+        child: _buildApplyButton(context),
+      ),
+    );
+  }
+
+  Widget _buildApplyButton(BuildContext context) {
+    // Đang check application
+    if (_isCheckingApplication && _isTutor) {
+      return FilledButton(
+        onPressed: null,
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: const SizedBox(
+          height: 20, width: 20,
+          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+        ),
+      );
+    }
+
+    // Đã apply
+    if (_isApplied) {
+      return FilledButton.icon(
+        onPressed: null,
+        icon: const Icon(Icons.check_circle_rounded),
+        label: const Text(
+          'Đã Đăng Ký Nhận Lớp',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+
+    // Không eligible (GS đã login nhưng sai loại)
+    if (_isTutor && !_isEligible && _tutorType != null) {
+      return FilledButton(
+        onPressed: null,
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: const Text(
+          'Không Đủ Điều Kiện',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      );
+    }
+
+    // Eligible hoặc chưa đăng nhập
+    return FilledButton(
+      onPressed: _isApplying ? null : () {
+        showAuthGuard(
+          context,
+          onSuccess: _handleApply,
+        );
+      },
+      style: FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: _isApplying
+          ? const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: 18, width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                ),
+                SizedBox(width: 10),
+                Text('Đang xử lý...', style: TextStyle(fontSize: 16)),
+              ],
+            )
+          : const Text(
+              '📝 Nhận Lớp Ngay',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -310,26 +593,7 @@ class ClassDetailScreen extends StatelessWidget {
       ]);
     }
 
-    // Read tutor level from BLoC state (already loaded) instead of
-    // firing a new API call via FutureBuilder on every rebuild.
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, authState) {
-        String? userLevel;
-        if (authState is AuthAuthenticated && authState.user.role == 'TUTOR') {
-          try {
-            final tutorState = context.read<TutorProfileBloc>().state;
-            if (tutorState is TutorDashboardLoaded) {
-              userLevel = tutorState.profile.level;
-            } else if (tutorState is TutorProfileLoaded) {
-              userLevel = tutorState.profile.level;
-            }
-          } catch (_) {
-            // TutorProfileBloc not in tree — show all levels equally
-          }
-        }
-        return _buildFeeList(context, fees, userLevel);
-      },
-    );
+    return _buildFeeList(context, fees, _tutorType);
   }
 
   Widget _buildFeeList(BuildContext context, List<Map<String, dynamic>> fees, String? highlightLevel) {
@@ -390,5 +654,4 @@ class ClassDetailScreen extends StatelessWidget {
       ],
     );
   }
-
 }
