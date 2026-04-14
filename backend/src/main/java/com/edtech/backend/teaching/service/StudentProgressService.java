@@ -16,6 +16,7 @@ import com.edtech.backend.cls.repository.ClassRepository;
 import com.edtech.backend.core.exception.EntityNotFoundException;
 import com.edtech.backend.student.entity.StudentProfileEntity;
 import com.edtech.backend.student.repository.StudentProfileRepository;
+import com.edtech.backend.teaching.dto.response.ProgressSummaryResponse;
 import com.edtech.backend.teaching.dto.response.StudentProgressResponse;
 import com.edtech.backend.teaching.entity.AssessmentEntity;
 import com.edtech.backend.teaching.entity.SubmissionEntity;
@@ -41,17 +42,72 @@ public class StudentProgressService {
      * Tìm studentId từ parentId → lấy submissions.
      */
     public List<StudentProgressResponse> getClassProgress(UUID classId, UUID parentId) {
-        ClassEntity classEntity = classRepository.findById(classId)
-                .orElseThrow(() -> new EntityNotFoundException("Class not found"));
-
-        // Tìm student thuộc parent này
         UUID studentId = findStudentIdForParent(parentId, classId);
+        return buildProgressList(classId, studentId);
+    }
 
-        // Lấy tất cả assessments của lớp
+    /**
+     * Tổng hợp tiến độ: điểm TB, BT chưa nộp, KT sắp tới + chi tiết.
+     */
+    public ProgressSummaryResponse getProgressSummary(UUID classId, UUID parentId) {
+        UUID studentId = findStudentIdForParent(parentId, classId);
+        List<StudentProgressResponse> details = buildProgressList(classId, studentId);
+
+        java.time.Instant now = java.time.Instant.now();
+
+        // Tách BT và KT
+        List<StudentProgressResponse> homeworks = details.stream()
+                .filter(d -> "HOMEWORK".equals(d.getType())).toList();
+        List<StudentProgressResponse> exams = details.stream()
+                .filter(d -> "EXAM".equals(d.getType())).toList();
+
+        // Điểm TB bài tập (chỉ tính đã chấm - có score)
+        Double homeworkAvg = homeworks.stream()
+                .filter(d -> d.getScore() != null)
+                .mapToDouble(StudentProgressResponse::getScore)
+                .average().orElse(0.0);
+        homeworkAvg = Math.round(homeworkAvg * 10.0) / 10.0;
+
+        // Điểm TB kiểm tra
+        Double examAvg = exams.stream()
+                .filter(d -> d.getScore() != null)
+                .mapToDouble(StudentProgressResponse::getScore)
+                .average().orElse(0.0);
+        examAvg = Math.round(examAvg * 10.0) / 10.0;
+
+        // BT chưa nộp
+        int pendingHomework = (int) homeworks.stream()
+                .filter(d -> "PENDING".equals(d.getStatus())).count();
+
+        // KT sắp tới (closesAt > now)
+        int upcomingExam = (int) exams.stream()
+                .filter(d -> {
+                    if (d.getClosesAt() == null) return false;
+                    try {
+                        return java.time.Instant.parse(d.getClosesAt()).isAfter(now);
+                    } catch (Exception e) {
+                        return false;
+                    }
+                }).count();
+
+        return ProgressSummaryResponse.builder()
+                .homeworkAvgScore(homeworkAvg)
+                .examAvgScore(examAvg)
+                .pendingHomeworkCount(pendingHomework)
+                .upcomingExamCount(upcomingExam)
+                .totalHomework(homeworks.size())
+                .totalExam(exams.size())
+                .details(details)
+                .build();
+    }
+
+    /**
+     * Build danh sách progress cho 1 student trong 1 class.
+     */
+    private List<StudentProgressResponse> buildProgressList(UUID classId, UUID studentId) {
         List<AssessmentEntity> assessments =
                 assessmentRepository.findByClassIdAndIsDeletedFalseOrderByCreatedAtDesc(classId);
 
-        // Lấy submissions của student
         Map<UUID, SubmissionEntity> submissionMap =
                 submissionRepository.findByClassIdAndStudentId(classId, studentId)
                         .stream()

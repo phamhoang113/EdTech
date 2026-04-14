@@ -558,7 +558,31 @@ export const ParentTeachingPage = () => {
                             )}
                           </div>
                         )}
-                        {sub.tutorFileName && (
+                        {/* Bài sửa của GS — list hình ảnh hoặc file */}
+                        {sub.tutorAttachments && sub.tutorAttachments.length > 0 ? (
+                          <div style={{ marginTop: 8 }}>
+                            <span style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--color-text)' }}>📝 Bài sửa của GS:</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: 4 }}>
+                              {sub.tutorAttachments.map((att, idx) => (
+                                <button
+                                  key={idx}
+                                  className="teaching-btn teaching-btn-secondary"
+                                  style={{ padding: '2px 8px', fontSize: '0.7rem' }}
+                                  onClick={() => {
+                                    const url = teachingApi.getTutorFileDownloadUrl(sub.id, att.fileUrl, att.fileName);
+                                    setPreviewFile({
+                                      url,
+                                      name: att.fileName,
+                                      downloadUrl: url
+                                    });
+                                  }}
+                                >
+                                  📎 {att.fileName}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ) : sub.tutorFileName && (
                           <button className="teaching-btn teaching-btn-secondary" style={{ padding: '4px 10px', fontSize: '0.76rem', marginTop: 8 }}
                             onClick={() => {
                               const url = `/api/v1/submissions/${sub.id}/tutor-download`;

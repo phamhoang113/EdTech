@@ -30,5 +30,6 @@ public enum NotificationType {
     HOMEWORK_ASSIGNED,          // GS giao bài tập → HS + PH
     HOMEWORK_DEADLINE_REMINDER, // Nhắc deadline BT → HS chưa nộp + PH
     HOMEWORK_SUBMITTED,         // HS nộp bài → GS
-    TEST_SCHEDULED              // GS tạo đề kiểm tra → HS + PH
+    TEST_SCHEDULED,             // GS tạo đề kiểm tra → HS + PH
+    SESSION_NOTE_UPDATED        // GS ghi nội dung dạy → PH
 }

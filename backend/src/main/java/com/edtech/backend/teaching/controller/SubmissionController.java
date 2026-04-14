@@ -127,7 +127,7 @@ public class SubmissionController {
 
         String finalName = fileName != null ? fileName : (entity.getFileName() != null ? entity.getFileName() : resource.getFilename());
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .contentType(MediaType.parseMediaType(resolveContentType(finalName)))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "inline; filename=\"" + finalName + "\"")
                 .body(resource);
@@ -145,7 +145,7 @@ public class SubmissionController {
 
         String finalName = fileName != null ? fileName : (entity.getTutorFileName() != null ? entity.getTutorFileName() : resource.getFilename());
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .contentType(MediaType.parseMediaType(resolveContentType(finalName)))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "inline; filename=\"" + finalName + "\"")
                 .body(resource);
@@ -155,5 +155,21 @@ public class SubmissionController {
         UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(userDetails.getUsername())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         return user.getId();
+    }
+
+    /** Detect content-type from filename for inline preview */
+    private String resolveContentType(String filename) {
+        if (filename == null) return "application/octet-stream";
+        String lower = filename.toLowerCase();
+        if (lower.endsWith(".pdf")) return "application/pdf";
+        if (lower.endsWith(".png")) return "image/png";
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+        if (lower.endsWith(".gif")) return "image/gif";
+        if (lower.endsWith(".webp")) return "image/webp";
+        if (lower.endsWith(".svg")) return "image/svg+xml";
+        if (lower.endsWith(".bmp")) return "image/bmp";
+        if (lower.endsWith(".doc") || lower.endsWith(".docx")) return "application/msword";
+        if (lower.endsWith(".txt")) return "text/plain";
+        return "application/octet-stream";
     }
 }

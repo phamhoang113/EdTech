@@ -7,6 +7,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 
 import { Button } from '../../components/ui/Button';
 import { ClassDetailModal } from '../../components/class/ClassDetailModal';
+import { SEO } from '../../components/common/SEO';
 import './ClassesPage.css';
 
 import { classApi } from '../../services/classApi';
@@ -515,6 +516,11 @@ export function ClassesPage() {
 
   return (
     <div className="classes-page">
+      <SEO
+        title="Tìm Lớp Dạy Phù Hợp | Gia Sư Tinh Hoa"
+        description="Danh sách lớp dạy mới nhất trên toàn quốc. Tìm lớp phù hợp với chuyên môn, khu vực và lịch dạy của bạn."
+        keywords="tìm lớp dạy, nhận lớp gia sư, lớp dạy kèm, việc làm gia sư"
+      />
       {/* Hero Header */}
       <section className="classes-hero">
         <div className="container">

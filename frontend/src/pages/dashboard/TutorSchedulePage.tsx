@@ -401,17 +401,35 @@ function CreateDraftModal({ onClose, onSuccess, initialDateStr, initialClassId, 
 }
 
 /* ── Session Detail Popup ────────────────────────────── */
-function SessionDetailPopup({ session, onClose, onEditTime, onDelete, onRequestAbsence }: {
+function SessionDetailPopup({ session, onClose, onEditTime, onDelete, onRequestAbsence, onNoteUpdate }: {
   session: TutorSessionDTO;
   onClose: () => void;
   onEditTime: () => void;
   onDelete: () => void;
   onRequestAbsence: () => void;
+  onNoteUpdate: () => void;
 }) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const displayStatus = getDisplayStatus(session.status, session.sessionDate, session.endTime);
   const cfg = STATUS_CFG[displayStatus] ?? { label: displayStatus, color: '#6b7280', bg: '#f3f4f6' };
   const isDraft = session.status === 'DRAFT';
+
+  const [editingNote, setEditingNote] = useState(false);
+  const [noteText, setNoteText] = useState(session.tutorNote || '');
+  const [savingNote, setSavingNote] = useState(false);
+
+  const handleSaveNote = async () => {
+    try {
+      setSavingNote(true);
+      await tutorApi.updateSessionNote(session.id, noteText);
+      setEditingNote(false);
+      onNoteUpdate();
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Lỗi khi lưu ghi chú');
+    } finally {
+      setSavingNote(false);
+    }
+  };
 
   return (
     <div className="tsched-detail-overlay" ref={overlayRef} onClick={e => { if (e.target === overlayRef.current) onClose(); }}>
@@ -455,15 +473,59 @@ function SessionDetailPopup({ session, onClose, onEditTime, onDelete, onRequestA
               </div>
             </div>
           )}
-          {session.tutorNote && (
-            <div className="tsched-detail-row">
-              <CalendarIcon size={15} />
-              <div>
-                <div className="tsched-detail-label">Ghi chú</div>
-                <div className="tsched-detail-value">{session.tutorNote}</div>
+          {/* Nội dung dạy — editable */}
+          <div className="tsched-detail-row" style={{ alignItems: 'flex-start' }}>
+            <CalendarIcon size={15} style={{ marginTop: 2 }} />
+            <div style={{ flex: 1 }}>
+              <div className="tsched-detail-label" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                Nội dung dạy
+                {!editingNote && (
+                  <button
+                    onClick={() => setEditingNote(true)}
+                    style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', fontSize: '0.78rem', padding: 0, fontWeight: 600 }}
+                  >
+                    ✏️ {session.tutorNote ? 'Sửa' : 'Thêm'}
+                  </button>
+                )}
               </div>
+              {editingNote ? (
+                <div style={{ marginTop: 4 }}>
+                  <textarea
+                    value={noteText}
+                    onChange={e => setNoteText(e.target.value)}
+                    placeholder="Hôm nay dạy gì, HS hiểu bao nhiêu %, giao BTVN gì..."
+                    rows={3}
+                    style={{
+                      width: '100%', padding: '8px', border: '1px solid var(--color-border)',
+                      borderRadius: '6px', resize: 'vertical', fontSize: '0.85rem',
+                      backgroundColor: 'var(--color-surface)', color: 'var(--color-text)',
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                    <button
+                      className="tsched-time-save-btn"
+                      style={{ padding: '4px 12px', fontSize: '0.8rem' }}
+                      onClick={handleSaveNote}
+                      disabled={savingNote}
+                    >
+                      <Save size={12} /> {savingNote ? 'Đang lưu...' : 'Lưu'}
+                    </button>
+                    <button
+                      className="tsched-time-cancel-btn"
+                      style={{ padding: '4px 12px', fontSize: '0.8rem' }}
+                      onClick={() => { setEditingNote(false); setNoteText(session.tutorNote || ''); }}
+                    >
+                      Huỷ
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="tsched-detail-value" style={{ color: session.tutorNote ? 'var(--color-text)' : 'var(--color-text-muted)', fontStyle: session.tutorNote ? 'normal' : 'italic' }}>
+                  {session.tutorNote || 'Chưa có ghi chú'}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {isDraft ? (
@@ -1015,6 +1077,10 @@ export function TutorSchedulePage() {
           }}
           onRequestAbsence={() => {
             setShowAbsenceModal(selectedSession);
+            setSelectedSession(null);
+          }}
+          onNoteUpdate={() => {
+            fetchData();
             setSelectedSession(null);
           }}
         />
