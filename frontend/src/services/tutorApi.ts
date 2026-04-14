@@ -221,4 +221,9 @@ export const tutorApi = {
     });
     return res.data;
   },
+
+  updateSessionNote: async (sessionId: string, note: string): Promise<TutorSessionDTO> => {
+    const res = await apiClient.patch<{ data: TutorSessionDTO }>(`/api/v1/tutor/schedule/sessions/${sessionId}/note`, { note });
+    return res.data.data;
+  },
 };

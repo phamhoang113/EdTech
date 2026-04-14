@@ -449,6 +449,46 @@ public class TutorScheduleService {
         return allDrafts.size();
     }
 
+    // ─── Session Note (after class) ─────────────────────────────────
+
+    /**
+     * GS ghi nội dung dạy sau buổi học.
+     * Cho phép cập nhật ở mọi status (DRAFT, SCHEDULED, COMPLETED).
+     * Notify PH nếu lớp có phụ huynh.
+     */
+    @Transactional
+    public SessionDTO updateSessionNote(UUID tutorId, UUID sessionId, String note) {
+        SessionEntity session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new EntityNotFoundException(ERR_SESSION_NOT_FOUND));
+
+        if (!tutorId.equals(session.getCls().getTutorId())) {
+            throw new BusinessRuleException(ERR_NOT_SESSION_TUTOR);
+        }
+
+        session.setTutorNote(note);
+        session = sessionRepository.save(session);
+
+        log.info("[UPDATE_NOTE] tutorId={}, sessionId={}, date={}", tutorId, sessionId, session.getSessionDate());
+
+        // Notify PH nếu lớp có parentId
+        UUID parentId = session.getCls().getParentId();
+        if (parentId != null && note != null && !note.isBlank()) {
+            UserEntity tutor = userRepository.findById(tutorId).orElse(null);
+            String tutorName = tutor != null ? tutor.getFullName() : "Gia sư";
+            String classTitle = session.getCls().getTitle();
+            String body = String.format("%s đã ghi nhận nội dung dạy buổi %s: \"%s\"",
+                    tutorName, session.getSessionDate(),
+                    note.length() > 100 ? note.substring(0, 100) + "..." : note);
+
+            notificationService.sendNotification(
+                    parentId, NotificationType.SESSION_NOTE_UPDATED,
+                    "Nội dung dạy: " + classTitle,
+                    body, "SESSION", session.getId());
+        }
+
+        return SessionDTO.fromEntity(session);
+    }
+
     // ─── Private helpers ───────────────────────────────────────────
 
     private SessionEntity findOwnedDraftSession(UUID tutorId, UUID sessionId) {

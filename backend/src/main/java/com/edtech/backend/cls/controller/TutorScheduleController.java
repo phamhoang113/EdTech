@@ -15,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.edtech.backend.core.dto.ApiResponse;
 
 import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.repository.UserRepository;
@@ -162,6 +165,21 @@ public class TutorScheduleController {
         UUID tutorId = resolveUserId(userDetails);
         List<ClassQuotaDTO> quotaStatus = scheduleService.getWeeklyQuotaStatus(tutorId, weekOf);
         return ResponseEntity.ok(quotaStatus);
+    }
+
+    // ─── Session Note (after class) ─────────────────────────────────
+
+    @PatchMapping("/schedule/sessions/{sessionId}/note")
+    @Operation(summary = "GS ghi nội dung dạy sau buổi học")
+    public ResponseEntity<ApiResponse<SessionDTO>> updateSessionNote(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID sessionId,
+            @RequestBody Map<String, String> body) {
+
+        UUID tutorId = resolveUserId(userDetails);
+        String note = body.getOrDefault("note", "");
+        SessionDTO result = scheduleService.updateSessionNote(tutorId, sessionId, note);
+        return ResponseEntity.ok(ApiResponse.ok(result, "Đã cập nhật nội dung dạy."));
     }
 
     // ─── Private helpers ───────────────────────────────────────────

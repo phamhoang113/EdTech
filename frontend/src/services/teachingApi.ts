@@ -254,4 +254,37 @@ export const teachingApi = {
   getMaterialDownloadUrl: (materialId: string): string => {
     return `${buildBaseUrl()}/api/v1/materials/${materialId}/download`;
   },
+
+  // ─── Progress ────────────────────────────────────────────────
+
+  /** Get progress summary for a class (Parent/Tutor) */
+  getProgressSummary: async (classId: string): Promise<ProgressSummaryDTO> => {
+    const res = await apiClient.get(`/api/v1/classes/${classId}/progress/summary`);
+    return unwrap(res);
+  },
 };
+
+/* ── Progress types ─────────────────────────────────────────────── */
+
+export interface StudentProgressDTO {
+  assessmentId: string;
+  assessmentTitle: string;
+  type: 'HOMEWORK' | 'EXAM';
+  status: 'PENDING' | 'SUBMITTED' | 'GRADED' | 'COMPLETED';
+  score: number | null;
+  totalScore: number | null;
+  tutorComment: string | null;
+  closesAt: string | null;
+  submittedAt: string | null;
+  gradedAt: string | null;
+}
+
+export interface ProgressSummaryDTO {
+  homeworkAvgScore: number;
+  examAvgScore: number;
+  pendingHomeworkCount: number;
+  upcomingExamCount: number;
+  totalHomework: number;
+  totalExam: number;
+  details: StudentProgressDTO[];
+}

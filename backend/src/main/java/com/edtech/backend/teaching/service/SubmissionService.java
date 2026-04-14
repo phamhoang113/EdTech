@@ -24,6 +24,8 @@ import com.edtech.backend.teaching.repository.AssessmentRepository;
 import com.edtech.backend.teaching.repository.SubmissionRepository;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.cls.repository.ClassRepository;
+import com.edtech.backend.student.entity.StudentProfileEntity;
+import com.edtech.backend.student.repository.StudentProfileRepository;
 
 @Slf4j
 @Service
@@ -37,6 +39,7 @@ public class SubmissionService {
     private final NotificationService notificationService;
     private final UserRepository userRepository;
     private final ClassRepository classRepository;
+    private final StudentProfileRepository studentProfileRepository;
 
     /**
      * HS nộp bài (upload file).
@@ -210,15 +213,28 @@ public class SubmissionService {
 
         submissionRepository.save(entity);
 
-        // Notify HS (và PH nếu có — caller sẽ xử lý)
+        // Notify HS
         AssessmentEntity assessment = assessmentRepository.findById(entity.getAssessmentId()).orElse(null);
         String assessmentTitle = assessment != null ? assessment.getTitle() : "Bài tập";
+        String scoreMsg = score != null ? "Điểm: " + score : "Gia sư đã sửa bài của bạn.";
 
         notificationService.sendNotification(
                 entity.getStudentId(), NotificationType.SUBMISSION_GRADED,
                 "Bài đã chấm: " + assessmentTitle,
-                score != null ? "Điểm: " + score : "Gia sư đã sửa bài của bạn.",
-                "SUBMISSION", submissionId);
+                scoreMsg, "SUBMISSION", submissionId);
+
+        // Notify tất cả PH liên kết với HS
+        List<StudentProfileEntity> profiles = studentProfileRepository.findByUserId(entity.getStudentId());
+        for (StudentProfileEntity profile : profiles) {
+            if (profile.getParentId() != null) {
+                String studentName = profile.getUser() != null ? profile.getUser().getFullName() : "Con em";
+                notificationService.sendNotification(
+                        profile.getParentId(), NotificationType.SUBMISSION_GRADED,
+                        "Bài của " + studentName + " đã được chấm",
+                        assessmentTitle + " — " + scoreMsg,
+                        "SUBMISSION", submissionId);
+            }
+        }
 
         log.info("Submission graded: id={}, score={}", submissionId, score);
         return SubmissionResponse.from(entity);

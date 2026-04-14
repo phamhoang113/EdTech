@@ -2,6 +2,7 @@ import { Sparkles, Star, CheckCircle, ArrowRight, Users, Briefcase } from 'lucid
 import { useOutletContext, Link } from 'react-router-dom';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import type { PublicLayoutContext } from '../components/layout/PublicLayout';
+import { SEO } from '../components/common/SEO';
 import './PricingPage.css';
 
 /* ─── Pricing Data ─── */
@@ -62,6 +63,11 @@ export const PricingPage = () => {
 
   return (
     <div className="pricing-page bg-surface">
+      <SEO
+        title="Học Phí Gia Sư Theo Cấp Độ | Gia Sư Tinh Hoa"
+        description="Bảng học phí tham khảo theo trình độ gia sư: Sinh viên từ 1.2tr, Tốt nghiệp từ 1.8tr, Giáo viên từ 2.5tr/tháng. Minh bạch, không phí ẩn."
+        keywords="học phí gia sư, bảng giá gia sư, chi phí thuê gia sư, giá gia sư tại nhà"
+      />
       <main className="pricing-main">
         {/* ─── HERO ─── */}
         <section className="pricing-hero">

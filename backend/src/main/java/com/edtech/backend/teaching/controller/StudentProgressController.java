@@ -20,6 +20,7 @@ import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.core.dto.ApiResponse;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.teaching.dto.response.ProgressSummaryResponse;
 import com.edtech.backend.teaching.dto.response.StudentProgressResponse;
 import com.edtech.backend.teaching.service.StudentProgressService;
 
@@ -46,6 +47,18 @@ public class StudentProgressController {
         UUID userId = resolveUserId(userDetails);
         List<StudentProgressResponse> progress = progressService.getClassProgress(classId, userId);
         return ResponseEntity.ok(ApiResponse.ok(progress, "Tiến độ học tập."));
+    }
+
+    @GetMapping("/{classId}/progress/summary")
+    @PreAuthorize("hasAnyRole('PARENT', 'TUTOR')")
+    @Operation(summary = "Tổng hợp tiến độ: điểm TB, BT chưa nộp, KT sắp tới")
+    public ResponseEntity<ApiResponse<ProgressSummaryResponse>> getProgressSummary(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID classId) {
+
+        UUID userId = resolveUserId(userDetails);
+        ProgressSummaryResponse summary = progressService.getProgressSummary(classId, userId);
+        return ResponseEntity.ok(ApiResponse.ok(summary, "Tổng hợp tiến độ."));
     }
 
     private UUID resolveUserId(UserDetails userDetails) {
