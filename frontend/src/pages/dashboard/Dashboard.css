@@ -153,6 +153,35 @@
   50% { transform: scale(1.05); }
 }
 
+/* AI nav item — gradient highlight */
+.dash-sidebar-item--ai {
+  background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%);
+  border: 1px solid rgba(99,102,241,0.15);
+  color: #818cf8;
+}
+.dash-sidebar-item--ai:hover {
+  background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%);
+  border-color: rgba(99,102,241,0.35);
+  color: #a5b4fc;
+}
+.dash-sidebar-item--ai.active {
+  background: linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.2) 100%);
+  border-color: rgba(99,102,241,0.4);
+  color: #a5b4fc;
+}
+
+/* AI badge — chứ không phải đỏ */
+.dash-sidebar-item .item-badge--ai {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  box-shadow: 0 2px 6px rgba(99,102,241,0.4);
+  animation: aiBadgePulse 3s ease-in-out infinite;
+}
+@keyframes aiBadgePulse {
+  0%, 100% { box-shadow: 0 2px 6px rgba(99,102,241,0.4); }
+  50%       { box-shadow: 0 2px 12px rgba(99,102,241,0.7); }
+}
+
+
 .dash-logout {
   display: flex;
   align-items: center;

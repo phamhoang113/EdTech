@@ -291,6 +291,13 @@ export const router = createBrowserRouter([
                   return { Component: StudentTeachingPage };
                 },
               },
+              {
+                path: '/student/ai',
+                lazy: async () => {
+                  const { StudentAIPage } = await import('../pages/dashboard/StudentAIPage');
+                  return { Component: StudentAIPage };
+                },
+              },
             ],
           },
 

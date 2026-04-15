@@ -1,4 +1,4 @@
-import { LayoutDashboard, Calendar, User, Users, MessageSquare, CreditCard, LogOut, BookOpen, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Calendar, User, Users, MessageSquare, CreditCard, LogOut, BookOpen, ClipboardList, Bot } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -7,7 +7,7 @@ import { useSidebarStore } from '../../store/useSidebarStore';
 import { studentApi } from '../../services/studentApi';
 
 interface StudentSidebarProps {
-  active?: 'overview' | 'schedule' | 'teaching' | 'messages' | 'achievements' | 'parents' | 'payments' | 'profile' | 'requests';
+  active?: 'overview' | 'schedule' | 'teaching' | 'messages' | 'achievements' | 'parents' | 'payments' | 'profile' | 'requests' | 'ai';
   hasParent?: boolean;
 }
 
@@ -80,6 +80,13 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
             onClick={() => handleNav('/student/teaching')}
           >
             <ClipboardList size={18} /> Bài tập & Tài liệu
+          </button>
+          <button 
+            className={`dash-sidebar-item dash-sidebar-item--ai ${active === 'ai' ? 'active' : ''}`}
+            onClick={() => handleNav('/student/ai')}
+          >
+            <Bot size={18} /> AI Study Companion
+            <span className="item-badge item-badge--ai">AI</span>
           </button>
           {!loadingParent && !hasParent && (
             <button 

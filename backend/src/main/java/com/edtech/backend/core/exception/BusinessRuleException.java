@@ -4,4 +4,9 @@ public class BusinessRuleException extends EdTechException {
     public BusinessRuleException(String message) {
         super(message, "BUSINESS_RULE_VIOLATION");
     }
+
+    public BusinessRuleException(String errorCode, String message) {
+        super(message, errorCode);
+    }
 }
+

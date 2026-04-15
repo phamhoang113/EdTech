@@ -678,7 +678,7 @@ export function ClassesPage() {
                       <span className="class-badge fee">Phí nhận lớp: {cls.feePercentage}%</span>
                     </div>
                     
-                    <h3 className="class-title">{cls.subject} - {cls.level}</h3>
+                    <h3 className="class-title">{cls.description}</h3>
                     
                     <div className="class-details">
                       <div className="detail-item highlight-fee-box">
@@ -726,7 +726,7 @@ export function ClassesPage() {
 
                     <div className="class-requirement">
                       <p><strong>Yêu cầu:</strong> {cls.tutorLevelRequirement.join(', ')} {cls.genderRequirement.includes('Không yêu cầu') ? '' : `(${cls.genderRequirement.join(', ')})`}</p>
-                      <p><strong>Mô tả:</strong> {cls.description}</p>
+                      <p><strong>Mô tả:</strong> {cls.subject} - {cls.level}</p>
                     </div>
 
                     <div className="card-actions">
