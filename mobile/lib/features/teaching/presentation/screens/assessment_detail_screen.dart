@@ -522,17 +522,8 @@ class _AssessmentDetailScreenState extends State<AssessmentDetailScreen> {
 
           // Điểm
           if (hasScore) ...[
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Text('Điểm:', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
-                const Spacer(),
-                Text(
-                  s.score!.toStringAsFixed(1),
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: statusColor),
-                ),
-              ],
-            ),
+            const SizedBox(height: 16),
+            _buildScoreBadge(theme, isDark, s),
           ],
 
           // GS comment
@@ -613,6 +604,109 @@ class _AssessmentDetailScreenState extends State<AssessmentDetailScreen> {
         );
       }
     }
+  }
+
+  /// Score badge nổi bật cho học sinh xem điểm của mình.
+  Widget _buildScoreBadge(ThemeData theme, bool isDark, SubmissionModel s) {
+    final score = s.score!;
+    final totalScore = _assessment?.totalScore ?? 10;
+    final ratio = (score / totalScore).clamp(0.0, 1.0);
+
+    final Color scoreColor = ratio >= 0.8
+        ? const Color(0xFF10B981)
+        : ratio >= 0.5
+            ? const Color(0xFFF59E0B)
+            : const Color(0xFFEF4444);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [scoreColor.withValues(alpha: 0.1), scoreColor.withValues(alpha: 0.04)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scoreColor.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          // Score ring
+          Container(
+            width: 64, height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: scoreColor, width: 3),
+              color: scoreColor.withValues(alpha: 0.1),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  score.toStringAsFixed(1),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: scoreColor,
+                    height: 1.1,
+                  ),
+                ),
+                Text(
+                  '/${totalScore.toStringAsFixed(0)}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: scoreColor.withValues(alpha: 0.7),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 16),
+
+          // Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  ratio >= 0.8
+                      ? '🎉 Xuất sắc!'
+                      : ratio >= 0.5
+                          ? '👍 Đạt yêu cầu'
+                          : '📚 Cần cải thiện',
+                  style: TextStyle(
+                    color: scoreColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: ratio,
+                    backgroundColor: scoreColor.withValues(alpha: 0.12),
+                    color: scoreColor,
+                    minHeight: 6,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${(ratio * 100).round()}% điểm tối đa',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: scoreColor.withValues(alpha: 0.7),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

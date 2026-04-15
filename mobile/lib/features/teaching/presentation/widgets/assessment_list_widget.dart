@@ -172,23 +172,10 @@ class _AssessmentCard extends StatelessWidget {
               ],
             ),
 
-            // Tutor: submission progress
+            // Tutor: submission progress bar
             if (isTutor && assessment.submittedCount != null) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.people_outline_rounded, size: 16,
-                       color: theme.colorScheme.onSurfaceVariant),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${assessment.submittedCount} bài nộp',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
+              const SizedBox(height: 14),
+              _buildSubmissionProgress(theme, assessment),
             ],
 
             // Attachment badge
@@ -225,6 +212,53 @@ class _AssessmentCard extends StatelessWidget {
         ),
       ),
       ),
+    );
+  }
+
+  Widget _buildSubmissionProgress(ThemeData theme, AssessmentModel assessment) {
+    final submitted = assessment.submittedCount ?? 0;
+    final hasTotalStudents = assessment.totalStudents != null && assessment.totalStudents! > 0;
+    final total = assessment.totalStudents ?? submitted;
+    final ratio = hasTotalStudents ? (submitted / total).clamp(0.0, 1.0) : 1.0;
+
+    final progressColor = submitted == 0
+        ? Colors.grey.shade400
+        : ratio >= 1.0
+            ? const Color(0xFF10B981)
+            : const Color(0xFF3B82F6);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.people_outline_rounded, size: 14, color: progressColor),
+            const SizedBox(width: 6),
+            Text(
+              hasTotalStudents ? '$submitted / $total HS đã nộp' : '$submitted bài nộp',
+              style: TextStyle(fontSize: 12, color: progressColor, fontWeight: FontWeight.w600),
+            ),
+            const Spacer(),
+            if (hasTotalStudents)
+              Text(
+                '${(ratio * 100).round()}%',
+                style: TextStyle(fontSize: 11, color: progressColor, fontWeight: FontWeight.w700),
+              ),
+          ],
+        ),
+        if (hasTotalStudents) ...[
+          const SizedBox(height: 5),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: ratio,
+              backgroundColor: progressColor.withValues(alpha: 0.12),
+              color: progressColor,
+              minHeight: 5,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

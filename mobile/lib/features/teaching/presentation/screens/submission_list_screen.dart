@@ -19,6 +19,14 @@ class _SubmissionListScreenState extends State<SubmissionListScreen> {
   final _dataSource = TeachingDataSource();
   List<SubmissionModel>? _submissions;
   bool _isLoading = true;
+  String _filterStatus = 'ALL'; // ALL | SUBMITTED | GRADED | COMPLETED
+
+  static const _filterOptions = [
+    ('ALL', 'Tất cả'),
+    ('SUBMITTED', 'Đã nộp'),
+    ('GRADED', 'Đã chấm'),
+    ('COMPLETED', 'Hoàn thành'),
+  ];
 
   @override
   void initState() {
@@ -36,9 +44,16 @@ class _SubmissionListScreenState extends State<SubmissionListScreen> {
     }
   }
 
+  List<SubmissionModel> get _filtered {
+    if (_submissions == null) return [];
+    if (_filterStatus == 'ALL') return _submissions!;
+    return _submissions!.where((s) => s.status == _filterStatus).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -51,16 +66,120 @@ class _SubmissionListScreenState extends State<SubmissionListScreen> {
               ? _buildEmpty(theme)
               : RefreshIndicator(
                   onRefresh: _load,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _submissions!.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (_, index) => _SubmissionCard(
-                      submission: _submissions![index],
-                      onTap: () => _openGrading(_submissions![index]),
-                    ),
+                  child: Column(
+                    children: [
+                      // ── Stats summary bar ──
+                      _buildStatsSummary(theme, isDark),
+
+                      // ── Filter chips ──
+                      _buildFilterChips(theme),
+
+                      // ── List ──
+                      Expanded(
+                        child: _filtered.isEmpty
+                            ? _buildFilterEmpty(theme)
+                            : ListView.separated(
+                                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                                itemCount: _filtered.length,
+                                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                                itemBuilder: (_, index) => _SubmissionCard(
+                                  submission: _filtered[index],
+                                  onTap: () => _openGrading(_filtered[index]),
+                                ),
+                              ),
+                      ),
+                    ],
                   ),
                 ),
+    );
+  }
+
+  Widget _buildStatsSummary(ThemeData theme, bool isDark) {
+    final all = _submissions ?? [];
+    final submitted = all.where((s) => s.status == 'SUBMITTED').length;
+    final graded = all.where((s) => s.status == 'GRADED').length;
+    final completed = all.where((s) => s.status == 'COMPLETED').length;
+    final notGraded = submitted; // chưa chấm = đã nộp nhưng chưa graded
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade200,
+        ),
+      ),
+      child: Row(
+        children: [
+          _StatItem(
+            value: all.length,
+            label: 'Tổng',
+            color: theme.colorScheme.primary,
+          ),
+          _buildDivider(isDark),
+          _StatItem(
+            value: notGraded,
+            label: 'Chờ chấm',
+            color: const Color(0xFF3B82F6),
+          ),
+          _buildDivider(isDark),
+          _StatItem(
+            value: graded,
+            label: 'Đã chấm',
+            color: const Color(0xFF10B981),
+          ),
+          _buildDivider(isDark),
+          _StatItem(
+            value: completed,
+            label: 'Hoàn thành',
+            color: const Color(0xFF8B5CF6),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider(bool isDark) {
+    return Container(
+      width: 1,
+      height: 36,
+      color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade200,
+    );
+  }
+
+  Widget _buildFilterChips(ThemeData theme) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+      child: Row(
+        children: _filterOptions.map((option) {
+          final (value, label) = option;
+          final isSelected = _filterStatus == value;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              label: Text(label),
+              selected: isSelected,
+              onSelected: (_) => setState(() => _filterStatus = value),
+              selectedColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+              checkmarkColor: theme.colorScheme.primary,
+              labelStyle: TextStyle(
+                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                fontSize: 13,
+              ),
+              side: BorderSide(
+                color: isSelected
+                    ? theme.colorScheme.primary.withValues(alpha: 0.6)
+                    : Colors.grey.withValues(alpha: 0.2),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -70,8 +189,7 @@ class _SubmissionListScreenState extends State<SubmissionListScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 80,
-            height: 80,
+            width: 80, height: 80,
             decoration: BoxDecoration(
               color: theme.colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
@@ -91,6 +209,24 @@ class _SubmissionListScreenState extends State<SubmissionListScreen> {
     );
   }
 
+  Widget _buildFilterEmpty(ThemeData theme) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.filter_list_off_rounded, size: 48, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(height: 12),
+          Text(
+            'Không có bài nộp nào với trạng thái này',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _openGrading(SubmissionModel submission) async {
     final result = await Navigator.push(
       context,
@@ -101,6 +237,45 @@ class _SubmissionListScreenState extends State<SubmissionListScreen> {
     if (result == true && mounted) _load();
   }
 }
+
+// ── Stats item widget ──
+
+class _StatItem extends StatelessWidget {
+  final int value;
+  final String label;
+  final Color color;
+
+  const _StatItem({required this.value, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            '$value',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color.withValues(alpha: 0.8),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Submission card ──
 
 class _SubmissionCard extends StatelessWidget {
   final SubmissionModel submission;
@@ -132,8 +307,7 @@ class _SubmissionCard extends StatelessWidget {
           children: [
             // Avatar
             Container(
-              width: 44,
-              height: 44,
+              width: 44, height: 44,
               decoration: BoxDecoration(
                 color: statusColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
@@ -181,7 +355,7 @@ class _SubmissionCard extends StatelessWidget {
             ),
 
             // Score
-            if (submission.totalScore != null) ...[
+            if (submission.totalScore != null)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
@@ -196,8 +370,8 @@ class _SubmissionCard extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-              ),
-            ] else
+              )
+            else
               Icon(Icons.chevron_right_rounded, color: theme.colorScheme.onSurfaceVariant),
           ],
         ),

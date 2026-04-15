@@ -118,15 +118,16 @@ class TeachingDataSource {
   }
   // ═══════════ SUBMISSIONS ═══════════
 
-  /// HS nộp bài (multipart).
+  /// HS nộp bài — hỗ trợ nhiều file (ảnh chụp + file thông thường).
   Future<SubmissionModel> submitAssignment({
     required String assessmentId,
-    required String filePath,
-    required String fileName,
+    required List<Map<String, String>> files,
   }) async {
-    final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(filePath, filename: fileName),
-    });
+    final fileEntries = await Future.wait(
+      files.map((f) => MultipartFile.fromFile(f['path']!, filename: f['name'])),
+    );
+
+    final formData = FormData.fromMap({'files': fileEntries});
 
     final response = await _dio.post(
       '/api/v1/assessments/$assessmentId/submissions',
