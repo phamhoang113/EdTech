@@ -187,6 +187,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               label: 'Đổi mật khẩu',
               onTap: () => context.push('/change-password'),
             ),
+            _buildActionTile(
+              context, theme,
+              icon: Icons.link_outlined,
+              label: 'Liên kết mạng xã hội',
+              onTap: () => context.push('/account-linking'),
+            ),
 
             const SizedBox(height: 24),
 

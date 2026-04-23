@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 import type { MessagePayload } from 'firebase/messaging';
 
@@ -17,6 +17,10 @@ export const auth = getAuth(app);
 
 // Cấu hình ngôn ngữ mặc định về Tiếng Việt cho SMS
 auth.languageCode = 'vi';
+
+// OAuth2 Providers cho Social Login
+export const googleProvider = new GoogleAuthProvider();
+export const facebookProvider = new FacebookAuthProvider();
 
 // ============================================================
 // Firebase Cloud Messaging (FCM) — Web Push Notification

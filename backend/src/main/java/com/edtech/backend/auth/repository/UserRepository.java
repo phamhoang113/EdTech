@@ -18,6 +18,7 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     Optional<UserEntity> findByPhoneAndIsDeletedFalse(String phone);
     boolean existsByPhoneAndIsDeletedFalse(String phone);
     Optional<UserEntity> findByUsernameAndIsDeletedFalse(String username);
+    Optional<UserEntity> findByEmailAndIsDeletedFalse(String email);
 
     /** Tìm user theo username (định danh đăng nhập duy nhất) */
     @Query("SELECT u FROM UserEntity u WHERE u.username = :identifier AND u.isDeleted = false")

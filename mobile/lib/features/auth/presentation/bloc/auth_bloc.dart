@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/di/tutor_verification_notifier.dart';
 import '../../../../core/services/push_notification_service.dart';
+import '../../data/datasources/social_auth_service.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -11,11 +12,14 @@ import 'auth_state.dart';
 @injectable
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
+  final SocialAuthService _socialAuthService;
 
-  AuthBloc(this._authRepository) : super(AuthInitial()) {
+  AuthBloc(this._authRepository, this._socialAuthService) : super(AuthInitial()) {
     on<AuthStarted>(_onAuthStarted);
     on<AuthLoginRequested>(_onAuthLoginRequested);
     on<AuthRegisterRequested>(_onAuthRegisterRequested);
+    on<AuthGoogleLoginRequested>(_onGoogleLoginRequested);
+    on<AuthFacebookLoginRequested>(_onFacebookLoginRequested);
     on<AuthForgotPasswordInitRequested>(_onForgotPasswordInit);
     on<AuthForgotPasswordResetRequested>(_onForgotPasswordReset);
     on<AuthLogoutRequested>(_onAuthLogoutRequested);
@@ -93,6 +97,52 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) => emit(AuthError(failure.message)),
       (newPassword) => emit(AuthForgotPasswordResetSuccess(newPassword)),
+    );
+  }
+
+  Future<void> _onGoogleLoginRequested(
+    AuthGoogleLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    final idToken = await _socialAuthService.signInWithGoogle();
+    if (idToken == null) {
+      emit(AuthError('Đăng nhập Google đã bị hủy.'));
+      return;
+    }
+    final result = await _authRepository.socialLogin(
+      idToken: idToken,
+      role: event.role,
+    );
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) {
+        emit(AuthAuthenticated(user));
+        PushNotificationService.instance.requestPermissionAndRegisterToken();
+      },
+    );
+  }
+
+  Future<void> _onFacebookLoginRequested(
+    AuthFacebookLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    final idToken = await _socialAuthService.signInWithFacebook();
+    if (idToken == null) {
+      emit(AuthError('Đăng nhập Facebook đã bị hủy.'));
+      return;
+    }
+    final result = await _authRepository.socialLogin(
+      idToken: idToken,
+      role: event.role,
+    );
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) {
+        emit(AuthAuthenticated(user));
+        PushNotificationService.instance.requestPermissionAndRegisterToken();
+      },
     );
   }
 

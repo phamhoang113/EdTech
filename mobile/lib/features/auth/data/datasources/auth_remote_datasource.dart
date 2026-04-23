@@ -11,15 +11,21 @@ abstract class AuthRemoteDataSource {
   /// This is the ONLY registration path (same as web)
   Future<AuthResponseModel> firebaseAuth({
     required String idToken,
-    required String fullName,
-    required String password,
-    required String role,
+    String? fullName,
+    String? password,
+    String? role,
+  });
+
+  /// OAuth social login — gửi idToken từ Google/Facebook
+  Future<AuthResponseModel> socialAuth({
+    required String idToken,
+    String? role,
   });
 
   /// Forgot password step 1: init → returns maskedPhone + fullPhone
   Future<Map<String, String>> initForgotPassword(String identifier);
 
-  /// Forgot password step 2: reset with idToken → returns newPassword
+  /// Forgot password step 2: reset with mock/Firebase idToken
   Future<String> resetForgotPassword(String identifier, String idToken);
 
   /// Refresh expired access token
@@ -50,18 +56,33 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<AuthResponseModel> firebaseAuth({
     required String idToken,
-    required String fullName,
-    required String password,
-    required String role,
+    String? fullName,
+    String? password,
+    String? role,
   }) async {
+    final data = <String, dynamic>{'idToken': idToken};
+    if (fullName != null) data['fullName'] = fullName;
+    if (password != null) data['password'] = password;
+    if (role != null) data['role'] = role;
+
     final response = await _client.dio.post(
       '/api/v1/auth/firebase',
-      data: {
-        'idToken': idToken,
-        'fullName': fullName,
-        'password': password,
-        'role': role,
-      },
+      data: data,
+    );
+    return AuthResponseModel.fromJson(_unwrap(response) as Map<String, dynamic>);
+  }
+
+  @override
+  Future<AuthResponseModel> socialAuth({
+    required String idToken,
+    String? role,
+  }) async {
+    final data = <String, dynamic>{'idToken': idToken};
+    if (role != null) data['role'] = role;
+
+    final response = await _client.dio.post(
+      '/api/v1/auth/firebase',
+      data: data,
     );
     return AuthResponseModel.fromJson(_unwrap(response) as Map<String, dynamic>);
   }

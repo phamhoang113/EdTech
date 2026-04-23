@@ -1,0 +1,87 @@
+.account-linking-settings {
+  padding: var(--spacing-4);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+}
+
+.account-linking-settings h3 {
+  margin-bottom: var(--spacing-1);
+}
+
+.settings-desc {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: var(--spacing-6);
+}
+
+.settings-error {
+  color: #dc2626;
+  background-color: #fef2f2;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-4);
+  font-size: 0.875rem;
+}
+
+.settings-success {
+  color: #16a34a;
+  background-color: #f0fdf4;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-4);
+  font-size: 0.875rem;
+}
+
+.linking-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.linking-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.linking-item-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.linked-email {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.password-section {
+  margin-top: var(--spacing-8);
+  padding-top: var(--spacing-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.password-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.password-form {
+  margin-top: var(--spacing-4);
+  background-color: var(--color-surface-hover);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-4);
+}

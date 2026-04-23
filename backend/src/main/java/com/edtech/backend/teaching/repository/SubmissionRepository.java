@@ -41,4 +41,24 @@ public interface SubmissionRepository extends JpaRepository<SubmissionEntity, UU
            "ORDER BY a.closesAt DESC")
     List<SubmissionEntity> findByClassIdAndStudentId(
             @Param("classId") UUID classId, @Param("studentId") UUID studentId);
+
+    /** Tìm các bài làm gần nhất (đã chấm) của học sinh để cung cấp ngữ cảnh cho AI */
+    @Query("SELECT s FROM SubmissionEntity s WHERE s.studentId = :studentId " +
+           "AND s.totalScore IS NOT NULL AND s.tutorComment IS NOT NULL " +
+           "ORDER BY s.gradedAt DESC")
+    List<SubmissionEntity> findLatestGradedSubmissionsForAi(
+            @Param("studentId") UUID studentId,
+            org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * Query nâng cao: JOIN với AssessmentEntity để lấy tên bài + loại + mô tả.
+     * Trả về [SubmissionEntity, title, type, description] cho mỗi row.
+     */
+    @Query("SELECT s, a.title, a.type, a.description " +
+           "FROM SubmissionEntity s JOIN AssessmentEntity a ON s.assessmentId = a.id " +
+           "WHERE s.studentId = :studentId AND s.totalScore IS NOT NULL " +
+           "ORDER BY s.gradedAt DESC")
+    List<Object[]> findGradedWithAssessmentDetails(
+            @Param("studentId") UUID studentId,
+            org.springframework.data.domain.Pageable pageable);
 }

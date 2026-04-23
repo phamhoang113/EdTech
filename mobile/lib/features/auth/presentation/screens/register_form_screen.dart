@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../app/theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 
 class RegisterFormScreen extends StatefulWidget {
   final String role;
@@ -114,22 +119,39 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            onPressed: () => context.pop(),
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          // If social login success, redirect
+          if (state.mustChangePassword) {
+            context.push('/change-password', extra: {'isForced': true});
+          } else {
+            // Replace all and go home
+            while (context.canPop()) {
+              context.pop();
+            }
+            context.go('/home');
+          }
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+        return Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+              onPressed: () => context.pop(),
+            ),
+            title: Text('Đăng ký — $_roleLabel'),
           ),
-          title: Text('Đăng ký — $_roleLabel'),
-        ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                   // ── Logo ──
                   Center(
                     child: Image.asset(
@@ -313,11 +335,71 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
                             ),
                     ),
                   ),
+                  const SizedBox(height: 20),
+
+                  // ── Divider ──
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: theme.colorScheme.outlineVariant)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'Hoặc đăng ký bằng',
+                          style: TextStyle(
+                            color: isDark ? Colors.white54 : Colors.grey[600],
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      Expanded(child: Divider(color: theme.colorScheme.outlineVariant)),
+                    ],
+                  ),
                   const SizedBox(height: 16),
+
+                  // ── Google Register Button ──
+                  OutlinedButton.icon(
+                    onPressed: isLoading
+                        ? null
+                        : () => context.read<AuthBloc>().add(AuthGoogleLoginRequested(role: widget.role)),
+                    icon: Image.network(
+                      'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                      width: 20,
+                      height: 20,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 24),
+                    ),
+                    label: const Text('Tiếp tục với Google'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: theme.colorScheme.outline),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      foregroundColor: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // ── Facebook Register Button ──
+                  ElevatedButton.icon(
+                    onPressed: isLoading
+                        ? null
+                        : () => context.read<AuthBloc>().add(AuthFacebookLoginRequested(role: widget.role)),
+                    icon: const Icon(Icons.facebook, size: 22, color: Colors.white),
+                    label: const Text('Tiếp tục với Facebook'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: const Color(0xFF1877F2),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
 
                   // ── Terms ──
                   Text(
-                    'Bằng cách đăng ký, bạn đồng ý với Điều khoản sử dụng của chúng tôi.',
+                    'Bằng cách tiếp tục, bạn đồng ý với Điều khoản sử dụng của chúng tôi.',
                     style: TextStyle(
                       color: isDark ? Colors.white38 : Colors.grey[500],
                       fontSize: 12,
@@ -329,7 +411,8 @@ class _RegisterFormScreenState extends State<RegisterFormScreen> {
             ),
           ),
         ),
-    );
+      );
+    });
   }
 
   Widget _buildField({

@@ -5,6 +5,7 @@ import { tutorApi, type UpdateTutorProfileRequest } from '../../services/tutorAp
 import { classApi } from '../../services/classApi';
 import { useAuthStore } from '../../store/useAuthStore';
 import { compressAvatar } from '../../utils/imageCompress';
+import { AccountLinkingSettings } from '../settings/AccountLinkingSettings';
 import './TutorProfilePage.css';
 
 const TEACHING_MODES = [
@@ -411,6 +412,11 @@ export default function TutorProfilePage() {
           >
             {saving ? 'Đang lưu...' : '💾 Lưu thay đổi'}
           </button>
+        </div>
+
+        {/* Bottom: Account Linking Settings */}
+        <div style={{ flexBasis: '100%', marginTop: '24px' }}>
+          <AccountLinkingSettings />
         </div>
       </div>
     </div>

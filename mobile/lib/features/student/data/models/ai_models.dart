@@ -12,7 +12,7 @@ class AiSubscriptionStatus {
   final int? trialDaysRemaining;
   final DateTime? paidUntil;
   final bool canUseAi;
-  final bool isTrial;
+  final bool isTrial; // map từ JSON field 'trial'
 
   const AiSubscriptionStatus({
     required this.subscriptionId,
@@ -39,8 +39,9 @@ class AiSubscriptionStatus {
       paidUntil: json['paidUntil'] != null
           ? DateTime.parse(json['paidUntil'] as String)
           : null,
-      canUseAi: json['canUseAi'] as bool,
-      isTrial: json['isTrial'] as bool,
+      canUseAi: (json['canUseAi'] as bool?) ?? false,
+      // Backend Java serialize 'private boolean isTrial' thành key 'trial'
+      isTrial: (json['trial'] as bool?) ?? (json['isTrial'] as bool?) ?? false,
     );
   }
 }
@@ -52,6 +53,7 @@ class AiConversation {
   final String title;
   final String? subject;
   final String? grade;
+  final String? learningGoal;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -60,6 +62,7 @@ class AiConversation {
     required this.title,
     this.subject,
     this.grade,
+    this.learningGoal,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -70,8 +73,21 @@ class AiConversation {
       title: json['title'] as String? ?? 'Cuộc trò chuyện',
       subject: json['subject'] as String?,
       grade: json['grade'] as String?,
+      learningGoal: json['learningGoal'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
+  AiConversation copyWith({String? learningGoal}) {
+    return AiConversation(
+      id: id,
+      title: title,
+      subject: subject,
+      grade: grade,
+      learningGoal: learningGoal ?? this.learningGoal,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 }

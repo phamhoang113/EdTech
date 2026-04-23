@@ -281,7 +281,48 @@ class _LoginSheetState extends State<LoginSheet> {
                     Expanded(child: Divider(color: theme.colorScheme.outlineVariant)),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
+
+                // ── Google Login Button ──
+                OutlinedButton.icon(
+                  onPressed: isLoading
+                      ? null
+                      : () => context.read<AuthBloc>().add(const AuthGoogleLoginRequested()),
+                  icon: Image.network(
+                    'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                    width: 20,
+                    height: 20,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 24),
+                  ),
+                  label: const Text('Đăng nhập với Google'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(color: theme.colorScheme.outline),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    foregroundColor: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // ── Facebook Login Button ──
+                ElevatedButton.icon(
+                  onPressed: isLoading
+                      ? null
+                      : () => context.read<AuthBloc>().add(const AuthFacebookLoginRequested()),
+                  icon: const Icon(Icons.facebook, size: 22, color: Colors.white),
+                  label: const Text('Đăng nhập với Facebook'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: const Color(0xFF1877F2),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
 
                 // ── Register Button ──
                 OutlinedButton(

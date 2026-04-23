@@ -5,6 +5,7 @@ import { userProfileApi } from '../../services/userProfileApi';
 import type { UpdateUserProfileRequest } from '../../services/userProfileApi';
 import { compressAvatar } from '../../utils/imageCompress';
 import { Mail, School, Save, Lock, User, GraduationCap } from 'lucide-react';
+import { AccountLinkingSettings } from '../settings/AccountLinkingSettings';
 import './TutorProfilePage.css';
 
 
@@ -266,6 +267,11 @@ export function StudentProfileForm() {
             </button>
           </div>
 
+        </div>
+
+        {/* Bottom: Account Linking Settings */}
+        <div style={{ flexBasis: '100%', marginTop: '24px' }}>
+          <AccountLinkingSettings />
         </div>
       </div>
     </div>

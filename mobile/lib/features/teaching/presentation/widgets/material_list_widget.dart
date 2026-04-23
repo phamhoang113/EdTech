@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../data/models/teaching_models.dart';
 import '../utils/file_download_helper.dart';
+import '../utils/file_preview_helper.dart';
 
 /// Widget hiển thị danh sách tài liệu dạng card.
 class MaterialListWidget extends StatelessWidget {
@@ -125,9 +126,17 @@ class _MaterialCard extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Preview
+            IconButton(
+              icon: Icon(_getPreviewIcon(material.type),
+                  color: theme.colorScheme.secondary, size: 22),
+              tooltip: 'Xem trước',
+              onPressed: () => FilePreviewHelper.open(context, material),
+            ),
             // Download
             IconButton(
               icon: Icon(Icons.download_rounded, color: theme.colorScheme.primary, size: 22),
+              tooltip: 'Tải về',
               onPressed: () => FileDownloadHelper.openDownloadUrl(context, material.downloadUrl),
             ),
             // Xóa (chỉ GS)
@@ -160,6 +169,15 @@ class _MaterialCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  IconData _getPreviewIcon(String type) {
+    switch (type.toUpperCase()) {
+      case 'IMAGE': return Icons.image_search_rounded;
+      case 'VIDEO': return Icons.play_circle_outline_rounded;
+      case 'LINK': return Icons.open_in_browser_rounded;
+      default: return Icons.visibility_outlined;
+    }
   }
 
   IconData _getIconForType(String type) {

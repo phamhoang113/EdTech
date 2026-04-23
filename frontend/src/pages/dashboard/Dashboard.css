@@ -155,19 +155,21 @@
 
 /* AI nav item — gradient highlight */
 .dash-sidebar-item--ai {
-  background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%);
+  background: transparent;
   border: 1px solid rgba(99,102,241,0.15);
-  color: #818cf8;
+  color: var(--color-primary);
 }
 .dash-sidebar-item--ai:hover {
-  background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%);
-  border-color: rgba(99,102,241,0.35);
-  color: #a5b4fc;
+  background: linear-gradient(135deg, rgba(99,102,241,0.05) 0%, rgba(139,92,246,0.05) 100%);
+  border-color: rgba(99,102,241,0.25);
+  color: var(--color-primary);
 }
 .dash-sidebar-item--ai.active {
-  background: linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.2) 100%);
+  background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%);
   border-color: rgba(99,102,241,0.4);
-  color: #a5b4fc;
+  color: var(--color-primary);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--color-primary);
 }
 
 /* AI badge — chứ không phải đỏ */

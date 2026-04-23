@@ -5,6 +5,7 @@ import { userProfileApi } from '../../services/userProfileApi';
 import type { UpdateUserProfileRequest } from '../../services/userProfileApi';
 import { compressAvatar } from '../../utils/imageCompress';
 import { Mail, MapPin, Save, Lock, User } from 'lucide-react';
+import { AccountLinkingSettings } from '../settings/AccountLinkingSettings';
 import './TutorProfilePage.css';
 
 
@@ -231,6 +232,11 @@ export function ParentProfileForm() {
             </button>
           </div>
 
+        </div>
+
+        {/* Bottom: Account Linking Settings */}
+        <div style={{ flexBasis: '100%', marginTop: '24px' }}>
+          <AccountLinkingSettings />
         </div>
       </div>
     </div>

@@ -1,11 +1,16 @@
 package com.edtech.backend.auth.entity;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -16,6 +21,7 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import com.edtech.backend.auth.enums.AuthProvider;
 import com.edtech.backend.auth.enums.UserRole;
 import com.edtech.backend.core.entity.BaseEntity;
 
@@ -34,7 +40,7 @@ public class UserEntity extends BaseEntity {
     @Column(unique = true, length = 50)
     private String username;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash")
     private String passwordHash;
 
     @Column(name = "full_name", nullable = false, length = 150)
@@ -82,4 +88,13 @@ public class UserEntity extends BaseEntity {
     @Column(name = "must_change_password", nullable = false)
     @Builder.Default
     private Boolean mustChangePassword = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", nullable = false, length = 20)
+    @Builder.Default
+    private AuthProvider authProvider = AuthProvider.PHONE;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @Builder.Default
+    private List<UserLinkedProviderEntity> linkedProviders = new ArrayList<>();
 }

@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Camera: chụp ảnh bài làm trực tiếp -->
     <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Micro: thu âm cho STT -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <!-- Đọc ảnh từ thư viện (Android 13+) -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <!-- Đọc file storage (Android 12 trở xuống) -->

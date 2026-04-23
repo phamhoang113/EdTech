@@ -17,6 +17,7 @@ import '../../features/auth/data/datasources/auth_local_datasource.dart'
     as _i992;
 import '../../features/auth/data/datasources/auth_remote_datasource.dart'
     as _i161;
+import '../../features/auth/data/datasources/social_auth_service.dart' as _i964;
 import '../../features/auth/data/repositories/auth_repository_impl.dart'
     as _i153;
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
@@ -58,6 +59,7 @@ extension GetItInjectableX on _i174.GetIt {
   }) {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final registerModule = _$RegisterModule();
+    gh.factory<_i964.SocialAuthService>(() => _i964.SocialAuthService());
     gh.lazySingleton<_i558.FlutterSecureStorage>(
       () => registerModule.secureStorage,
     );
@@ -110,7 +112,10 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i76.HomeRepositoryImpl(gh<_i278.HomeRemoteDataSource>()),
     );
     gh.factory<_i797.AuthBloc>(
-      () => _i797.AuthBloc(gh<_i787.AuthRepository>()),
+      () => _i797.AuthBloc(
+        gh<_i787.AuthRepository>(),
+        gh<_i964.SocialAuthService>(),
+      ),
     );
     gh.factory<_i412.PublicTutorBloc>(
       () => _i412.PublicTutorBloc(gh<_i255.TutorProfileRepository>()),

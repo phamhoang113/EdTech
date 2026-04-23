@@ -6,7 +6,9 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { RoleSelectionModal } from './RoleSelectionModal';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
+import { SocialLoginButtons } from './SocialLoginButtons';
 import { loginApi } from '../../services/authApi';
+import type { TokenResponse } from '../../services/authApi';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import './LoginModal.css';
 
@@ -144,14 +146,34 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
             <span>Hoặc</span>
           </div>
 
-          <Button
-            type="button"
-            variant="ghost"
-            fullWidth
-            onClick={() => setShowRoleSelection(true)}
-          >
-            Chưa có tài khoản? Đăng ký ngay
-          </Button>
+          <SocialLoginButtons
+            mode="login"
+            onSuccess={(data: TokenResponse) => {
+              login(
+                { phone: data.email || '', role: data.role, fullName: data.fullName, avatarBase64: data.avatarBase64 ?? undefined },
+                data.accessToken,
+                data.refreshToken
+              );
+              onClose();
+              if (data.role === 'ADMIN') {
+                navigate('/admin/dashboard');
+              } else {
+                navigate('/dashboard');
+              }
+            }}
+            onError={(msg: string) => setError(msg)}
+          />
+
+          <div style={{ marginTop: 'var(--spacing-4)' }}>
+            <Button
+              type="button"
+              variant="ghost"
+              fullWidth
+              onClick={() => setShowRoleSelection(true)}
+            >
+              Chưa có tài khoản? Đăng ký ngay
+            </Button>
+          </div>
         </form>
       </div>
     </div>

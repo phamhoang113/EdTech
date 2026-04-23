@@ -85,7 +85,7 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
             className={`dash-sidebar-item dash-sidebar-item--ai ${active === 'ai' ? 'active' : ''}`}
             onClick={() => handleNav('/student/ai')}
           >
-            <Bot size={18} /> AI Study Companion
+            <Bot size={18} /> Gia sư AI
             <span className="item-badge item-badge--ai">AI</span>
           </button>
           {!loadingParent && !hasParent && (

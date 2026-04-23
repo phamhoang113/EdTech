@@ -2,9 +2,11 @@ import { Eye, EyeOff, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { firebaseAuthApi, checkPhoneApi } from '../services/authApi';
+import type { TokenResponse } from '../services/authApi';
 import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useAuthStore } from '../store/useAuthStore';
+import { SocialLoginButtons } from '../components/auth/SocialLoginButtons';
 
 import { SEO } from '../components/common/SEO';
 import './RegisterPage.css';
@@ -310,6 +312,25 @@ export const RegisterPage = () => {
               Bằng cách đăng ký, bạn đồng ý với{' '}
               <a href="#terms">Điều khoản sử dụng</a> của chúng tôi.
             </p>
+
+            <div className="modal-divider" style={{ margin: '20px 0' }}>
+              <span>Hoặc đăng ký bằng</span>
+            </div>
+
+            <SocialLoginButtons
+              mode="register"
+              role={role}
+              onSuccess={(data: TokenResponse) => {
+                login({
+                  phone: data.email || '',
+                  role: data.role,
+                  fullName: data.fullName,
+                  avatarBase64: data.avatarBase64 || undefined
+                }, data.accessToken, data.refreshToken);
+                navigate('/dashboard', { replace: true });
+              }}
+              onError={(msg: string) => setError(msg)}
+            />
           </form>
         ) : (
           <form className="register-form" onSubmit={handleVerifyOtp}>

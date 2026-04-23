@@ -29,12 +29,12 @@ import com.edtech.backend.core.exception.BusinessRuleException;
 @Transactional(readOnly = true)
 public class AiSubscriptionService {
 
-    private static final int TRIAL_DAYS = 30;
+    private static final int TRIAL_DAYS = 14;
     private static final int PAID_DAYS  = 30;
 
-    /** Số tin/ngày tối đa: trial = 20, paid = 100 */
-    public static final int TRIAL_DAILY_LIMIT  = 20;
-    public static final int PAID_DAILY_LIMIT   = 100;
+    /** Số tin/ngày tối đa: trial = 15, paid = unlimited */
+    public static final int TRIAL_DAILY_LIMIT  = 15;
+    public static final int PAID_DAILY_LIMIT   = Integer.MAX_VALUE;
 
     private final AiSubscriptionRepository subscriptionRepository;
 
@@ -70,7 +70,7 @@ public class AiSubscriptionService {
         if (!canUse) {
             throw new BusinessRuleException(
                 "AI_ACCESS_DENIED",
-                "Thời gian dùng thử đã hết. Nâng cấp AI Premium (200.000đ/tháng) để tiếp tục."
+                "Thời gian dùng thử đã hết. Nâng cấp AI Gia sư Premium (500.000đ/tháng) để tiếp tục học không giới hạn."
             );
         }
 

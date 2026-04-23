@@ -8,19 +8,29 @@ export interface TokenResponse {
   avatarBase64: string | null;
   isActive: boolean;
   mustChangePassword?: boolean;
+  authProvider?: string;
+  email?: string;
+  hasPassword?: boolean;
+  linkedProviders?: string[];
 }
 
 /** Payload for registering or authenticating via Firebase */
 export interface FirebaseAuthPayload {
   idToken: string;
-  fullName: string;
+  fullName?: string;
   password?: string;
-  role: 'PARENT' | 'TUTOR' | 'STUDENT';
+  role?: 'PARENT' | 'TUTOR' | 'STUDENT';
 }
 
 export interface LoginPayload {
   phone: string;
   password: string;
+}
+
+export interface LinkedProvider {
+  provider: string;
+  providerEmail: string;
+  linkedAt: string;
 }
 
 
@@ -55,4 +65,27 @@ export const changePasswordApi = async (payload: { oldPassword: string; newPassw
 export const checkPhoneApi = async (phone: string): Promise<boolean> => {
   const res = await apiClient.get('/api/v1/auth/check-phone', { params: { phone } });
   return unwrap<{ exists: boolean }>(res).exists;
+};
+
+// ─────────── Account Linking APIs ───────────
+
+/** Link Google/Facebook OAuth provider vào tài khoản hiện tại */
+export const linkProviderApi = async (idToken: string): Promise<void> => {
+  await apiClient.post('/api/v1/auth/link-provider', { idToken });
+};
+
+/** OAuth user thiết lập username + password lần đầu */
+export const setPasswordApi = async (username: string, newPassword: string): Promise<void> => {
+  await apiClient.post('/api/v1/auth/set-password', { username, newPassword });
+};
+
+/** Gỡ liên kết OAuth provider */
+export const unlinkProviderApi = async (provider: string): Promise<void> => {
+  await apiClient.delete('/api/v1/auth/unlink-provider', { params: { provider } });
+};
+
+/** Lấy danh sách providers đã link */
+export const getLinkedProvidersApi = async (): Promise<LinkedProvider[]> => {
+  const res = await apiClient.get('/api/v1/auth/linked-providers');
+  return unwrap(res);
 };

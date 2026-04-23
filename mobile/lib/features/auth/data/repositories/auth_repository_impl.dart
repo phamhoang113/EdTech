@@ -101,6 +101,42 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, UserEntity>> socialLogin({
+    required String idToken,
+    String? role,
+  }) async {
+    try {
+      final response = await _remoteDataSource.socialAuth(
+        idToken: idToken,
+        role: role,
+      );
+
+      final identifier = response.email ?? response.fullName;
+
+      await _saveSession(
+        phone: identifier,
+        role: response.role,
+        fullName: response.fullName,
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+        mustChangePassword: response.mustChangePassword,
+      );
+
+      return Right(UserEntity(
+        id: identifier,
+        phoneNumber: identifier,
+        role: response.role,
+        name: response.fullName,
+        mustChangePassword: response.mustChangePassword ?? false,
+      ));
+    } on DioException catch (e) {
+      return Left(ServerFailure(_extractMessage(e, 'Đăng nhập thất bại')));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, Map<String, String>>> initForgotPassword(String identifier) async {
     try {
       final data = await _remoteDataSource.initForgotPassword(identifier);

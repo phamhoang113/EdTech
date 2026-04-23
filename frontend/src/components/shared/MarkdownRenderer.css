@@ -1,0 +1,240 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   MarkdownRenderer.css — Styles cho markdown + KaTeX trong AI messages
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+.md-renderer {
+  font-size: 14px;
+  line-height: 1.7;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ── Headings ─────────────────────────────────────────────────────────────── */
+.md-renderer h1,
+.md-renderer h2,
+.md-renderer h3,
+.md-renderer h4 {
+  margin: 12px 0 6px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: inherit;
+}
+
+.md-renderer h1 { font-size: 1.3em; }
+.md-renderer h2 { font-size: 1.15em; }
+.md-renderer h3 { font-size: 1.05em; }
+.md-renderer h4 { font-size: 1em; }
+
+.md-renderer h1:first-child,
+.md-renderer h2:first-child,
+.md-renderer h3:first-child {
+  margin-top: 0;
+}
+
+/* ── Paragraphs ───────────────────────────────────────────────────────────── */
+.md-renderer p {
+  margin: 6px 0;
+}
+
+.md-renderer p:first-child {
+  margin-top: 0;
+}
+
+.md-renderer p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Strong / Em / Del ────────────────────────────────────────────────────── */
+.md-renderer strong {
+  font-weight: 700;
+}
+
+.md-renderer em {
+  font-style: italic;
+}
+
+.md-renderer del {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* ── Lists ────────────────────────────────────────────────────────────────── */
+.md-renderer ul,
+.md-renderer ol {
+  margin: 6px 0;
+  padding-left: 22px;
+}
+
+.md-renderer li {
+  margin: 3px 0;
+  line-height: 1.6;
+}
+
+.md-renderer li > p {
+  margin: 2px 0;
+}
+
+.md-renderer ul ul,
+.md-renderer ol ol,
+.md-renderer ul ol,
+.md-renderer ol ul {
+  margin: 2px 0;
+}
+
+/* ── Inline code ──────────────────────────────────────────────────────────── */
+.md-inline-code {
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--color-primary, #6366f1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+/* User message inline code — trên nền tối */
+.ai-msg--user .md-inline-code {
+  background: rgba(255, 255, 255, 0.15);
+  color: #e0e7ff;
+}
+
+/* ── Code blocks ──────────────────────────────────────────────────────────── */
+.md-code-block {
+  margin: 10px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #1e1e2e;
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.md-code-block__lang {
+  padding: 4px 12px;
+  background: rgba(99, 102, 241, 0.12);
+  color: #a5b4fc;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.md-code-block pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+
+.md-code-block code {
+  color: #e2e8f0;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  line-height: 1.6;
+  white-space: pre;
+}
+
+/* ── Blockquote ───────────────────────────────────────────────────────────── */
+.md-renderer blockquote {
+  margin: 8px 0;
+  padding: 8px 14px;
+  border-left: 3px solid var(--color-primary, #6366f1);
+  background: rgba(99, 102, 241, 0.05);
+  border-radius: 0 8px 8px 0;
+  color: inherit;
+}
+
+.md-renderer blockquote p {
+  margin: 2px 0;
+}
+
+/* ── Tables ────────────────────────────────────────────────────────────────── */
+.md-renderer table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 13px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.md-renderer th {
+  background: rgba(99, 102, 241, 0.08);
+  font-weight: 600;
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--color-border, #e2e8f0);
+}
+
+.md-renderer td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.md-renderer tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Horizontal rule ──────────────────────────────────────────────────────── */
+.md-renderer hr {
+  margin: 14px 0;
+  border: none;
+  border-top: 1px solid var(--color-border, #e2e8f0);
+}
+
+/* ── Links ────────────────────────────────────────────────────────────────── */
+.md-renderer a {
+  color: var(--color-primary, #6366f1);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px dashed currentColor;
+  transition: opacity 0.15s;
+}
+
+.md-renderer a:hover {
+  opacity: 0.8;
+}
+
+.ai-msg--user .md-renderer a {
+  color: #c7d2fe;
+}
+
+/* ── KaTeX overrides ──────────────────────────────────────────────────────── */
+
+/* Inline math */
+.md-renderer .katex {
+  font-size: 1.05em;
+}
+
+/* Block math (display mode) */
+.md-renderer .katex-display {
+  margin: 12px 0;
+  padding: 10px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.md-renderer .katex-display > .katex {
+  font-size: 1.1em;
+}
+
+/* KaTeX trên user bubble (nền tối) */
+.ai-msg--user .md-renderer .katex {
+  color: #fff;
+}
+
+/* KaTeX scrollbar */
+.md-renderer .katex-display::-webkit-scrollbar {
+  height: 3px;
+}
+
+.md-renderer .katex-display::-webkit-scrollbar-thumb {
+  background: var(--color-border, #e2e8f0);
+  border-radius: 3px;
+}
+
+/* ── Images in markdown ───────────────────────────────────────────────────── */
+.md-renderer img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 8px 0;
+}

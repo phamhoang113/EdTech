@@ -40,4 +40,8 @@ public class AiConversationEntity extends BaseEntity {
     /** Lớp học (Lớp 10, Lớp 11...) */
     @Column(name = "grade", length = 50)
     private String grade;
+
+    /** Mục tiêu học tập — HS tự đặt (VD: "Ôn thi giữa kỳ chương 3-4", "Luyện đạo hàm") */
+    @Column(name = "learning_goal", length = 500)
+    private String learningGoal;
 }

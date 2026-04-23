@@ -13,17 +13,22 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import reactor.core.publisher.Flux;
+import org.springframework.http.codec.ServerSentEvent;
+
 import com.edtech.backend.ai.dto.AiConversationResponse;
 import com.edtech.backend.ai.dto.AiMessageResponse;
 import com.edtech.backend.ai.dto.AiSubscriptionStatusResponse;
 import com.edtech.backend.ai.dto.CreateConversationRequest;
 import com.edtech.backend.ai.dto.SendMessageRequest;
+import com.edtech.backend.ai.dto.UpdateConversationRequest;
 import com.edtech.backend.ai.service.AiConversationService;
 import com.edtech.backend.ai.service.AiSubscriptionService;
 import com.edtech.backend.auth.entity.UserEntity;
@@ -104,6 +109,18 @@ public class AiController {
         return ResponseEntity.ok(ApiResponse.ok(null, "Đã xóa conversation."));
     }
 
+    @PatchMapping("/conversations/{conversationId}")
+    @Operation(summary = "Cập nhật conversation (đặt mục tiêu học tập)")
+    public ResponseEntity<ApiResponse<AiConversationResponse>> updateConversation(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID conversationId,
+            @RequestBody UpdateConversationRequest request) {
+
+        UUID studentId = resolveUserId(userDetails);
+        AiConversationResponse response = conversationService.updateConversation(studentId, conversationId, request);
+        return ResponseEntity.ok(ApiResponse.ok(response, "Đã cập nhật conversation."));
+    }
+
     // ── Messages ──────────────────────────────────────────────────────────
 
     @PostMapping("/conversations/{conversationId}/messages")
@@ -116,6 +133,51 @@ public class AiController {
         UUID studentId = resolveUserId(userDetails);
         AiMessageResponse response = conversationService.sendMessage(studentId, conversationId, request);
         return ResponseEntity.ok(ApiResponse.ok(response, "AI đã trả lời."));
+    }
+
+    @PostMapping(value = "/conversations/{conversationId}/messages/stream",
+                 produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "Gửi message tới AI (SSE streaming — response từng chunk real-time)")
+    public Flux<ServerSentEvent<String>> sendMessageStreaming(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID conversationId,
+            @RequestBody SendMessageRequest request) {
+
+        UUID studentId = resolveUserId(userDetails);
+
+        try {
+            AiConversationService.StreamingResult result =
+                    conversationService.sendMessageStreaming(studentId, conversationId, request);
+
+            UUID convId = result.conversationId();
+
+            return result.textStream()
+                    .map(chunk -> ServerSentEvent.<String>builder()
+                            .event("chunk")
+                            .data(chunk)
+                            .build())
+                    .concatWith(Flux.just(
+                            ServerSentEvent.<String>builder()
+                                    .event("done")
+                                    .data("{\"conversationId\":\"" + convId + "\"}")
+                                    .build()
+                    ))
+                    .onErrorResume(e -> Flux.just(
+                            ServerSentEvent.<String>builder()
+                                    .event("error")
+                                    .data(e.getMessage() != null ? e.getMessage()
+                                            : "AI tạm thời không khả dụng.")
+                                    .build()
+                    ));
+        } catch (Exception e) {
+            return Flux.just(
+                    ServerSentEvent.<String>builder()
+                            .event("error")
+                            .data(e.getMessage() != null ? e.getMessage()
+                                    : "Có lỗi xảy ra. Vui lòng thử lại.")
+                            .build()
+            );
+        }
     }
 
     // ── Private helpers ───────────────────────────────────────────────────

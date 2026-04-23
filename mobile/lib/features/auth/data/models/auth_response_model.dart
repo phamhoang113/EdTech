@@ -3,7 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'auth_response_model.g.dart';
 
 /// Match với TokenResponse từ backend:
-/// { accessToken, refreshToken, role, fullName, isActive }
+/// { accessToken, refreshToken, role, fullName, isActive, authProvider, email, hasPassword, linkedProviders }
 @JsonSerializable()
 class AuthResponseModel {
   final String accessToken;
@@ -12,6 +12,10 @@ class AuthResponseModel {
   final String fullName;
   final bool? isActive;
   final bool? mustChangePassword;
+  final String? authProvider;
+  final String? email;
+  final bool? hasPassword;
+  final List<String>? linkedProviders;
 
   const AuthResponseModel({
     required this.accessToken,
@@ -20,6 +24,10 @@ class AuthResponseModel {
     required this.fullName,
     this.isActive,
     this.mustChangePassword,
+    this.authProvider,
+    this.email,
+    this.hasPassword,
+    this.linkedProviders,
   });
 
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) =>

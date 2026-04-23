@@ -16,6 +16,7 @@ public class AiConversationResponse {
     private String title;
     private String subject;
     private String grade;
+    private String learningGoal;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -25,6 +26,7 @@ public class AiConversationResponse {
                 .title(entity.getTitle())
                 .subject(entity.getSubject())
                 .grade(entity.getGrade())
+                .learningGoal(entity.getLearningGoal())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

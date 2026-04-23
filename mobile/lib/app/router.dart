@@ -17,22 +17,23 @@ import '../features/classes/presentation/screens/class_detail_screen.dart';
 import '../features/classes/presentation/screens/class_list_screen.dart';
 import '../features/classes/presentation/screens/request_class_screen.dart';
 import '../features/home/presentation/screens/ai_screen.dart';
-import '../features/teaching/presentation/screens/teaching_screen.dart';
-import '../features/home/presentation/screens/documents_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/home/presentation/screens/main_shell.dart';
 import '../features/home/presentation/screens/parent_class_detail_screen.dart';
 import '../features/home/domain/entities/my_class_entity.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/profile/presentation/screens/edit_profile_screen.dart';
+import '../features/profile/presentation/screens/account_linking_screen.dart';
 import '../features/schedule/presentation/screens/schedule_screen.dart';
+import '../features/student/presentation/screens/parent_report_screen.dart';
+import '../features/teaching/presentation/screens/teaching_screen.dart';
 import '../features/tutor_profile/presentation/screens/tutor_verification_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _homeNavKey = GlobalKey<NavigatorState>(debugLabel: 'home');
 final GlobalKey<NavigatorState> _scheduleNavKey = GlobalKey<NavigatorState>(debugLabel: 'schedule');
 final GlobalKey<NavigatorState> _teachingNavKey = GlobalKey<NavigatorState>(debugLabel: 'teaching');
-final GlobalKey<NavigatorState> _docsNavKey = GlobalKey<NavigatorState>(debugLabel: 'docs');
+final GlobalKey<NavigatorState> _parentReportNavKey = GlobalKey<NavigatorState>(debugLabel: 'parent_report');
 final GlobalKey<NavigatorState> _aiNavKey = GlobalKey<NavigatorState>(debugLabel: 'ai');
 final GlobalKey<NavigatorState> _profileNavKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 
@@ -41,14 +42,14 @@ final GoRouter appRouter = GoRouter(
   initialLocation: '/home',
   routes: [
     // ── Main Shell with Bottom Navigation ──
-    // PH/GS/Guest: 4 tabs (Home, Lịch, Blog, Tôi)
-    // HS: 6 tabs (Home, Lịch, Blog, Tài liệu, AI, Tôi)
+    // PH/GS/Guest: 4 tabs (Home, Lịch, Giảng dạy, Tôi)
+    // HS: 5 tabs (Home, Lịch, Học tập, AI, Tôi)
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return MainShell(navigationShell: navigationShell);
       },
       branches: [
-        // Tab 0: Home
+        // Branch 0: Home
         StatefulShellBranch(
           navigatorKey: _homeNavKey,
           routes: [
@@ -58,7 +59,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 1: Lịch (schedule)
+        // Branch 1: Lịch (schedule)
         StatefulShellBranch(
           navigatorKey: _scheduleNavKey,
           routes: [
@@ -68,7 +69,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 2: Giảng dạy / Học tập (thay thế Blog)
+        // Branch 2: Giảng dạy / Học tập
         StatefulShellBranch(
           navigatorKey: _teachingNavKey,
           routes: [
@@ -78,17 +79,17 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 3: Tài liệu (CHỈ HS — ẩn cho PH/GS bởi MainShell)
+        // Branch 3: Báo cáo (CHỆ PH — ẩn cho STUDENT/GS bởi MainShell)
         StatefulShellBranch(
-          navigatorKey: _docsNavKey,
+          navigatorKey: _parentReportNavKey,
           routes: [
             GoRoute(
-              path: '/documents',
-              builder: (context, state) => const DocumentsScreen(),
+              path: '/parent-report',
+              builder: (context, state) => const ParentReportScreen(),
             ),
           ],
         ),
-        // Tab 4: AI (CHỈ HS — ẩn cho PH/GS bởi MainShell)
+        // Branch 4: AI (CHỆ HS — ẩn cho PH/GS bởi MainShell)
         StatefulShellBranch(
           navigatorKey: _aiNavKey,
           routes: [
@@ -98,7 +99,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        // Tab 5: Tôi (Profile + Settings)
+        // Branch 5: Tôi (Profile + Settings)
         StatefulShellBranch(
           navigatorKey: _profileNavKey,
           routes: [
@@ -192,6 +193,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/edit-profile',
       builder: (context, state) => const EditProfileScreen(),
+    ),
+    GoRoute(
+      path: '/account-linking',
+      builder: (context, state) => const AccountLinkingScreen(),
     ),
   ],
 );

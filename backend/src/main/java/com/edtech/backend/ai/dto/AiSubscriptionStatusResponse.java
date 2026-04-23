@@ -25,8 +25,8 @@ public class AiSubscriptionStatusResponse {
     /** HS có quyền dùng AI không */
     private boolean canUseAi;
 
-    /** Có phải đang trial không */
-    private boolean isTrial;
+    /** Có phải đang trial không — field name 'trial' (không dùng 'isTrial' vì Jackson strip prefix 'is') */
+    private boolean trial;
 
     public static AiSubscriptionStatusResponse from(AiSubscriptionEntity entity) {
         Instant now = Instant.now();
@@ -48,7 +48,7 @@ public class AiSubscriptionStatusResponse {
                 .trialDaysRemaining(trialDays)
                 .paidUntil(entity.getPaidUntil())
                 .canUseAi(canUse)
-                .isTrial(entity.getStatus() == AiSubscriptionStatus.TRIAL)
+                .trial(entity.getStatus() == AiSubscriptionStatus.TRIAL)
                 .build();
     }
 }

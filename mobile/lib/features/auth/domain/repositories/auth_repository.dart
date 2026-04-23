@@ -6,12 +6,17 @@ abstract class AuthRepository {
   Future<Either<Failure, UserEntity>> login(String phone, String password);
 
   /// Register via Firebase auth (mock on test env)
-  /// Flow: form → mock OTP → MOCK_TOKEN → POST /api/v1/auth/firebase
   Future<Either<Failure, UserEntity>> registerWithFirebase({
     required String phone,
     required String fullName,
     required String password,
     required String role,
+  });
+
+  /// OAuth social login (Google/Facebook)
+  Future<Either<Failure, UserEntity>> socialLogin({
+    required String idToken,
+    String? role,
   });
 
   /// Forgot password step 1: returns { maskedPhone, fullPhone }

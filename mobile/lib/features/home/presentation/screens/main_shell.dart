@@ -15,8 +15,8 @@ import '../../../notification/presentation/screens/notification_screen.dart';
 import '../../../../shared/widgets/floating_bottom_nav.dart';
 
 /// MainShell — Provides fixed AppBar + BottomNavigationBar.
-/// PH/GS/Guest: 4 tabs (Home, Lịch, Giảng dạy/Học tập, Tôi).
-/// STUDENT: 6 tabs (Home, Lịch, Học tập, Tài liệu, AI, Tôi).
+/// PH/GS/Guest: 4 tabs (Home, Lịch, Giảng dạy, Tôi).
+/// STUDENT: 5 tabs (Home, Lịch, Học tập, AI, Tôi).
 class MainShell extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -27,7 +27,7 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
-  /// Total branches in router: 0=Home, 1=Lịch, 2=Giảng dạy, 3=Docs, 4=AI, 5=Profile
+  /// Total branches: 0=Home, 1=Lịch, 2=Học tập/Giảng dạy, 3=Báo cáo (PH), 4=AI (HS), 5=Profile
   static const int _totalBranches = 6;
 
   int _unreadCount = 0;
@@ -98,14 +98,17 @@ class _MainShellState extends State<MainShell> {
     }
   }
 
-  /// Admin tabs: 0=Home, 5=Profile
+  /// Admin tabs: [0=Home, 5=Profile]
   static const List<int> _adminBranches = [0, 5];
 
-  /// Non-student tabs: 0=Home, 1=Lịch, 2=Giảng dạy/Học tập, 5=Profile
+  /// TUTOR tabs: [0=Home, 1=Lịch, 2=Giảng dạy, 5=Profile]
   static const List<int> _defaultBranches = [0, 1, 2, 5];
 
-  /// Student tabs: all 6
-  static const List<int> _studentBranches = [0, 1, 2, 3, 4, 5];
+  /// PARENT tabs: [0=Home, 1=Lịch, 2=Học tập, 3=Báo cáo, 5=Profile]
+  static const List<int> _parentBranches = [0, 1, 2, 3, 5];
+
+  /// STUDENT tabs: [0=Home, 1=Lịch, 2=Học tập, 4=AI, 5=Profile]
+  static const List<int> _studentBranches = [0, 1, 2, 4, 5];
 
   String? get _userRole {
     final state = context.read<AuthBloc>().state;
@@ -117,6 +120,7 @@ class _MainShellState extends State<MainShell> {
     final role = _userRole;
     if (role == 'ADMIN') return _adminBranches;
     if (role == 'STUDENT') return _studentBranches;
+    if (role == 'PARENT') return _parentBranches;
     return _defaultBranches;
   }
 
@@ -183,8 +187,6 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final currentRealIndex = widget.navigationShell.currentIndex;
     final currentVisualIndex = _realToVisual(currentRealIndex);
 
@@ -262,11 +264,20 @@ class _MainShellState extends State<MainShell> {
       FloatingBottomNavItem(icon: Icons.school_outlined, activeIcon: Icons.school_rounded, label: teachingLabel),
     ];
 
+    if (role == 'PARENT') {
+      items.add(const FloatingBottomNavItem(
+        icon: Icons.bar_chart_outlined,
+        activeIcon: Icons.bar_chart_rounded,
+        label: 'Báo cáo',
+      ));
+    }
+
     if (role == 'STUDENT') {
-      items.addAll(const [
-        FloatingBottomNavItem(icon: Icons.menu_book_outlined, activeIcon: Icons.menu_book_rounded, label: 'Tài liệu'),
-        FloatingBottomNavItem(icon: Icons.smart_toy_outlined, activeIcon: Icons.smart_toy_rounded, label: 'AI'),
-      ]);
+      items.add(const FloatingBottomNavItem(
+        icon: Icons.smart_toy_outlined,
+        activeIcon: Icons.smart_toy_rounded,
+        label: 'AI',
+      ));
     }
 
     items.add(const FloatingBottomNavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Tôi'));

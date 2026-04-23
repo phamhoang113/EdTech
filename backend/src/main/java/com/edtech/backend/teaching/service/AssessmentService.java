@@ -96,7 +96,8 @@ public class AssessmentService {
             }
         }
 
-        return AssessmentResponse.from(entity);
+        // Tự động publish (gửi noti) ngay khi vừa tạo xong
+        return publish(entity.getId(), tutorId, null, null);
     }
 
     /**

@@ -54,4 +54,22 @@ class AuthForgotPasswordResetRequested extends AuthEvent {
   List<Object> get props => [identifier, idToken];
 }
 
+/// OAuth social login (Google)
+class AuthGoogleLoginRequested extends AuthEvent {
+  final String? role;
+  const AuthGoogleLoginRequested({this.role});
+
+  @override
+  List<Object> get props => [role ?? ''];
+}
+
+/// OAuth social login (Facebook)
+class AuthFacebookLoginRequested extends AuthEvent {
+  final String? role;
+  const AuthFacebookLoginRequested({this.role});
+
+  @override
+  List<Object> get props => [role ?? ''];
+}
+
 class AuthLogoutRequested extends AuthEvent {}

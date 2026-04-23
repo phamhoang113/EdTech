@@ -26,7 +26,7 @@ public class ApplicationConfig {
         return identifier -> userRepository.findByIdentifierAndIsDeletedFalse(identifier)
                 .map(user -> User.builder()
                         .username(user.getUsername())
-                        .password(user.getPasswordHash())
+                        .password(user.getPasswordHash() != null ? user.getPasswordHash() : "")
                         .roles(user.getRole().name())
                         .build())
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + identifier));

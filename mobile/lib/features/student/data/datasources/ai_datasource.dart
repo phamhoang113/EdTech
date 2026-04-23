@@ -1,11 +1,12 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/ai_models.dart';
 
-/// REST API datasource cho module AI Study Companion.
+/// REST API datasource cho module AI Assistance.
 class AiDataSource {
   final _dio = getIt<DioClient>().dio;
 
@@ -50,6 +51,22 @@ class AiDataSource {
   /// Xóa conversation.
   Future<void> deleteConversation(String conversationId) async {
     await _dio.delete('/api/v1/ai/conversations/$conversationId');
+  }
+
+  /// Cập nhật conversation (mục tiêu học tập).
+  Future<AiConversation> updateConversation(
+    String conversationId, {
+    String? learningGoal,
+  }) async {
+    final response = await _dio.patch(
+      '/api/v1/ai/conversations/$conversationId',
+      data: {
+        if (learningGoal != null) 'learningGoal': learningGoal,
+      },
+    );
+    return AiConversation.fromJson(
+      response.data['data'] as Map<String, dynamic>,
+    );
   }
 
   // ═══════════ MESSAGES ═══════════
@@ -97,5 +114,61 @@ class AiDataSource {
       options: Options(receiveTimeout: const Duration(seconds: 90)),
     );
     return AiMessage.fromJson(response.data['data'] as Map<String, dynamic>);
+  }
+
+  /// Gửi message với SSE streaming — nhận AI response từng chunk real-time.
+  /// Trả về Stream<String> mỗi text chunk.
+  Stream<String> sendMessageStream({
+    required String conversationId,
+    String? content,
+    List<int>? imageBytes,
+    String? imageMimeType,
+  }) async* {
+    final data = <String, dynamic>{};
+    if (content != null) data['content'] = content;
+    if (imageBytes != null) {
+      data['imageBase64'] = base64Encode(imageBytes);
+      data['imageMimeType'] = imageMimeType ?? 'image/jpeg';
+      data['content'] ??= 'Hãy giải bài tập trong ảnh này từng bước chi tiết.';
+    }
+
+    final response = await _dio.post<ResponseBody>(
+      '/api/v1/ai/conversations/$conversationId/messages/stream',
+      data: data,
+      options: Options(
+        responseType: ResponseType.stream,
+        receiveTimeout: const Duration(seconds: 120),
+      ),
+    );
+
+    final stream = response.data?.stream;
+    if (stream == null) return;
+
+    String buffer = '';
+    await for (final bytes in stream) {
+      buffer += utf8.decode(bytes);
+
+      final lines = buffer.split('\n');
+      buffer = lines.removeLast(); // giữ lại dòng chưa hoàn chỉnh
+
+      String currentEvent = '';
+
+      for (final line in lines) {
+        final trimmed = line.trim();
+
+        if (trimmed.startsWith('event:')) {
+          currentEvent = trimmed.substring(6).trim();
+        } else if (trimmed.startsWith('data:')) {
+          final data = trimmed.substring(5).trim();
+
+          if (currentEvent == 'chunk' && data.isNotEmpty) {
+            yield data;
+          } else if (currentEvent == 'error' && data.isNotEmpty) {
+            throw Exception(data);
+          }
+          // 'done' event → stream kết thúc tự nhiên
+        }
+      }
+    }
   }
 }
