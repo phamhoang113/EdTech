@@ -5,7 +5,7 @@ import { tutorApi, type UpdateTutorProfileRequest } from '../../services/tutorAp
 import { classApi } from '../../services/classApi';
 import { useAuthStore } from '../../store/useAuthStore';
 import { compressAvatar } from '../../utils/imageCompress';
-import { AccountLinkingSettings } from '../settings/AccountLinkingSettings';
+import { AccountLinkingSettings } from '../../components/settings/AccountLinkingSettings';
 import './TutorProfilePage.css';
 
 const TEACHING_MODES = [

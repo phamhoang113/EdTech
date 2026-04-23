@@ -5,7 +5,7 @@ import { userProfileApi } from '../../services/userProfileApi';
 import type { UpdateUserProfileRequest } from '../../services/userProfileApi';
 import { compressAvatar } from '../../utils/imageCompress';
 import { Mail, MapPin, Save, Lock, User } from 'lucide-react';
-import { AccountLinkingSettings } from '../settings/AccountLinkingSettings';
+import { AccountLinkingSettings } from '../../components/settings/AccountLinkingSettings';
 import './TutorProfilePage.css';
 
 

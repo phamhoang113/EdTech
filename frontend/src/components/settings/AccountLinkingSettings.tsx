@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { getLinkedProvidersApi, linkProviderApi, unlinkProviderApi, type LinkedProvider, setPasswordApi } from '../../services/authApi';
 import { useAuthStore } from '../../store/useAuthStore';
 import { Button } from '../ui/Button';
-import { getAuth, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '../../firebase';
 import './AccountLinkingSettings.css';
 
 export const AccountLinkingSettings = () => {
-  const { user, login } = useAuthStore();
+  const { user } = useAuthStore();
   const [providers, setProviders] = useState<LinkedProvider[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -113,9 +113,9 @@ export const AccountLinkingSettings = () => {
             </div>
           </div>
           {hasGoogle ? (
-            <Button variant="outline" size="small" onClick={() => handleUnlink('google')}>Hủy liên kết</Button>
+            <Button variant="secondary" size="sm" onClick={() => handleUnlink('google')}>Hủy liên kết</Button>
           ) : (
-            <Button variant="primary" size="small" onClick={() => handleLink('google')}>Liên kết</Button>
+            <Button variant="primary" size="sm" onClick={() => handleLink('google')}>Liên kết</Button>
           )}
         </div>
 
@@ -128,9 +128,9 @@ export const AccountLinkingSettings = () => {
             </div>
           </div>
           {hasFacebook ? (
-            <Button variant="outline" size="small" onClick={() => handleUnlink('facebook')}>Hủy liên kết</Button>
+            <Button variant="secondary" size="sm" onClick={() => handleUnlink('facebook')}>Hủy liên kết</Button>
           ) : (
-            <Button variant="primary" size="small" onClick={() => handleLink('facebook')}>Liên kết</Button>
+            <Button variant="primary" size="sm" onClick={() => handleLink('facebook')}>Liên kết</Button>
           )}
         </div>
       </div>
@@ -142,7 +142,7 @@ export const AccountLinkingSettings = () => {
             <p className="settings-desc">Thiết lập mật khẩu quản lý tài khoản độc lập với mạng xã hội.</p>
           </div>
           {!showPasswordForm && (
-            <Button variant="outline" size="small" onClick={() => setShowPasswordForm(true)}>Thiết lập mật khẩu</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowPasswordForm(true)}>Thiết lập mật khẩu</Button>
           )}
         </div>
 

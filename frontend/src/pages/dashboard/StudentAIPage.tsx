@@ -7,7 +7,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Bot, Send, Plus, Trash2, Camera,
   Sparkles, Crown, Clock, ChevronRight, X, Loader2,
-  BookOpen, Brain, AlertCircle, MessageSquare, Zap, Star, Target
+  BookOpen, Brain, AlertCircle, Zap, Star, Target
 } from 'lucide-react';
 import { aiApi } from '../../services/aiApi';
 import type {
