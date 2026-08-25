@@ -20,8 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import reactor.core.publisher.Flux;
-import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import lombok.extern.slf4j.Slf4j;
 
 import com.edtech.backend.ai.dto.AiConversationResponse;
 import com.edtech.backend.ai.dto.AiMessageResponse;
@@ -40,6 +40,7 @@ import com.edtech.backend.core.exception.EntityNotFoundException;
  * REST API cho module AI Student Study Companion.
  * Chỉ học sinh (STUDENT) được phép sử dụng.
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/ai")
 @RequiredArgsConstructor
@@ -138,12 +139,15 @@ public class AiController {
     @PostMapping(value = "/conversations/{conversationId}/messages/stream",
                  produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "Gửi message tới AI (SSE streaming — response từng chunk real-time)")
-    public Flux<ServerSentEvent<String>> sendMessageStreaming(
+    public SseEmitter sendMessageStreaming(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID conversationId,
             @RequestBody SendMessageRequest request) {
 
         UUID studentId = resolveUserId(userDetails);
+
+        // Timeout 2 phút — đủ cho response dài
+        SseEmitter emitter = new SseEmitter(120_000L);
 
         try {
             AiConversationService.StreamingResult result =
@@ -151,33 +155,52 @@ public class AiController {
 
             UUID convId = result.conversationId();
 
-            return result.textStream()
-                    .map(chunk -> ServerSentEvent.<String>builder()
-                            .event("chunk")
-                            .data(chunk)
-                            .build())
-                    .concatWith(Flux.just(
-                            ServerSentEvent.<String>builder()
-                                    .event("done")
-                                    .data("{\"conversationId\":\"" + convId + "\"}")
-                                    .build()
-                    ))
-                    .onErrorResume(e -> Flux.just(
-                            ServerSentEvent.<String>builder()
-                                    .event("error")
-                                    .data(e.getMessage() != null ? e.getMessage()
-                                            : "AI tạm thời không khả dụng.")
-                                    .build()
-                    ));
+            result.textStream()
+                    .subscribe(
+                            chunk -> {
+                                try {
+                                    emitter.send(SseEmitter.event()
+                                            .name("chunk")
+                                            .data(chunk));
+                                } catch (Exception e) {
+                                    log.debug("SSE send chunk failed: {}", e.getMessage());
+                                }
+                            },
+                            error -> {
+                                try {
+                                    emitter.send(SseEmitter.event()
+                                            .name("error")
+                                            .data(error.getMessage() != null ? error.getMessage()
+                                                    : "AI tạm thời không khả dụng."));
+                                } catch (Exception e) {
+                                    log.debug("SSE send error failed: {}", e.getMessage());
+                                }
+                                emitter.complete();
+                            },
+                            () -> {
+                                try {
+                                    emitter.send(SseEmitter.event()
+                                            .name("done")
+                                            .data("{\"conversationId\":\"" + convId + "\"}"));
+                                } catch (Exception e) {
+                                    log.debug("SSE send done failed: {}", e.getMessage());
+                                }
+                                emitter.complete();
+                            }
+                    );
         } catch (Exception e) {
-            return Flux.just(
-                    ServerSentEvent.<String>builder()
-                            .event("error")
-                            .data(e.getMessage() != null ? e.getMessage()
-                                    : "Có lỗi xảy ra. Vui lòng thử lại.")
-                            .build()
-            );
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("error")
+                        .data(e.getMessage() != null ? e.getMessage()
+                                : "Có lỗi xảy ra. Vui lòng thử lại."));
+            } catch (Exception ex) {
+                log.debug("SSE send catch error failed: {}", ex.getMessage());
+            }
+            emitter.complete();
         }
+
+        return emitter;
     }
 
     // ── Private helpers ───────────────────────────────────────────────────

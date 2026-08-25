@@ -18,6 +18,30 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+/**
+ * Map entityType → URL path tương ứng.
+ * Service Worker không truy cập được React Router nên phải map thủ công.
+ */
+function buildNavigationUrl(entityType) {
+  const ENTITY_URL_MAP = {
+    'CLASS': '/dashboard',
+    'SESSION': '/dashboard',
+    'APPLICATION': '/applications',
+    'ABSENCE': '/dashboard',
+    'SCHEDULE': '/dashboard',
+    'VERIFICATION': '/admin/verification',
+    'BILLING': '/billing',
+    'HOMEWORK': '/dashboard',
+    'EXAM': '/dashboard',
+    'MATERIAL': '/dashboard',
+    'SUBMISSION': '/dashboard',
+    'ASSESSMENT': '/dashboard',
+    'MESSAGE': '/messages',
+    'CONTACT': '/admin/contacts'
+  };
+  return ENTITY_URL_MAP[entityType] || '/dashboard';
+}
+
 // Xử lý notification khi browser ở background
 messaging.onBackgroundMessage((payload) => {
   console.log('[SW] Background message:', payload);

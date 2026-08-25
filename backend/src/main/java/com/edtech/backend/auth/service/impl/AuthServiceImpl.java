@@ -496,6 +496,7 @@ public class AuthServiceImpl implements AuthService {
                 .authProvider(user.getAuthProvider().name())
                 .email(user.getEmail())
                 .hasPassword(user.getPasswordHash() != null)
+                .hasCompletedOnboarding(user.getHasCompletedOnboarding())
                 .linkedProviders(providerNames)
                 .build();
     }

@@ -50,8 +50,6 @@ public class GeminiService {
     private static final int MAX_RETRIES = 3;
     private static final Duration INITIAL_BACKOFF = Duration.ofSeconds(1);
 
-    /** Dynamic retrieval — model tự quyết định khi nào cần Google Search (tiết kiệm ~70% search cost) */
-    private static final double SEARCH_DYNAMIC_THRESHOLD = 0.7;
 
     private static final String SSE_DATA_PREFIX = "data: ";
 
@@ -134,11 +132,11 @@ public class GeminiService {
 
     /** Chọn model phù hợp theo subject để tối ưu chi phí + chất lượng */
     private String resolveGenerateUrl(String subject) {
-        return resolveModelUrl(subject) + ":generateContent";
+        return resolveModelUrl(subject) + ":generateContent?key=" + apiKey;
     }
 
     private String resolveStreamUrl(String subject) {
-        return resolveModelUrl(subject) + ":streamGenerateContent?alt=sse";
+        return resolveModelUrl(subject) + ":streamGenerateContent?alt=sse&key=" + apiKey;
     }
 
     private String resolveModelUrl(String subject) {
@@ -161,15 +159,8 @@ public class GeminiService {
             generationConfig.put("thinkingConfig", Map.of("thinkingBudget", STEM_THINKING_BUDGET));
         }
 
-        // Dynamic retrieval — model tự quyết định khi nào cần Google Search
-        Map<String, Object> dynamicSearch = Map.of(
-            "google_search_retrieval", Map.of(
-                "dynamic_retrieval_config", Map.of(
-                    "mode", "MODE_DYNAMIC",
-                    "dynamic_threshold", SEARCH_DYNAMIC_THRESHOLD
-                )
-            )
-        );
+        // Google Search tool — model tự quyết định khi nào cần search
+        Map<String, Object> googleSearch = Map.of("google_search", Map.of());
 
         return Map.of(
             "system_instruction", Map.of(
@@ -177,7 +168,7 @@ public class GeminiService {
             ),
             "contents", contents,
             "generationConfig", generationConfig,
-            "tools", List.of(dynamicSearch)
+            "tools", List.of(googleSearch)
         );
     }
 
@@ -193,7 +184,6 @@ public class GeminiService {
             Map<String, Object> response = geminiWebClient
                     .post()
                     .uri(resolveGenerateUrl(subject))
-                    .header("x-goog-api-key", apiKey)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(requestBody)
                     .retrieve()
@@ -230,15 +220,22 @@ public class GeminiService {
         return geminiWebClient
                 .post()
                 .uri(resolveStreamUrl(subject))
-                .header("x-goog-api-key", apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(requestBody)
                 .retrieve()
                 .bodyToFlux(String.class)
+                .doOnNext(raw -> log.debug("Gemini SSE raw chunk: {}", raw.length() > 200 ? raw.substring(0, 200) + "..." : raw))
+                .doOnComplete(() -> log.debug("Gemini SSE stream completed"))
+                .doOnError(e -> log.error("Gemini SSE stream error: {}", e.getMessage()))
                 .retryWhen(buildRetrySpec())
                 .flatMap(this::parseSseChunk)
                 .onErrorResume(e -> {
-                    log.error("Lỗi streaming Gemini API: {}", e.getMessage(), e);
+                    if (e instanceof WebClientResponseException wcre) {
+                        log.error("Lỗi streaming Gemini API: {} | Response body: {}",
+                                e.getMessage(), wcre.getResponseBodyAsString());
+                    } else {
+                        log.error("Lỗi streaming Gemini API: {}", e.getMessage(), e);
+                    }
                     return Flux.error(
                         new IllegalStateException("AI tạm thời không khả dụng. Vui lòng thử lại sau.")
                     );
@@ -280,33 +277,50 @@ public class GeminiService {
      */
     @SuppressWarnings("unchecked")
     private Flux<String> parseSseChunk(String rawChunk) {
-        // SSE lines có thể chứa nhiều "data:" prefix
-        String[] lines = rawChunk.split("\n");
         List<String> textChunks = new ArrayList<>();
+        String trimmed = rawChunk.trim();
 
+        if (trimmed.isEmpty() || "[DONE]".equals(trimmed)) {
+            return Flux.empty();
+        }
+
+        // Xử lý JSON trực tiếp (format mới — không có prefix "data: ")
+        if (trimmed.startsWith("{")) {
+            parseJsonChunk(trimmed, textChunks);
+            return Flux.fromIterable(textChunks);
+        }
+
+        // Fallback: SSE format cũ — mỗi line bắt đầu bằng "data: "
+        String[] lines = rawChunk.split("\n");
         for (String line : lines) {
-            String trimmed = line.trim();
-            if (!trimmed.startsWith(SSE_DATA_PREFIX)) {
+            String lineTrimmed = line.trim();
+            if (!lineTrimmed.startsWith(SSE_DATA_PREFIX)) {
                 continue;
             }
 
-            String jsonStr = trimmed.substring(SSE_DATA_PREFIX.length()).trim();
+            String jsonStr = lineTrimmed.substring(SSE_DATA_PREFIX.length()).trim();
             if (jsonStr.isEmpty() || "[DONE]".equals(jsonStr)) {
                 continue;
             }
 
-            try {
-                Map<String, Object> chunk = objectMapper.readValue(jsonStr, Map.class);
-                String extracted = extractTextFromStreamChunk(chunk);
-                if (extracted != null && !extracted.isEmpty()) {
-                    textChunks.add(extracted);
-                }
-            } catch (JsonProcessingException e) {
-                log.debug("Bỏ qua SSE chunk không parse được: {}", jsonStr);
-            }
+            parseJsonChunk(jsonStr, textChunks);
         }
 
         return Flux.fromIterable(textChunks);
+    }
+
+    /** Parse 1 JSON chunk → extract text, thêm vào list */
+    @SuppressWarnings("unchecked")
+    private void parseJsonChunk(String jsonStr, List<String> textChunks) {
+        try {
+            Map<String, Object> chunk = objectMapper.readValue(jsonStr, Map.class);
+            String extracted = extractTextFromStreamChunk(chunk);
+            if (extracted != null && !extracted.isEmpty()) {
+                textChunks.add(extracted);
+            }
+        } catch (JsonProcessingException e) {
+            log.debug("Bỏ qua chunk không parse được: {}", jsonStr.length() > 100 ? jsonStr.substring(0, 100) + "..." : jsonStr);
+        }
     }
 
     /**

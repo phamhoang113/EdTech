@@ -11,6 +11,7 @@ export interface TokenResponse {
   authProvider?: string;
   email?: string;
   hasPassword?: boolean;
+  hasCompletedOnboarding?: boolean;
   linkedProviders?: string[];
 }
 
@@ -88,4 +89,9 @@ export const unlinkProviderApi = async (provider: string): Promise<void> => {
 export const getLinkedProvidersApi = async (): Promise<LinkedProvider[]> => {
   const res = await apiClient.get('/api/v1/auth/linked-providers');
   return unwrap(res);
+};
+
+/** Đánh dấu user đã hoàn thành onboarding */
+export const completeOnboardingApi = async (): Promise<void> => {
+  await apiClient.put('/api/v1/users/profile/onboarding/complete');
 };

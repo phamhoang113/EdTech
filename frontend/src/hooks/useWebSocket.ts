@@ -73,9 +73,13 @@ async function initFcmAfterLogin() {
     await registerPushToken(token);
 
     // Lắng nghe foreground messages từ FCM
-    onForegroundMessage(() => {
-      // Khi nhận FCM ở foreground → refresh notification count
+    onForegroundMessage((payload) => {
+      // Khi nhận FCM ở foreground → show OS notification nếu tab không visible
       // (notification list sẽ tự update qua WebSocket)
+      const title = payload.notification?.title || 'Thông báo mới';
+      const body = payload.notification?.body || '';
+      const entityType = payload.data?.entityType;
+      showBrowserNotification(title, body, entityType);
     });
   }
 }

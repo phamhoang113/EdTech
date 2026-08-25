@@ -163,7 +163,8 @@ export const RegisterPage = () => {
         phone: formattedPhone,
         role: tokenRes.role,
         fullName: tokenRes.fullName,
-        avatarBase64: tokenRes.avatarBase64 || undefined
+        avatarBase64: tokenRes.avatarBase64 || undefined,
+        hasCompletedOnboarding: tokenRes.hasCompletedOnboarding ?? false
       }, tokenRes.accessToken, tokenRes.refreshToken);
       
       navigate('/dashboard', { replace: true });
@@ -313,6 +314,17 @@ export const RegisterPage = () => {
               <a href="#terms">Điều khoản sử dụng</a> của chúng tôi.
             </p>
 
+            <p className="register-terms" style={{ marginTop: '4px' }}>
+              <button
+                type="button"
+                className="text-btn"
+                style={{ fontSize: '0.8rem', color: '#6366f1', fontWeight: 500 }}
+                onClick={() => navigate(-1)}
+              >
+                Chọn nhầm vai trò? Quay lại chọn lại
+              </button>
+            </p>
+
             <div className="modal-divider" style={{ margin: '20px 0' }}>
               <span>Hoặc đăng ký bằng</span>
             </div>
@@ -325,7 +337,8 @@ export const RegisterPage = () => {
                   phone: data.email || '',
                   role: data.role,
                   fullName: data.fullName,
-                  avatarBase64: data.avatarBase64 || undefined
+                  avatarBase64: data.avatarBase64 || undefined,
+                  hasCompletedOnboarding: data.hasCompletedOnboarding ?? false
                 }, data.accessToken, data.refreshToken);
                 navigate('/dashboard', { replace: true });
               }}

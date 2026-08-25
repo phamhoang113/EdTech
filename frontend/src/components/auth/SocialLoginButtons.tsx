@@ -7,41 +7,45 @@ import './SocialLoginButtons.css';
 
 type Role = 'PARENT' | 'TUTOR' | 'STUDENT';
 
+/** Từ khoá trong error message khi user chưa có account */
+const NEW_USER_ERROR_KEYWORD = 'chưa đăng ký';
+
 interface SocialLoginButtonsProps {
   mode: 'login' | 'register';
   role?: Role;
   onSuccess: (data: TokenResponse) => void;
   onError: (msg: string) => void;
+  /** Gọi khi user mới chưa có account — cần chọn role trước khi đăng ký */
+  onNeedRole?: (idToken: string, provider: 'google' | 'facebook') => void;
 }
 
-export const SocialLoginButtons = ({ mode, role, onSuccess, onError }: SocialLoginButtonsProps) => {
+export const SocialLoginButtons = ({ mode, role, onSuccess, onError, onNeedRole }: SocialLoginButtonsProps) => {
   const [loadingProvider, setLoadingProvider] = useState<'google' | 'facebook' | null>(null);
 
   const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
+  const getFirebaseIdToken = async (provider: 'google' | 'facebook'): Promise<string | null> => {
+    if (isLocalDev) {
+      const mockEmail = provider === 'google' ? 'testuser@gmail.com' : 'testuser@facebook.com';
+      const email = window.prompt(
+        `[Dev Mode] Nhập email ${provider === 'google' ? 'Google' : 'Facebook'} để test:`,
+        mockEmail
+      );
+      if (!email) return null;
+      const prefix = provider === 'google' ? 'GOOGLE' : 'FACEBOOK';
+      return `MOCK_TOKEN_${prefix}_${email}`;
+    }
+
+    const firebaseProvider = provider === 'google' ? googleProvider : facebookProvider;
+    const result = await signInWithPopup(auth, firebaseProvider);
+    return result.user.getIdToken();
+  };
+
   const handleSocialLogin = async (provider: 'google' | 'facebook') => {
     setLoadingProvider(provider);
     try {
-      let idToken: string;
-
-      if (isLocalDev) {
-        // Bypass Firebase popup cho môi trường local/dev
-        const mockEmail = provider === 'google' ? 'testuser@gmail.com' : 'testuser@facebook.com';
-        const email = window.prompt(
-          `[Dev Mode] Nhập email ${provider === 'google' ? 'Google' : 'Facebook'} để test:`,
-          mockEmail
-        );
-        if (!email) {
-          setLoadingProvider(null);
-          return;
-        }
-        const prefix = provider === 'google' ? 'GOOGLE' : 'FACEBOOK';
-        idToken = `MOCK_TOKEN_${prefix}_${email}`;
-      } else {
-        const firebaseProvider = provider === 'google' ? googleProvider : facebookProvider;
-        const result = await signInWithPopup(auth, firebaseProvider);
-        idToken = await result.user.getIdToken();
-      }
+      const idToken = await getFirebaseIdToken(provider);
+      if (!idToken) return;
 
       const tokenRes = await firebaseAuthApi({
         idToken,
@@ -55,6 +59,20 @@ export const SocialLoginButtons = ({ mode, role, onSuccess, onError }: SocialLog
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         (err as { message?: string })?.message ||
         `Đăng nhập ${provider === 'google' ? 'Google' : 'Facebook'} thất bại.`;
+
+      // User mới chưa có account → cần chọn role để hoàn tất đăng ký
+      const isNewUser = msg.toLowerCase().includes(NEW_USER_ERROR_KEYWORD);
+      if (isNewUser && onNeedRole) {
+        // Lấy idToken lại vì lần đầu đã thất bại do thiếu role
+        try {
+          const freshIdToken = await getFirebaseIdToken(provider);
+          onNeedRole(freshIdToken ?? '', provider);
+        } catch {
+          onNeedRole('', provider);
+        }
+        return;
+      }
+
       onError(msg);
     } finally {
       setLoadingProvider(null);

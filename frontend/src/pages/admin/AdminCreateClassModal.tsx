@@ -1,4 +1,4 @@
-import { X, UserPlus, Phone, Loader2, AlertCircle } from 'lucide-react';
+import { X, UserPlus, Search, Loader2, AlertCircle } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
 import { adminApi } from '../../services/adminApi';
@@ -29,13 +29,21 @@ interface Filters {
 
 export function AdminCreateClassModal({ onClose, onSuccess, showToast }: AdminCreateClassModalProps) {
   useEscapeKey(onClose);
-  // Tabs: search | create
-  const [parentMode, setParentMode] = useState<'search' | 'create'>('search');
+  // Tabs: search | keyword | create
+  const [parentMode, setParentMode] = useState<'search' | 'keyword' | 'create'>('search');
 
-  // Search Parent
+  // Role filter: search across PARENT, STUDENT, or both
+  const [searchRole, setSearchRole] = useState<'ALL' | 'PARENT' | 'STUDENT'>('ALL');
+
+  // Search by phone
   const [phoneSearch, setPhoneSearch] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<AdminUserListItem[]>([]);
+
+  // Search by keyword (name/email)
+  const [keywordSearch, setKeywordSearch] = useState('');
+  const [keywordLoading, setKeywordLoading] = useState(false);
+  const [keywordResults, setKeywordResults] = useState<AdminUserListItem[]>([]);
   const [selectedParent, setSelectedParent] = useState<AdminUserListItem | null>(null);
 
   // Quick Create Parent
@@ -79,20 +87,65 @@ export function AdminCreateClassModal({ onClose, onSuccess, showToast }: AdminCr
   const set = <K extends keyof typeof form>(k: K, v: typeof form[K]) =>
     setForm(f => ({ ...f, [k]: v }));
 
-  // Search Parent Handler
+  // Fetch users by role filter (PARENT, STUDENT, or both)
+  const fetchUsersByRole = async (): Promise<AdminUserListItem[]> => {
+    if (searchRole === 'ALL') {
+      const [parentRes, studentRes] = await Promise.all([
+        adminApi.getUsers('PARENT'),
+        adminApi.getUsers('STUDENT'),
+      ]);
+      return [...parentRes.data, ...studentRes.data];
+    }
+    const res = await adminApi.getUsers(searchRole);
+    return res.data;
+  };
+
+  const getRoleName = (role: string) => {
+    if (role === 'PARENT') return 'Phụ huynh';
+    if (role === 'STUDENT') return 'Học sinh';
+    return role;
+  };
+
+  // Search by phone
   const handleSearchParent = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!phoneSearch.trim()) return;
     setSearchLoading(true);
     try {
-      const res = await adminApi.getUsers('PARENT');
-      const matches = res.data.filter(u => u.phone.includes(phoneSearch.trim()));
+      const allUsers = await fetchUsersByRole();
+      const keyword = phoneSearch.trim().toLowerCase();
+      const matches = allUsers.filter(u =>
+        u.phone?.includes(keyword) ||
+        u.fullName.toLowerCase().includes(keyword) ||
+        (u.email && u.email.toLowerCase().includes(keyword))
+      );
       setSearchResults(matches);
-      if (matches.length === 0) showToast('error', 'Không tìm thấy phụ huynh nào với SĐT này');
+      if (matches.length === 0) showToast('error', 'Không tìm thấy user nào phù hợp');
     } catch {
-      showToast('error', 'Lỗi khi tìm phụ huynh');
+      showToast('error', 'Lỗi khi tìm kiếm');
     } finally {
       setSearchLoading(false);
+    }
+  };
+
+  // Search by keyword (name/email)
+  const handleSearchByKeyword = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const keyword = keywordSearch.trim().toLowerCase();
+    if (!keyword) return;
+    setKeywordLoading(true);
+    try {
+      const allUsers = await fetchUsersByRole();
+      const matches = allUsers.filter(u =>
+        u.fullName.toLowerCase().includes(keyword) ||
+        (u.email && u.email.toLowerCase().includes(keyword))
+      );
+      setKeywordResults(matches);
+      if (matches.length === 0) showToast('error', 'Không tìm thấy user nào phù hợp');
+    } catch {
+      showToast('error', 'Lỗi khi tìm kiếm');
+    } finally {
+      setKeywordLoading(false);
     }
   };
 
@@ -200,13 +253,26 @@ export function AdminCreateClassModal({ onClose, onSuccess, showToast }: AdminCr
 
           {/* Section 0: PARENT */}
           <div className="rcm-section">
-            <div className="rcm-section-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span><span className="rcm-sl-dot"/> 👤 Bắt buộc: Chọn Phụ huynh <span className="rcm-label-req">*</span></span>
-              {selectedParent && (
-                <button onClick={() => setSelectedParent(null)} style={{ fontSize: '0.8rem', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 600 }}>
-                  Hủy chọn
-                </button>
-              )}
+            <div className="rcm-section-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span><span className="rcm-sl-dot"/> 👤 Bắt buộc: Chọn Phụ huynh / Học sinh <span className="rcm-label-req">*</span></span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {!selectedParent && (
+                  <select
+                    value={searchRole}
+                    onChange={e => setSearchRole(e.target.value as 'ALL' | 'PARENT' | 'STUDENT')}
+                    style={{ fontSize: '0.8rem', padding: '4px 8px', borderRadius: 6, border: '1px solid #cbd5e1', background: '#fff', color: '#475569', cursor: 'pointer' }}
+                  >
+                    <option value="ALL">Tất cả role</option>
+                    <option value="PARENT">Phụ huynh</option>
+                    <option value="STUDENT">Học sinh</option>
+                  </select>
+                )}
+                {selectedParent && (
+                  <button onClick={() => setSelectedParent(null)} style={{ fontSize: '0.8rem', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 600 }}>
+                    Hủy chọn
+                  </button>
+                )}
+              </div>
             </div>
 
             {selectedParent ? (
@@ -215,18 +281,21 @@ export function AdminCreateClassModal({ onClose, onSuccess, showToast }: AdminCr
                   {selectedParent.fullName.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <div style={{ fontWeight: 600, color: '#1e293b' }}>{selectedParent.fullName}</div>
-                  <div style={{ fontSize: '0.85rem', color: '#64748b' }}>SĐT: {selectedParent.phone} | Khóa: {selectedParent.isActive?'Không':'Có'}</div>
+                  <div style={{ fontWeight: 600, color: '#1e293b' }}>{selectedParent.fullName} <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: selectedParent.role === 'PARENT' ? 'rgba(99,102,241,0.1)' : 'rgba(16,185,129,0.1)', color: selectedParent.role === 'PARENT' ? '#6366f1' : '#10b981', borderRadius: 8, fontWeight: 600 }}>{getRoleName(selectedParent.role)}</span></div>
+                  <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedParent.phone ? `SĐT: ${selectedParent.phone}` : (selectedParent.email || 'Chưa có SĐT')} | Khóa: {selectedParent.isActive?'Không':'Có'}</div>
                 </div>
               </div>
             ) : (
               <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, border: '1px solid #e2e8f0' }}>
                 <div style={{ display: 'flex', gap: 0, marginBottom: 16, borderBottom: '1px solid #e2e8f0' }}>
-                  <button onClick={() => setParentMode('search')} style={{ flex: 1, padding: '10px 0', border: 'none', background: 'none', fontWeight: 600, cursor: 'pointer', color: parentMode === 'search' ? '#6366f1' : '#64748b', borderBottom: parentMode === 'search' ? '2px solid #6366f1' : '2px solid transparent' }}>
-                    🔍 Tìm bằng SĐT
+                  <button onClick={() => setParentMode('search')} style={{ flex: 1, padding: '10px 0', border: 'none', background: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem', color: parentMode === 'search' ? '#6366f1' : '#64748b', borderBottom: parentMode === 'search' ? '2px solid #6366f1' : '2px solid transparent' }}>
+                    🔍 Tìm bằng SĐT/Tên
                   </button>
-                  <button onClick={() => setParentMode('create')} style={{ flex: 1, padding: '10px 0', border: 'none', background: 'none', fontWeight: 600, cursor: 'pointer', color: parentMode === 'create' ? '#6366f1' : '#64748b', borderBottom: parentMode === 'create' ? '2px solid #6366f1' : '2px solid transparent' }}>
-                    <UserPlus size={16} style={{display:'inline', verticalAlign:'text-bottom', marginRight: 4}}/>Tạo mới Phụ Huynh
+                  <button onClick={() => setParentMode('keyword')} style={{ flex: 1, padding: '10px 0', border: 'none', background: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem', color: parentMode === 'keyword' ? '#6366f1' : '#64748b', borderBottom: parentMode === 'keyword' ? '2px solid #6366f1' : '2px solid transparent' }}>
+                    📧 Tìm theo tên/email
+                  </button>
+                  <button onClick={() => setParentMode('create')} style={{ flex: 1, padding: '10px 0', border: 'none', background: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem', color: parentMode === 'create' ? '#6366f1' : '#64748b', borderBottom: parentMode === 'create' ? '2px solid #6366f1' : '2px solid transparent' }}>
+                    <UserPlus size={14} style={{display:'inline', verticalAlign:'text-bottom', marginRight: 4}}/>Tạo mới PH
                   </button>
                 </div>
 
@@ -234,19 +303,47 @@ export function AdminCreateClassModal({ onClose, onSuccess, showToast }: AdminCr
                   <div>
                     <form onSubmit={handleSearchParent} style={{ display: 'flex', gap: 10 }}>
                       <div style={{ flex: 1, position: 'relative' }}>
-                        <Phone size={16} color="#94a3b8" style={{ position: 'absolute', top: 12, left: 12 }}/>
-                        <input autoFocus placeholder="Nhập SĐT..." value={phoneSearch} onChange={e => setPhoneSearch(e.target.value)} style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: 8, border: '1px solid #cbd5e1' }}/>
+                        <Search size={16} color="#94a3b8" style={{ position: 'absolute', top: 12, left: 12 }}/>
+                        <input autoFocus placeholder="Nhập SĐT, tên hoặc email..." value={phoneSearch} onChange={e => setPhoneSearch(e.target.value)} style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: 8, border: '1px solid #cbd5e1' }}/>
                       </div>
                       <button type="submit" disabled={searchLoading} style={{ padding: '0 20px', background: '#6366f1', color: '#fff', borderRadius: 8, border: 'none', fontWeight: 600, cursor: 'pointer' }}>
                         {searchLoading ? <Loader2 size={18} className="spin" /> : 'Tìm'}
                       </button>
                     </form>
                     {searchResults.length > 0 && (
-                      <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 150, overflowY: 'auto' }}>
+                      <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 180, overflowY: 'auto' }}>
                         {searchResults.map(u => (
-                          <div key={u.id} onClick={() => setSelectedParent(u)} style={{ padding: 12, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ fontWeight: 600 }}>{u.fullName} {u.isActive?'':'(Bị khóa)'}</span>
-                            <span style={{ color: '#475569' }}>{u.phone}</span>
+                          <div key={u.id} onClick={() => setSelectedParent(u)} style={{ padding: 12, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <div style={{ fontWeight: 600 }}>{u.fullName} {u.isActive?'':'(Bị khóa)'} <span style={{ fontSize: '0.7rem', padding: '1px 6px', background: u.role === 'PARENT' ? 'rgba(99,102,241,0.1)' : 'rgba(16,185,129,0.1)', color: u.role === 'PARENT' ? '#6366f1' : '#10b981', borderRadius: 8, fontWeight: 600 }}>{getRoleName(u.role)}</span></div>
+                              <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 2 }}>{u.phone || u.email || 'Chưa có thông tin'}</div>
+                            </div>
+                            <span style={{ fontSize: '0.75rem', padding: '2px 8px', background: 'rgba(99,102,241,0.1)', color: '#6366f1', borderRadius: 12, fontWeight: 600 }}>Chọn</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : parentMode === 'keyword' ? (
+                  <div>
+                    <form onSubmit={handleSearchByKeyword} style={{ display: 'flex', gap: 10 }}>
+                      <div style={{ flex: 1, position: 'relative' }}>
+                        <Search size={16} color="#94a3b8" style={{ position: 'absolute', top: 12, left: 12 }}/>
+                        <input autoFocus placeholder="Nhập tên hoặc email..." value={keywordSearch} onChange={e => setKeywordSearch(e.target.value)} style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: 8, border: '1px solid #cbd5e1' }}/>
+                      </div>
+                      <button type="submit" disabled={keywordLoading} style={{ padding: '0 20px', background: '#6366f1', color: '#fff', borderRadius: 8, border: 'none', fontWeight: 600, cursor: 'pointer' }}>
+                        {keywordLoading ? <Loader2 size={18} className="spin" /> : 'Tìm'}
+                      </button>
+                    </form>
+                    {keywordResults.length > 0 && (
+                      <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 150, overflowY: 'auto' }}>
+                        {keywordResults.map(u => (
+                          <div key={u.id} onClick={() => setSelectedParent(u)} style={{ padding: 12, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <div style={{ fontWeight: 600 }}>{u.fullName} {u.isActive?'':'(Bị khóa)'} <span style={{ fontSize: '0.7rem', padding: '1px 6px', background: u.role === 'PARENT' ? 'rgba(99,102,241,0.1)' : 'rgba(16,185,129,0.1)', color: u.role === 'PARENT' ? '#6366f1' : '#10b981', borderRadius: 8, fontWeight: 600 }}>{getRoleName(u.role)}</span></div>
+                              <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{u.email || 'Chưa có email'} {u.phone ? `| ${u.phone}` : ''}</div>
+                            </div>
+                            <span style={{ fontSize: '0.75rem', padding: '2px 8px', background: 'rgba(99,102,241,0.1)', color: '#6366f1', borderRadius: 12, fontWeight: 600 }}>Chọn</span>
                           </div>
                         ))}
                       </div>

@@ -2,7 +2,7 @@ import { BookOpen, Award, TrendingUp, Calendar, ChevronRight, Clock, Users, X, S
 import { useState, useEffect } from 'react';
 import { getDisplayStatus } from '../../utils/sessionStatus';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 
 import { RequestClassModal } from '../../components/parent/RequestClassModal';
@@ -254,6 +254,16 @@ export const ParentDashboard = () => {
       setUpcomingSessions(upcoming);
     }).catch(() => {});
   }, [classesKey]);
+
+  // Auto-open "Mở lớp" modal nếu đến từ onboarding flow
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get('openCreateClass') === 'true') {
+      setShowRequestClass(true);
+      searchParams.delete('openCreateClass');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const dataLoaded = studentsCount !== null && hasTutor !== null;
   const hasLinkedStudent = (studentsCount ?? 0) > 0;

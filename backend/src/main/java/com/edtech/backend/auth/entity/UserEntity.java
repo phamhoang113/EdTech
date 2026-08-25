@@ -89,6 +89,10 @@ public class UserEntity extends BaseEntity {
     @Builder.Default
     private Boolean mustChangePassword = false;
 
+    @Column(name = "has_completed_onboarding", nullable = false)
+    @Builder.Default
+    private Boolean hasCompletedOnboarding = false;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "auth_provider", nullable = false, length = 20)
     @Builder.Default

@@ -8,6 +8,7 @@ export interface User {
   fullName: string;
   avatarBase64?: string;
   mustChangePassword?: boolean;
+  hasCompletedOnboarding?: boolean;
 }
 
 interface AuthState {

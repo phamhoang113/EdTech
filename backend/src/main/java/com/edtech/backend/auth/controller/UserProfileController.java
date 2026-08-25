@@ -41,4 +41,11 @@ public class UserProfileController {
         UserProfileResponse response = userProfileService.updateMyProfile(username, request);
         return ApiResponse.ok(response);
     }
+
+    @PutMapping("/onboarding/complete")
+    public ApiResponse<Void> completeOnboarding(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        userProfileService.completeOnboarding(userDetails.getUsername());
+        return ApiResponse.ok(null, "Onboarding completed");
+    }
 }

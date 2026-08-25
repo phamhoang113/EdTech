@@ -1,4 +1,4 @@
-import { Search, Lock, Unlock, Trash2, ShieldAlert, X, User, Phone, Mail, Calendar, MapPin, BookOpen, Star, Award, Clock, CheckCircle, XCircle, AlertCircle, MessageSquare } from 'lucide-react';
+import { Search, Lock, Unlock, Trash2, ShieldAlert, X, User, Phone, Mail, Calendar, MapPin, BookOpen, Star, Award, Clock, CheckCircle, XCircle, AlertCircle, MessageSquare, RefreshCw } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -50,7 +50,8 @@ interface UserDetailDrawerProps {
 function UserDetailDrawer({ userId, onClose, onRefresh }: UserDetailDrawerProps) {
   const [detail, setDetail] = useState<AdminUserDetail | null>(null);
   const [loading, setLoading] = useState(false);
-  const [confirm, setConfirm] = useState<'delete' | 'reset' | null>(null);
+  const [confirm, setConfirm] = useState<'delete' | 'reset' | 'role' | null>(null);
+  const [newRole, setNewRole] = useState<UserRole | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState<string | null>(null);
@@ -102,6 +103,18 @@ function UserDetailDrawer({ userId, onClose, onRefresh }: UserDetailDrawerProps)
       onClose();
     } catch { showToast('Không thể xóa người dùng'); }
     finally { setBusy(false); setConfirm(null); }
+  };
+
+  const handleChangeRole = async () => {
+    if (!detail || !newRole || newRole === detail.role) return;
+    setBusy(true);
+    try {
+      const res = await adminApi.changeUserRole(detail.id, newRole);
+      setDetail(res.data);
+      showToast(`Đã đổi vai trò thành ${ROLE_LABEL[newRole]}`);
+      onRefresh();
+    } catch { showToast('Không thể đổi vai trò'); }
+    finally { setBusy(false); setConfirm(null); setNewRole(null); }
   };
 
   const handleResetPassword = async () => {
@@ -390,12 +403,41 @@ function UserDetailDrawer({ userId, onClose, onRefresh }: UserDetailDrawerProps)
                     </button>
                   </div>
                 </div>
+              ) : confirm === 'role' ? (
+                <div className="admin-drawer__confirm-box" style={{ width: '100%' }}>
+                  <div className="admin-drawer__confirm-title" style={{ color: '#6366f1' }}><RefreshCw size={16}/> Đổi vai trò người dùng</div>
+                  <div className="admin-drawer__confirm-desc">Chọn vai trò mới cho người dùng này:</div>
+                  <select
+                    value={newRole || detail.role}
+                    onChange={e => setNewRole(e.target.value as UserRole)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.88rem', marginBottom: '8px', background: '#fff' }}
+                  >
+                    {(['PARENT', 'STUDENT', 'TUTOR'] as UserRole[]).map(r => (
+                      <option key={r} value={r} disabled={r === detail.role}>
+                        {ROLE_LABEL[r]} {r === detail.role ? '(hiện tại)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={handleChangeRole} disabled={busy || !newRole || newRole === detail.role} className="admin-drawer__btn" style={{ background: '#6366f1', color: '#fff', border: 'none' }}>
+                      {busy ? 'Đang xử lý...' : 'Xác nhận đổi'}
+                    </button>
+                    <button onClick={() => { setConfirm(null); setNewRole(null); }} className="admin-drawer__btn admin-drawer__btn--secondary">
+                      Hủy
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <>
                   <button onClick={handleLock} disabled={busy} className={`admin-drawer__btn ${detail.isActive ? 'admin-drawer__btn--lock' : 'admin-drawer__btn--unlock'}`}>
                     {detail.isActive ? <Lock size={15}/> : <Unlock size={15}/>}
                     {detail.isActive ? 'Khóa tài khoản' : 'Mở khóa'}
                   </button>
+                  {detail.role !== 'ADMIN' && (
+                    <button onClick={() => { setConfirm('role'); setNewRole(null); }} className="admin-drawer__btn admin-drawer__btn--secondary">
+                      <RefreshCw size={15}/> Đổi vai trò
+                    </button>
+                  )}
                   <button onClick={() => setConfirm('reset')} className="admin-drawer__btn admin-drawer__btn--secondary">
                     <Lock size={15}/> Cấp mật khẩu
                   </button>

@@ -20,5 +20,6 @@ public class TokenResponse {
     private String authProvider;
     private String email;
     private Boolean hasPassword;
+    private Boolean hasCompletedOnboarding;
     private List<String> linkedProviders;
 }

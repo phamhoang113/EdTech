@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.edtech.backend.admin.dto.AdminUserDetail;
 import com.edtech.backend.admin.dto.AdminUserListItem;
+import com.edtech.backend.admin.dto.ChangeUserRoleRequest;
 import com.edtech.backend.admin.dto.CreateUserAdminRequest;
 import com.edtech.backend.admin.service.AdminUserService;
 import com.edtech.backend.auth.enums.UserRole;
@@ -54,6 +56,14 @@ public class AdminUserController {
     public ApiResponse<Void> lockUser(@PathVariable UUID userId) {
         adminUserService.setUserActive(userId, false);
         return ApiResponse.ok(null, "Đã khóa tài khoản");
+    }
+
+    /** Đổi vai trò người dùng */
+    @PutMapping("/{userId}/role")
+    public ApiResponse<AdminUserDetail> changeUserRole(
+            @PathVariable UUID userId,
+            @Valid @RequestBody ChangeUserRoleRequest request) {
+        return ApiResponse.ok(adminUserService.changeUserRole(userId, request.getRole()), "Đã đổi vai trò thành công");
     }
 
     /** Mở khóa tài khoản user */

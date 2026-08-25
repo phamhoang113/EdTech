@@ -129,6 +129,47 @@ public class AdminUserService {
         userRepository.save(user);
     }
 
+    /** Đổi vai trò người dùng (Admin only, không cho đổi thành ADMIN) */
+    @Transactional
+    public AdminUserDetail changeUserRole(UUID userId, UserRole newRole) {
+        if (newRole == UserRole.ADMIN) {
+            throw new BusinessRuleException("Không thể đổi vai trò thành Admin.");
+        }
+
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        if (user.getRole() == UserRole.ADMIN) {
+            throw new BusinessRuleException("Không thể đổi vai trò của tài khoản Admin.");
+        }
+
+        UserRole oldRole = user.getRole();
+
+        // Nếu đổi từ TUTOR sang role khác → soft-delete TutorProfile
+        if (oldRole == UserRole.TUTOR && newRole != UserRole.TUTOR) {
+            tutorProfileRepository.findByUserId(userId).ifPresent(profile -> {
+                tutorProfileRepository.delete(profile);
+            });
+        }
+
+        // Nếu đổi sang TUTOR → tạo TutorProfile rỗng (nếu chưa có)
+        if (newRole == UserRole.TUTOR && oldRole != UserRole.TUTOR) {
+            boolean profileExists = tutorProfileRepository.findByUserId(userId).isPresent();
+            if (!profileExists) {
+                TutorProfileEntity tutorProfile = TutorProfileEntity.builder()
+                        .userId(userId)
+                        .verificationStatus(VerificationStatus.UNVERIFIED)
+                        .build();
+                tutorProfileRepository.save(tutorProfile);
+            }
+        }
+
+        user.setRole(newRole);
+        userRepository.save(user);
+
+        return getUserDetail(userId);
+    }
+
     /** Xóa mềm user */
     @Transactional
     public void deleteUser(UUID userId) {

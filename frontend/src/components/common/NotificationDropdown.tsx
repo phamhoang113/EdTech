@@ -12,25 +12,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import './NotificationDropdown.css';
 
-const DAILY_RESET_KEY = 'notif_last_reset_date';
-
-/**
- * Kiểm tra xem đã sang ngày mới chưa → nếu rồi thì mark all as read
- */
-async function checkDailyReset() {
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  const lastReset = localStorage.getItem(DAILY_RESET_KEY);
-
-  if (lastReset !== today) {
-    try {
-      await notificationApi.markAllAsRead();
-      localStorage.setItem(DAILY_RESET_KEY, today);
-    } catch {
-      // Nếu lỗi thì bỏ qua, sẽ thử lại lần sau
-    }
-  }
-}
-
 export function NotificationDropdown() {
   const [notifications, setNotifications] = useState<NotificationResponseDTO[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -49,7 +30,7 @@ export function NotificationDropdown() {
   });
 
   useEffect(() => {
-    checkDailyReset().then(() => fetchInitialData());
+    fetchInitialData();
     
     // FCM foreground listener — nhận push notification real-time
     let unsubFcm: (() => void) | null = null;
@@ -123,8 +104,6 @@ export function NotificationDropdown() {
       await notificationApi.markAllAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
-      // Cập nhật daily reset timestamp
-      localStorage.setItem(DAILY_RESET_KEY, new Date().toISOString().slice(0, 10));
     } catch (error) {
       console.error(error);
     }

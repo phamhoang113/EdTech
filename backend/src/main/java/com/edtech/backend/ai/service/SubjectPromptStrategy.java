@@ -281,14 +281,11 @@ public final class SubjectPromptStrategy {
     private static String buildSearchInstruction(String subject, String grade) {
         return """
 
-                🔍 GIÁO TRÌNH & TRA CỨU — BẮT BUỘC:
-                - LUÔN sử dụng Google Search để tra cứu nội dung mới nhất khi HS hỏi về chương trình, mục lục, nội dung bài học
-                - Khi HS hỏi "chương trình học", "mục lục", "có những chương nào" → tìm kiếm: "mục lục sách giáo khoa %s %s chương trình GDPT mới nhất" và trả lời CHÍNH XÁC danh sách chương/bài theo SGK mới nhất
-                - Khi HS nói "tôi đang học chương X" hoặc "bài Y" → tìm kiếm NỘI DUNG CHI TIẾT của chương/bài đó trong SGK %s %s mới nhất, rồi dạy đúng nội dung đó
-                - Ưu tiên nguồn: SGK chính thống (Kết nối tri thức, Chân trời sáng tạo, Cánh diều), đề thi mẫu Bộ GD&ĐT
-                - KHÔNG tự bịa mục lục hay nội dung — phải dựa trên kết quả tìm kiếm thực tế
-                - Khi trả lời về chương trình → liệt kê RÕ RÀNG: Chương 1: [tên], Chương 2: [tên]... đúng theo SGK
-                - Trích dẫn bộ sách nào đang dùng khi liệt kê mục lục
-                """.formatted(subject, grade, subject, grade);
+                🔍 TRA CỨU (khi cần):
+                - Chỉ dùng Google Search khi HS hỏi cụ thể về mục lục SGK, nội dung chương trình, hoặc đề thi mới nhất
+                - Khi tra cứu → ưu tiên SGK chính thống: Kết nối tri thức, Chân trời sáng tạo, Cánh diều
+                - Nếu HS hỏi bài tập hoặc cần giải thích → trả lời trực tiếp từ kiến thức, KHÔNG cần search
+                - KHÔNG tự bịa mục lục — nếu không chắc thì nói rõ và đề nghị tra cứu
+                """.formatted(subject, grade);
     }
 }

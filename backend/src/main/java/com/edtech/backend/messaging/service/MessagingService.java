@@ -205,30 +205,27 @@ public class MessagingService {
 
     private void triggerNewMessageNotification(ConversationEntity conversation, UserEntity sender, MessageResponseDTO message) {
         try {
-            UUID recipientId;
-            boolean toAdmin = false;
-            
             if (sender.getRole() == UserRole.ADMIN) {
-                recipientId = conversation.getUser().getId();
-            } else {
-                // To Admin: We don't have a single admin ID, usually we notify a general topic or all admins.
-                // For simplicity let's rely on the messaging topic `/topic/messages/unread/admin` instead of pushing to `notifications` table for every message sent to Admin inbox.
-                toAdmin = true;
-                recipientId = null; 
-            }
-
-            if (!toAdmin && recipientId != null) {
-                // Normal notification for Non-Admin
+                // Admin gửi → thông báo cho user
                 notificationService.sendNotification(
-                        recipientId,
+                        conversation.getUser().getId(),
                         NotificationType.NEW_MESSAGE,
                         "Tin nhắn mới từ Hỗ trợ",
                         getPreview(message.getContent(), message.getMessageType()),
                         "CONVERSATION",
                         conversation.getId()
                 );
+            } else {
+                // User gửi → thông báo cho tất cả Admin
+                notificationService.sendNotificationToAdmins(
+                        NotificationType.NEW_MESSAGE,
+                        "Tin nhắn mới từ " + sender.getFullName(),
+                        getPreview(message.getContent(), message.getMessageType()),
+                        "CONVERSATION",
+                        conversation.getId()
+                );
             }
-            
+
             // Broadcast badge update
             broadcastUnreadCounts(conversation);
             

@@ -123,6 +123,8 @@ export const aiApi = {
     const token = localStorage.getItem('accessToken');
 
     const url = `${baseUrl}/api/v1/ai/conversations/${conversationId}/messages/stream`;
+    let streamDone = false;
+    let hasReceivedChunks = false;
 
     fetch(url, {
       method: 'POST',
@@ -170,8 +172,10 @@ export const aiApi = {
               const data = trimmed.substring(5).trim();
 
               if (currentEvent === 'chunk' && data) {
+                hasReceivedChunks = true;
                 callbacks.onChunk(data);
               } else if (currentEvent === 'done' && data) {
+                streamDone = true;
                 try {
                   const parsed = JSON.parse(data);
                   callbacks.onDone(parsed.conversationId || conversationId);
@@ -192,14 +196,26 @@ export const aiApi = {
           const remaining = buffer.trim();
           if (remaining.startsWith('data:')) {
             const data = remaining.substring(5).trim();
-            if (data) callbacks.onChunk(data);
+            if (data) {
+              hasReceivedChunks = true;
+              callbacks.onChunk(data);
+            }
           }
+        }
+
+        // Stream reader kết thúc bình thường → gọi onDone nếu chưa nhận
+        if (!streamDone) {
+          callbacks.onDone(conversationId);
         }
       })
       .catch((err) => {
-        if (err.name !== 'AbortError') {
-          callbacks.onError(err.message || 'Có lỗi xảy ra khi kết nối AI.');
+        if (err.name === 'AbortError') return;
+        // Bỏ qua network error nếu đã nhận được nội dung AI
+        if (hasReceivedChunks || streamDone) {
+          callbacks.onDone(conversationId);
+          return;
         }
+        callbacks.onError(err.message || 'Có lỗi xảy ra khi kết nối AI.');
       });
 
     return controller;

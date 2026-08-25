@@ -82,6 +82,13 @@ public class UserProfileService {
                 .build();
     }
 
+    @Transactional
+    public void completeOnboarding(String username) {
+        UserEntity user = findUserByIdentifier(username);
+        user.setHasCompletedOnboarding(true);
+        userRepository.save(user);
+    }
+
     private void updateIfPresent(String value, Consumer<String> setter) {
         if (value != null) {
             setter.accept(value.trim().isEmpty() ? null : value.trim());

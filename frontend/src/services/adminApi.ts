@@ -159,6 +159,12 @@ export const adminApi = {
     return response.data;
   },
 
+  changeUserRole: async (userId: string, role: UserRole): Promise<ApiResponse<AdminUserDetail>> => {
+    const response = await apiClient.put(`/api/v1/admin/users/${userId}/role`, { role });
+    return response.data;
+  },
+
+
 
   // ─── System Settings ─────────────────────────────────────────────────────
   getSettings: async (): Promise<ApiResponse<SystemSettings>> => {

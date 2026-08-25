@@ -1,6 +1,7 @@
 package com.edtech.backend.notification.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.edtech.backend.auth.entity.UserEntity;
+import com.edtech.backend.auth.enums.UserRole;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.core.exception.EdTechException;
 import com.edtech.backend.notification.dto.NotificationResponseDTO;
@@ -110,6 +112,18 @@ public class NotificationService {
 
         // Gửi FCM push notification (chạy async, không block)
         fcmPushService.sendToUser(recipientId, title, body, entityType, entityId);
+    }
+
+    /**
+     * Gửi thông báo đến tất cả Admin
+     */
+    @Transactional
+    public void sendNotificationToAdmins(NotificationType type, String title, String body,
+                                          String entityType, UUID entityId) {
+        List<UserEntity> admins = userRepository.findAllByRoleAndIsDeletedFalse(UserRole.ADMIN);
+        for (UserEntity admin : admins) {
+            sendNotification(admin.getId(), type, title, body, entityType, entityId);
+        }
     }
 
     private UserEntity getUserByUsername(String username) {
