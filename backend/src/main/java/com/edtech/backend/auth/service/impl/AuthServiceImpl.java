@@ -43,6 +43,8 @@ import com.edtech.backend.auth.service.AuthService;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.util.ImageCompressUtil;
 import com.edtech.backend.security.jwt.JwtService;
+import com.edtech.backend.tutor.entity.TutorProfileEntity;
+import com.edtech.backend.tutor.repository.TutorProfileRepository;
 
 @Slf4j
 @Service
@@ -54,6 +56,7 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserDeviceRepository userDeviceRepository;
     private final UserLinkedProviderRepository linkedProviderRepository;
+    private final TutorProfileRepository tutorProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -314,6 +317,11 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(newUser);
         linkProviderToUser(newUser, provider, email, providerUid);
 
+        // Tự tạo TutorProfile nếu đăng ký vai trò Gia sư
+        if (request.getRole() == UserRole.TUTOR) {
+            createDefaultTutorProfile(newUser);
+        }
+
         log.info("OAuth registered new user via [{}]: {}", provider, email);
         return generateTokenResponse(newUser);
     }
@@ -363,11 +371,26 @@ public class AuthServiceImpl implements AuthService {
                 .failedAttempts(0)
                 .build();
         userRepository.save(user);
+
+        // Tự tạo TutorProfile nếu đăng ký vai trò Gia sư
+        if (request.getRole() == UserRole.TUTOR) {
+            createDefaultTutorProfile(user);
+        }
+
         log.info("Firebase Auth successful. Registered new user: {}", phone);
         return generateTokenResponse(user);
     }
 
     // ─────────── Private Helpers ───────────
+
+    /** Tạo TutorProfile mặc định cho user mới đăng ký vai trò Gia sư */
+    private void createDefaultTutorProfile(UserEntity user) {
+        TutorProfileEntity profile = TutorProfileEntity.builder()
+                .userId(user.getId())
+                .build();
+        tutorProfileRepository.save(profile);
+        log.info("Created default TutorProfile for new tutor: {}", user.getFullName());
+    }
 
     /**
      * Decode Firebase idToken, extract provider info.

@@ -24,22 +24,32 @@ interface PageData<T> {
   number: number;
 }
 
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
 export const notificationApi = {
-  getMyNotifications(page = 0, size = 20) {
-    return apiClient.get<PageData<NotificationResponseDTO>>('/api/v1/notifications', {
+  async getMyNotifications(page = 0, size = 20): Promise<ApiResponse<PageData<NotificationResponseDTO>>> {
+    const res = await apiClient.get<ApiResponse<PageData<NotificationResponseDTO>>>('/api/v1/notifications', {
       params: { page, size }
     });
+    return res.data;
   },
 
-  getUnreadCount() {
-    return apiClient.get<UnreadCountDTO>('/api/v1/notifications/unread-count');
+  async getUnreadCount(): Promise<ApiResponse<UnreadCountDTO>> {
+    const res = await apiClient.get<ApiResponse<UnreadCountDTO>>('/api/v1/notifications/unread-count');
+    return res.data;
   },
 
-  markAsRead(id: string) {
-    return apiClient.patch<void>(`/api/v1/notifications/${id}/read`);
+  async markAsRead(id: string): Promise<ApiResponse<void>> {
+    const res = await apiClient.patch<ApiResponse<void>>(`/api/v1/notifications/${id}/read`);
+    return res.data;
   },
 
-  markAllAsRead() {
-    return apiClient.patch<void>('/api/v1/notifications/read-all');
+  async markAllAsRead(): Promise<ApiResponse<void>> {
+    const res = await apiClient.patch<ApiResponse<void>>('/api/v1/notifications/read-all');
+    return res.data;
   }
 };

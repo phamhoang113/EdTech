@@ -1,4 +1,4 @@
-import { Bell, Check, Users, BookOpen, CreditCard, MessageSquare, CalendarCheck, CalendarX } from 'lucide-react';
+import { Bell, BellRing, Check, Users, BookOpen, CreditCard, MessageSquare, CalendarCheck, CalendarX } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,8 +16,28 @@ export function NotificationDropdown() {
   const [notifications, setNotifications] = useState<NotificationResponseDTO[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [pushPermission, setPushPermission] = useState<NotificationPermission>(
+    'Notification' in window ? Notification.permission : 'denied'
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  /** Xin quyền push notification — phải gọi từ user gesture (tap/click) trên mobile */
+  const handleEnablePush = async () => {
+    try {
+      const { requestNotificationPermission } = await import('../../firebase');
+      const { registerPushToken } = await import('../../services/pushNotificationService');
+
+      const token = await requestNotificationPermission();
+      setPushPermission(Notification.permission);
+
+      if (token) {
+        await registerPushToken(token);
+      }
+    } catch (error) {
+      console.error('[Push] Failed to enable:', error);
+    }
+  };
 
   // Connect to STOMP and listen for exact topics
   useWebSocket({
@@ -38,8 +58,8 @@ export function NotificationDropdown() {
       unsubFcm = onForegroundMessage((payload) => {
         // Khi nhận FCM push ở foreground → refresh notification data ngay
         fetchInitialData();
-        // Hiện OS notification nếu tab không focus
-        if (document.visibilityState !== 'visible' && payload.notification) {
+        // Hiện OS notification
+        if (payload.notification) {
           import('../../services/pushNotificationService').then(({ showBrowserNotification }) => {
             showBrowserNotification(
               payload.notification?.title || 'Thông báo mới',
@@ -86,13 +106,9 @@ export function NotificationDropdown() {
         messagingApi.getUnreadCount()
       ]);
 
-      const notifData = (notifRes as any).data;
-      const countData = (countRes as any).data;
-      const msgCountData = (msgCountRes as any).data;
-
-      setNotifications(notifData?.content || []);
-      setUnreadCount(countData?.count || 0);
-      useNotificationStore.getState().setUnreadMessages(msgCountData?.count || 0);
+      setNotifications(notifRes.data?.content || []);
+      setUnreadCount(countRes.data?.count || 0);
+      useNotificationStore.getState().setUnreadMessages(msgCountRes.data?.count || 0);
     } catch (error) {
       console.error('Lỗi khi tải thông báo:', error);
     }
@@ -212,6 +228,13 @@ export function NotificationDropdown() {
 
       {isOpen && (
         <div className="notification-dropdown">
+          {pushPermission !== 'granted' && (
+            <button className="push-enable-banner" onClick={handleEnablePush}>
+              <BellRing size={16} />
+              Bật thông báo đẩy để không bỏ lỡ tin mới
+            </button>
+          )}
+
           <div className="notification-header">
             <h3>Thông báo</h3>
             {unreadCount > 0 && (

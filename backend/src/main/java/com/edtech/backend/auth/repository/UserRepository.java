@@ -41,6 +41,10 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     @Query("SELECT u FROM UserEntity u WHERE u.username = :identifier AND u.role = :role AND u.isDeleted = false")
     Optional<UserEntity> findByIdentifierAndRoleAndIsDeletedFalse(@Param("identifier") String identifier, @Param("role") UserRole role);
 
+    /** Tìm user theo email + role */
+    @Query("SELECT u FROM UserEntity u WHERE u.email = :email AND u.role = :role AND u.isDeleted = false")
+    Optional<UserEntity> findByEmailAndRoleAndIsDeletedFalse(@Param("email") String email, @Param("role") UserRole role);
+
     /** Lấy tất cả user theo role, chưa xóa */
     List<UserEntity> findAllByRoleAndIsDeletedFalse(UserRole role);
 

@@ -182,7 +182,22 @@ public class TutorScheduleController {
         return ResponseEntity.ok(ApiResponse.ok(result, "Đã cập nhật nội dung dạy."));
     }
 
-    // ─── Private helpers ───────────────────────────────────────────
+    // ─── Session Meet Link ─────────────────────────────────────────────
+
+    @PatchMapping("/schedule/sessions/{sessionId}/meet-link")
+    @Operation(summary = "GS set/sửa Google Meet link cho buổi học")
+    public ResponseEntity<ApiResponse<SessionDTO>> updateSessionMeetLink(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID sessionId,
+            @RequestBody Map<String, String> body) {
+
+        UUID tutorId = resolveUserId(userDetails);
+        String meetLink = body.getOrDefault("meetLink", "");
+        SessionDTO result = scheduleService.updateSessionMeetLink(tutorId, sessionId, meetLink);
+        return ResponseEntity.ok(ApiResponse.ok(result, "Đã cập nhật link Meet."));
+    }
+
+    // ─── Private helpers ───────────────────────────────────────────────
 
     private UUID resolveUserId(UserDetails userDetails) {
         UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(userDetails.getUsername())

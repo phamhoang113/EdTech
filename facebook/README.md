@@ -15,6 +15,8 @@
 | 04 | [04_meo_hoc_tap](./04_meo_hoc_tap/) | Mẹo học tập | Content giá trị |
 | 05 | [05_gia_su_noi_bat](./05_gia_su_noi_bat/) | Gia sư nổi bật tuần | Template — cần data thực |
 | 06 | [06_tan_sinh_vien_lam_gia_su](./06_tan_sinh_vien_lam_gia_su/) | Tân sinh viên làm gia sư | Target: Sinh viên + Phụ huynh |
+| 07 | [07_chuan_bi_nam_hoc_moi](./07_chuan_bi_nam_hoc_moi/) | Chuẩn bị năm học mới | Target: Phụ huynh — Seasonal |
+| 08 | [08_loi_ich_su_dung](./08_loi_ich_su_dung/) | Lợi ích khi sử dụng Gia Sư Tinh Hoa | Target: Phụ huynh + Gia sư — Evergreen |
 
 ---
 

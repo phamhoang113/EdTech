@@ -143,6 +143,12 @@ export const parentApi = {
     return res.data;
   },
 
+  /** Tra cứu học sinh theo Email — trả về null nếu chưa có tài khoản */
+  lookupChildByEmail: async (email: string): Promise<ApiResponse<Student | null>> => {
+    const res = await apiClient.get(`/api/v1/parent/students/lookup?email=${encodeURIComponent(email)}`);
+    return res.data;
+  },
+
   /** Cập nhật học sinh cho một lớp */
   updateClassStudents: async (classId: string, studentIds: string[]): Promise<ApiResponse<ParentClass>> => {
     const res = await apiClient.put(`/api/v1/parent/classes/${classId}/students`, studentIds);
@@ -189,6 +195,7 @@ export interface Student {
 
 export interface StudentRequest {
   phone?: string;
+  email?: string;
   fullName: string;
   grade?: string;
   school?: string;

@@ -173,13 +173,15 @@ public class AdminAbsenceService {
             Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             if (principal instanceof UserEntity user) {
                 return user.getId();
-            } else if (principal instanceof String principalStr) {
-                UserEntity u = userRepository.findByPhoneAndIsDeletedFalse(principalStr).orElse(null);
-                if (u != null) return u.getId();
+            }
+            if (principal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
+                return userRepository.findByIdentifierAndIsDeletedFalse(userDetails.getUsername())
+                        .map(UserEntity::getId)
+                        .orElseThrow(() -> new RuntimeException("Admin not found: " + userDetails.getUsername()));
             }
         } catch (Exception e) {
             log.warn("Cannot resolve admin ID from security context: {}", e.getMessage());
         }
-        return UUID.fromString("00000000-0000-0000-0000-000000000001");
+        throw new RuntimeException("Cannot resolve admin ID from security context");
     }
 }

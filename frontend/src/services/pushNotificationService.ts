@@ -36,15 +36,13 @@ export async function unregisterPushToken(): Promise<void> {
 }
 
 /**
- * Hiển thị OS notification bằng Web Notification API (Cấp 1 fallback).
- * Dùng khi tab đang mở nhưng không ở foreground.
+ * Hiển thị OS notification bằng Web Notification API.
+ * Luôn hiện notification khi nhận — dù tab foreground hay background.
+ * Dùng `tag` để tránh trùng lặp notification cùng loại.
  */
 export function showBrowserNotification(title: string, body: string, entityType?: string): void {
   if (!('Notification' in window)) return;
   if (Notification.permission !== 'granted') return;
-
-  // Chỉ hiện khi tab không ở foreground
-  if (document.visibilityState === 'visible') return;
 
   const notification = new Notification(title, {
     body,

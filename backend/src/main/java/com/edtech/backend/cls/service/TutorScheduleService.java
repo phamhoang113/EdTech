@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Collections;
 import java.util.HashMap;
@@ -486,6 +487,26 @@ public class TutorScheduleService {
                     body, "SESSION", session.getId());
         }
 
+        return SessionDTO.fromEntity(session);
+    }
+
+    /**
+     * GS set/sửa Google Meet link cho 1 session (bất kỳ status nào).
+     */
+    @Transactional
+    public SessionDTO updateSessionMeetLink(UUID tutorId, UUID sessionId, String meetLink) {
+        SessionEntity session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new EntityNotFoundException(ERR_SESSION_NOT_FOUND));
+
+        if (!tutorId.equals(session.getCls().getTutorId())) {
+            throw new BusinessRuleException(ERR_NOT_SESSION_TUTOR);
+        }
+
+        session.setMeetLink(meetLink);
+        session.setMeetLinkSetAt(OffsetDateTime.now());
+        session = sessionRepository.save(session);
+
+        log.info("[UPDATE_MEET_LINK] tutorId={}, sessionId={}, link={}", tutorId, sessionId, meetLink);
         return SessionDTO.fromEntity(session);
     }
 

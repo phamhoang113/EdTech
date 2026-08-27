@@ -63,6 +63,9 @@ public class AdminClassListItem {
     Instant createdAt;
     List<UUID> studentIds;
 
+    /** Google Meet link cho lớp ONLINE */
+    String meetLink;
+
     // Suspend Info
     Instant suspendedAt;
     String suspendReason;

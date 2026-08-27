@@ -131,7 +131,8 @@ public class ClassEntity extends BaseEntity {
      */
     @Column(name = "tutor_proposals", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
-    private String tutorProposals;
+    @Builder.Default
+    private String tutorProposals = "[]";
 
     @Column(name = "meet_link", length = 500)
     private String meetLink;

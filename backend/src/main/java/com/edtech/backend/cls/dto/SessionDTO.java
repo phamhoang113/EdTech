@@ -40,6 +40,7 @@ public class SessionDTO {
     private SessionType sessionType;
     private String tutorNote;
     private String address;
+    private String mode;
     private Boolean hasPendingAbsence;
     private Boolean requiresMakeup;
 
@@ -89,6 +90,7 @@ public class SessionDTO {
                 .sessionType(entity.getSessionType())
                 .tutorNote(entity.getTutorNote())
                 .address(entity.getCls() != null ? entity.getCls().getAddress() : null)
+                .mode(entity.getCls() != null && entity.getCls().getMode() != null ? entity.getCls().getMode().name() : null)
                 .requiresMakeup(entity.getRequiresMakeup())
                 .makeupForSessionId(entity.getMakeupForSessionId())
                 .parentFee(pFee)

@@ -38,8 +38,10 @@ public class ParentStudentController {
     private final UserRepository userRepository;
 
     @GetMapping("/lookup")
-    public ResponseEntity<ApiResponse<StudentResponse>> lookupByPhone(@RequestParam String phone) {
-        StudentResponse found = studentService.lookupByPhone(phone);
+    public ResponseEntity<ApiResponse<StudentResponse>> lookupByIdentifier(
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String email) {
+        StudentResponse found = studentService.lookupByIdentifier(phone, email);
         if (found == null) {
             return ResponseEntity.ok(ApiResponse.ok(null, "NOT_FOUND"));
         }

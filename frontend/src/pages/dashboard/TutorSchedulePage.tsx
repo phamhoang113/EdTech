@@ -400,6 +400,59 @@ function CreateDraftModal({ onClose, onSuccess, initialDateStr, initialClassId, 
   );
 }
 
+/* ── Meet Link Editor (GS set meet link per session) ───── */
+function MeetLinkEditor({ sessionId, currentLink, onUpdate }: {
+  sessionId: string;
+  currentLink?: string;
+  onUpdate: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(currentLink ?? '');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await tutorApi.updateSessionMeetLink(sessionId, draft.trim());
+      setEditing(false);
+      onUpdate();
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Lỗi lưu link Meet');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (editing) {
+    return (
+      <div style={{ width: '100%', display: 'flex', gap: 6, alignItems: 'center' }}>
+        <input
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          placeholder="https://meet.google.com/xxx-xxxx-xxx"
+          style={{ flex: 1, padding: '6px 10px', border: '1.5px solid #10b981', borderRadius: 6, fontSize: '0.82rem', outline: 'none' }}
+        />
+        <button className="tsched-time-save-btn" style={{ padding: '4px 10px', fontSize: '0.78rem' }} onClick={handleSave} disabled={saving}>
+          {saving ? '...' : '✓'}
+        </button>
+        <button className="tsched-time-cancel-btn" style={{ padding: '4px 8px', fontSize: '0.78rem' }} onClick={() => { setEditing(false); setDraft(currentLink ?? ''); }}>
+          ✕
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      className="tsched-time-save-btn"
+      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: currentLink ? 'rgba(16,185,129,0.1)' : '#f0fdf4', borderColor: '#10b981', color: '#059669', fontSize: '0.82rem' }}
+      onClick={() => setEditing(true)}
+    >
+      <Video size={13} /> {currentLink ? '✏️ Sửa link Meet' : '+ Thêm link Meet'}
+    </button>
+  );
+}
+
 /* ── Session Detail Popup ────────────────────────────── */
 function SessionDetailPopup({ session, onClose, onEditTime, onDelete, onRequestAbsence, onNoteUpdate }: {
   session: TutorSessionDTO;
@@ -544,6 +597,7 @@ function SessionDetailPopup({ session, onClose, onEditTime, onDelete, onRequestA
                 <Video size={14} /> Vào lớp (Google Meet)
               </a>
             )}
+            <MeetLinkEditor sessionId={session.id} currentLink={session.meetLink} onUpdate={onNoteUpdate} />
             {session.status === 'SCHEDULED' && (
               session.hasPendingAbsence ? (
                 <div style={{ width: '100%', textAlign: 'center', padding: '10px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--color-warning)', fontWeight: 600, fontSize: '0.85rem', border: '1px solid rgba(245, 158, 11, 0.2)' }}>

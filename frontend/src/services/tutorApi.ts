@@ -72,6 +72,7 @@ export interface TutorSessionDTO {
   sessionType: 'REGULAR' | 'MAKEUP' | 'EXTRA';
   tutorNote?: string;
   address?: string;
+  mode?: 'ONLINE' | 'OFFLINE';
   hasPendingAbsence?: boolean;
   requiresMakeup?: boolean;
 }
@@ -224,6 +225,11 @@ export const tutorApi = {
 
   updateSessionNote: async (sessionId: string, note: string): Promise<TutorSessionDTO> => {
     const res = await apiClient.patch<{ data: TutorSessionDTO }>(`/api/v1/tutor/schedule/sessions/${sessionId}/note`, { note });
+    return res.data.data;
+  },
+
+  updateSessionMeetLink: async (sessionId: string, meetLink: string): Promise<TutorSessionDTO> => {
+    const res = await apiClient.patch<{ data: TutorSessionDTO }>(`/api/v1/tutor/schedule/sessions/${sessionId}/meet-link`, { meetLink });
     return res.data.data;
   },
 };

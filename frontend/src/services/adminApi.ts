@@ -280,6 +280,11 @@ export const adminApi = {
     return response.data;
   },
 
+  updateMeetLink: async (classId: string, meetLink: string): Promise<ApiResponse<void>> => {
+    const response = await apiClient.patch(`/api/v1/admin/classes/${classId}/meet-link`, { meetLink });
+    return response.data;
+  },
+
   // ─── Billing ────────────────────────────────────────────────────────────
 
   getBillings: async (status?: string, month?: number, year?: number): Promise<ApiResponse<AdminBillingItem[]>> => {
@@ -445,6 +450,9 @@ export interface AdminClassListItem {
   suspendReason?: string;
   suspendStartDate?: string;
   suspendEndDate?: string;
+
+  /** Google Meet link (lớp ONLINE) */
+  meetLink?: string;
 }
 
 export interface AdminClassScheduleStatsDTO {

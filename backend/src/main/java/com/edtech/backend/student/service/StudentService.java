@@ -9,8 +9,8 @@ import com.edtech.backend.student.dto.StudentResponse;
 
 public interface StudentService {
 
-    /** Tìm học sinh theo SĐT — trả null nếu không tồn tại, error nếu không phải STUDENT role */
-    StudentResponse lookupByPhone(String phone);
+    /** Tìm học sinh theo SĐT hoặc Email — trả null nếu không tồn tại */
+    StudentResponse lookupByIdentifier(String phone, String email);
 
     /** Lấy danh sách con em của phụ huynh */
     List<StudentResponse> getChildrenByParentId(UUID parentId);

@@ -241,6 +241,7 @@ public class AdminClassService {
                 .startDate(request.startDate())
                 .endDate(request.endDate())
                 .status(ClassStatus.PENDING_APPROVAL)
+                .tutorProposals("[]")
                 .isDeleted(false)
                 .build();
 
@@ -288,7 +289,7 @@ public class AdminClassService {
         if (cls.getStatus() == ClassStatus.ACTIVE || cls.getStatus() == ClassStatus.OPEN) {
             cls.setTutorId(null);
             cls.setTutorFee(null);
-            cls.setTutorProposals(null);
+            cls.setTutorProposals("[]");
         }
         classRepository.save(cls);
         log.info("[DELETE_CLASS] classId={}", classId);
@@ -426,10 +427,16 @@ public class AdminClassService {
             if (principal instanceof UserEntity user) {
                 return user.getId();
             }
+            // Security context thường trả về UserDetails (username string)
+            if (principal instanceof org.springframework.security.core.userdetails.UserDetails userDetails) {
+                return userRepository.findByIdentifierAndIsDeletedFalse(userDetails.getUsername())
+                        .map(UserEntity::getId)
+                        .orElseThrow(() -> new RuntimeException("Admin not found: " + userDetails.getUsername()));
+            }
         } catch (Exception e) {
             log.warn("Cannot resolve admin ID from security context: {}", e.getMessage());
         }
-        return UUID.fromString("00000000-0000-0000-0000-000000000001"); // fallback
+        throw new RuntimeException("Cannot resolve admin ID from security context");
     }
 
     private AdminClassListItem buildSingleItem(ClassEntity cls, UserEntity parent, UserEntity tutor,
@@ -467,7 +474,16 @@ public class AdminClassService {
                 .suspendReason(cls.getSuspendReason())
                 .suspendStartDate(cls.getSuspendStartDate())
                 .suspendEndDate(cls.getSuspendEndDate())
+                .meetLink(cls.getMeetLink())
                 .build();
+    }
+
+    @Transactional
+    public void updateMeetLink(UUID classId, String meetLink) {
+        ClassEntity cls = classRepository.findById(classId)
+                .orElseThrow(() -> new EntityNotFoundException(ERR_CLASS_NOT_FOUND));
+        cls.setMeetLink(meetLink);
+        classRepository.save(cls);
     }
 
     // ─── Class Request Approval ────────────────────────────────────────────────

@@ -135,4 +135,13 @@ public class AdminClassController {
         adminClassService.resumeClass(id);
         return ResponseEntity.ok(ApiResponse.ok(null, "Đã kích hoạt lại lớp"));
     }
+
+    /** Admin set/sửa Google Meet link cho lớp ONLINE */
+    @PatchMapping("/{id}/meet-link")
+    public ResponseEntity<ApiResponse<Void>> updateMeetLink(
+            @PathVariable UUID id,
+            @RequestBody Map<String, String> body) {
+        adminClassService.updateMeetLink(id, body.get("meetLink"));
+        return ResponseEntity.ok(ApiResponse.ok(null, "Đã cập nhật link Meet"));
+    }
 }

@@ -1,5 +1,6 @@
 package com.edtech.backend.student.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -8,6 +9,10 @@ public record StudentRequest(
 
         @Pattern(regexp = "^0[0-9]{9,10}$", message = "Số điện thoại không hợp lệ")
         String phone,
+
+        @Email(message = "Email không hợp lệ")
+        @Size(max = 255)
+        String email,
 
         @NotBlank(message = "Tên học sinh không được để trống")
         @Size(max = 150)
@@ -19,3 +24,4 @@ public record StudentRequest(
         @Size(max = 255)
         String school
 ) {}
+

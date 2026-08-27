@@ -202,12 +202,16 @@ export function ParentSchedulePage() {
                               <span style={{fontSize: 14}}>🧑‍🏫</span>
                               <span>{s.tutorName || 'Chưa cập nhật'}</span>
                             </div>
-                            {s.meetLink && s.status !== 'CANCELLED' && (
+                            {s.status !== 'CANCELLED' && s.mode === 'ONLINE' && (
                               <div className="psched-info-item">
-                                <Video size={14} color="#6366f1" />
-                                <a href={s.meetLink} target="_blank" rel="noreferrer" className="psched-link">
-                                  Vào phòng học (Google Meet)
-                                </a>
+                                <Video size={14} color={s.meetLink ? '#6366f1' : '#9ca3af'} />
+                                {s.meetLink ? (
+                                  <a href={s.meetLink} target="_blank" rel="noreferrer" className="psched-link">
+                                    Vào phòng học (Google Meet)
+                                  </a>
+                                ) : (
+                                  <span style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '0.85rem' }}>Chưa có link học</span>
+                                )}
                               </div>
                             )}
                           </div>

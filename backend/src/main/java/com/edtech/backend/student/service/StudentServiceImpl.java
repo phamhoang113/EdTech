@@ -31,7 +31,8 @@ import com.edtech.backend.student.repository.StudentProfileRepository;
 @Transactional(readOnly = true)
 public class StudentServiceImpl implements StudentService {
 
-    private static final String ERROR_NOT_STUDENT_ROLE = "SĐT này không phải tài khoản học sinh.";
+    private static final String ERROR_NOT_STUDENT_ROLE_PHONE = "SĐT này không phải tài khoản học sinh.";
+    private static final String ERROR_NOT_STUDENT_ROLE_EMAIL = "Email này không phải tài khoản học sinh.";
     private static final String ERROR_ALREADY_LINKED   = "Con em này đã được thêm vào danh sách của bạn.";
     private static final String ERROR_STUDENT_NOT_FOUND = "Không tìm thấy thông tin con em.";
     private static final String ERROR_PARENT_NOT_FOUND  = "Không tìm thấy phụ huynh.";
@@ -43,15 +44,34 @@ public class StudentServiceImpl implements StudentService {
     private final BillingRepository billingRepository;
 
     @Override
-    public StudentResponse lookupByPhone(String phone) {
-        Optional<UserEntity> studentUser = userRepository.findByIdentifierAndRoleAndIsDeletedFalse(phone, UserRole.STUDENT);
+    public StudentResponse lookupByIdentifier(String phone, String email) {
+        boolean hasPhone = phone != null && !phone.isBlank();
+        boolean hasEmail = email != null && !email.isBlank();
 
-        if (studentUser.isEmpty()) {
-            assertPhoneNotUsedByOtherRole(phone);
-            return null; // NOT_FOUND — caller xử lý
+        // Ưu tiên tìm theo email trước (vì user đăng ký Gmail có username = email)
+        if (hasEmail) {
+            Optional<UserEntity> byEmail = userRepository.findByEmailAndRoleAndIsDeletedFalse(email, UserRole.STUDENT);
+            if (byEmail.isEmpty()) {
+                // Thử tìm theo username = email (trường hợp đăng ký bằng email, username = email)
+                byEmail = userRepository.findByIdentifierAndRoleAndIsDeletedFalse(email, UserRole.STUDENT);
+            }
+            if (byEmail.isPresent()) {
+                return toBasicResponse(byEmail.get());
+            }
+            assertEmailNotUsedByOtherRole(email);
+            return null;
         }
 
-        return toBasicResponse(studentUser.get());
+        if (hasPhone) {
+            Optional<UserEntity> byPhone = userRepository.findByIdentifierAndRoleAndIsDeletedFalse(phone, UserRole.STUDENT);
+            if (byPhone.isPresent()) {
+                return toBasicResponse(byPhone.get());
+            }
+            assertPhoneNotUsedByOtherRole(phone);
+            return null;
+        }
+
+        return null;
     }
 
     @Override
@@ -65,24 +85,43 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public StudentResponse addChild(StudentRequest request, UUID parentId) {
-        if (request.phone() != null && !request.phone().isBlank()) {
-            return addExistingOrPhoneChild(request, parentId);
+        boolean hasPhone = request.phone() != null && !request.phone().isBlank();
+        boolean hasEmail = request.email() != null && !request.email().isBlank();
+
+        if (hasPhone || hasEmail) {
+            return addExistingChild(request, parentId);
         } else {
             return addNewPhonelessChild(request, parentId);
         }
     }
 
-    private StudentResponse addExistingOrPhoneChild(StudentRequest request, UUID parentId) {
-        Optional<UserEntity> existingStudent = userRepository
-                .findByIdentifierAndRoleAndIsDeletedFalse(request.phone(), UserRole.STUDENT);
+    private StudentResponse addExistingChild(StudentRequest request, UUID parentId) {
+        boolean hasEmail = request.email() != null && !request.email().isBlank();
+        Optional<UserEntity> existingStudent;
 
-        if (existingStudent.isEmpty()) {
-            assertPhoneNotUsedByOtherRole(request.phone());
-            // SĐT chưa có trong hệ thống → yêu cầu HS tự đăng ký
-            throw new BusinessRuleException(
-                    "Không tìm thấy tài khoản học sinh với SĐT này. "
-                  + "Vui lòng yêu cầu học sinh đăng ký tài khoản trên ứng dụng trước, "
-                  + "sau đó quay lại liên kết bằng SĐT.");
+        if (hasEmail) {
+            // Tìm theo email trước
+            existingStudent = userRepository.findByEmailAndRoleAndIsDeletedFalse(request.email(), UserRole.STUDENT);
+            if (existingStudent.isEmpty()) {
+                // Thử username = email (user đăng ký bằng email)
+                existingStudent = userRepository.findByIdentifierAndRoleAndIsDeletedFalse(request.email(), UserRole.STUDENT);
+            }
+            if (existingStudent.isEmpty()) {
+                assertEmailNotUsedByOtherRole(request.email());
+                throw new BusinessRuleException(
+                        "Không tìm thấy tài khoản học sinh với email này. "
+                      + "Vui lòng yêu cầu học sinh đăng ký tài khoản trên ứng dụng trước, "
+                      + "sau đó quay lại liên kết bằng email.");
+            }
+        } else {
+            existingStudent = userRepository.findByIdentifierAndRoleAndIsDeletedFalse(request.phone(), UserRole.STUDENT);
+            if (existingStudent.isEmpty()) {
+                assertPhoneNotUsedByOtherRole(request.phone());
+                throw new BusinessRuleException(
+                        "Không tìm thấy tài khoản học sinh với SĐT này. "
+                      + "Vui lòng yêu cầu học sinh đăng ký tài khoản trên ứng dụng trước, "
+                      + "sau đó quay lại liên kết bằng SĐT.");
+            }
         }
 
         UserEntity studentUser = existingStudent.get();
@@ -221,7 +260,14 @@ public class StudentServiceImpl implements StudentService {
     private void assertPhoneNotUsedByOtherRole(String phone) {
         boolean isUsedByOtherRole = userRepository.findByPhoneAndIsDeletedFalse(phone).isPresent();
         if (isUsedByOtherRole) {
-            throw new BusinessRuleException(ERROR_NOT_STUDENT_ROLE);
+            throw new BusinessRuleException(ERROR_NOT_STUDENT_ROLE_PHONE);
+        }
+    }
+
+    private void assertEmailNotUsedByOtherRole(String email) {
+        boolean isUsedByOtherRole = userRepository.findByEmailAndIsDeletedFalse(email).isPresent();
+        if (isUsedByOtherRole) {
+            throw new BusinessRuleException(ERROR_NOT_STUDENT_ROLE_EMAIL);
         }
     }
 

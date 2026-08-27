@@ -1,4 +1,4 @@
-import { Plus, Pencil, Trash2, X, GraduationCap, School, UserCircle, AlertCircle, Phone, CheckCircle, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, GraduationCap, School, UserCircle, AlertCircle, Phone, CheckCircle, Search, Mail } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
 import { parentApi } from '../../services/parentApi';
@@ -93,9 +93,22 @@ function ChildFormModal({ child, levels, onClose, onSaved }: {
   const setField = <K extends keyof StudentRequest>(k: K, v: StudentRequest[K]) =>
     setForm(f => ({ ...f, [k]: v }));
 
-  /* Auto-lookup khi PH nhập SĐT (chỉ ở mode thêm mới) */
-  const handlePhoneChange = (phone: string) => {
-    setField('phone', phone);
+  /* Helper: detect xem input là email hay SĐT */
+  const isEmailInput = (value: string) => value.includes('@');
+  const isValidPhone = (value: string) => /^0[0-9]{9,10}$/.test(value);
+  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  /* Auto-lookup khi PH nhập SĐT hoặc Email (chỉ ở mode thêm mới) */
+  const handleIdentifierChange = (value: string) => {
+    // Lưu vào field phù hợp
+    if (isEmailInput(value)) {
+      setField('email', value);
+      setField('phone', '');
+    } else {
+      setField('phone', value);
+      setField('email', '');
+    }
+
     if (isEdit) return;
 
     setLookupStatus('idle');
@@ -104,16 +117,18 @@ function ChildFormModal({ child, levels, onClose, onSaved }: {
 
     if (lookupTimer.current) clearTimeout(lookupTimer.current);
 
-    // Khi SĐT đủ định dạng mới lookup
-    if (/^0[0-9]{9,10}$/.test(phone)) {
+    const shouldLookup = isEmailInput(value) ? isValidEmail(value) : isValidPhone(value);
+
+    if (shouldLookup) {
       setLookupStatus('searching');
       lookupTimer.current = setTimeout(async () => {
         try {
-          const res = await parentApi.lookupChildByPhone(phone);
+          const res = isEmailInput(value)
+            ? await parentApi.lookupChildByEmail(value)
+            : await parentApi.lookupChildByPhone(value);
           if (res.message === 'FOUND' && res.data) {
             setLookupStatus('found');
             setLookupName(res.data.fullName);
-            // Auto-fill tên từ tài khoản
             setForm(f => ({ ...f, fullName: res.data!.fullName }));
           } else if (res.message === 'NOT_FOUND') {
             setLookupStatus('not_found');
@@ -121,20 +136,21 @@ function ChildFormModal({ child, levels, onClose, onSaved }: {
         } catch (e: unknown) {
           const err = e as { response?: { data?: { message?: string } } };
           setLookupStatus('error');
-          setLookupError(err?.response?.data?.message ?? 'Không thể kiểm tra SĐT');
+          setLookupError(err?.response?.data?.message ?? 'Không thể kiểm tra');
         }
       }, 600);
     }
   };
 
   const handleSave = async () => {
-    if (!isEdit && hasPhone && (!form.phone || !form.phone.trim())) { setError('Vui lòng nhập số điện thoại học sinh.'); return; }
+    if (!isEdit && hasPhone && (!form.phone || !form.phone.trim()) && (!form.email || !form.email.trim())) { setError('Vui lòng nhập SĐT hoặc Email học sinh.'); return; }
     if (!form.fullName.trim())          { setError('Vui lòng nhập tên học sinh.'); return; }
     setSaving(true); setError('');
     try {
       const payload = { ...form };
       if (!isEdit && !hasPhone) {
-        delete payload.phone; // Không gửi phone
+        delete payload.phone;
+        delete payload.email;
       }
 
       if (isEdit) { 
@@ -195,7 +211,7 @@ function ChildFormModal({ child, levels, onClose, onSaved }: {
           <div>
             <div className="child-modal-icon">{isEdit ? '✏️' : '👶'}</div>
             <h3 className="child-modal-title">{isEdit ? 'Sửa thông tin' : 'Thêm con em'}</h3>
-            <p className="child-modal-subtitle">{isEdit ? 'Cập nhật thông tin học sinh' : 'Nhập SĐT để liên kết tài khoản'}</p>
+            <p className="child-modal-subtitle">{isEdit ? 'Cập nhật thông tin học sinh' : 'Nhập SĐT hoặc Email để liên kết tài khoản'}</p>
           </div>
           <button className="child-modal-close" onClick={onClose}><X size={18}/></button>
         </div>
@@ -210,32 +226,38 @@ function ChildFormModal({ child, levels, onClose, onSaved }: {
             <div className="child-field" style={{ marginBottom: 15 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                 <label className="child-label" style={{ margin: 0 }}>
-                  Số điện thoại học sinh {hasPhone && <span style={{ color: '#ef4444' }}>*</span>}
+                  SĐT hoặc Email học sinh {hasPhone && <span style={{ color: '#ef4444' }}>*</span>}
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer', color: '#4b5563' }}>
                   <input type="checkbox" checked={!hasPhone} onChange={(e) => {
                     setHasPhone(!e.target.checked);
-                    if (e.target.checked) setField('phone', '');
+                    if (e.target.checked) { setField('phone', ''); setField('email', ''); }
                     setLookupStatus('idle'); setLookupError('');
                   }} />
-                  Chưa có SĐT
+                  Chưa có SĐT/Email
                 </label>
               </div>
 
               {hasPhone && (
                 <div style={{ position: 'relative' }}>
-                  <Phone size={14} style={{
-                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                    color: 'var(--color-text-muted, #9ca3af)',
-                  }}/>
+                  {isEmailInput(form.email || form.phone || '') ? (
+                    <Mail size={14} style={{
+                      position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                      color: 'var(--color-text-muted, #9ca3af)',
+                    }}/>
+                  ) : (
+                    <Phone size={14} style={{
+                      position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                      color: 'var(--color-text-muted, #9ca3af)',
+                    }}/>
+                  )}
                   <input
                     className="child-input"
                     style={{ paddingLeft: 34 }}
-                    value={form.phone ?? ''}
-                    onChange={e => handlePhoneChange(e.target.value)}
-                    placeholder="Vd: 0345851204"
+                    value={form.email || form.phone || ''}
+                    onChange={e => handleIdentifierChange(e.target.value)}
+                    placeholder="Vd: 0345851204 hoặc email@gmail.com"
                     autoFocus
-                    maxLength={11}
                   />
                 </div>
               )}
@@ -253,7 +275,10 @@ function ChildFormModal({ child, levels, onClose, onSaved }: {
               )}
               {lookupStatus === 'not_found' && (
                 <div className="child-lookup-badge not-found">
-                  <Plus size={12}/> Chưa có tài khoản — sẽ tạo mới
+                  {isEmailInput(form.email || '') 
+                    ? <><AlertCircle size={12}/> Chưa có tài khoản với email này</>
+                    : <><Plus size={12}/> Chưa có tài khoản — sẽ tạo mới</>
+                  }
                 </div>
               )}
               {lookupStatus === 'error' && (
@@ -394,7 +419,7 @@ export function ChildrenSection() {
           <span className="children-header-icon">👨‍👩‍👧‍👦</span>
           <div>
             <h3 className="children-header-title">Con em của tôi</h3>
-            <p className="children-header-sub">Liên kết qua SĐT — quản lý thông tin học sinh</p>
+            <p className="children-header-sub">Liên kết qua SĐT hoặc Email — quản lý thông tin học sinh</p>
           </div>
         </div>
         <button className="children-add-btn" onClick={() => { setEditChild(null); setShowForm(true); }}>
@@ -411,7 +436,7 @@ export function ChildrenSection() {
         <div className="children-empty">
           <div className="children-empty-icon">👶</div>
           <p className="children-empty-text">Chưa có thông tin con em</p>
-          <p className="children-empty-hint">Nhập SĐT học sinh để liên kết tài khoản</p>
+          <p className="children-empty-hint">Nhập SĐT hoặc Email học sinh để liên kết tài khoản</p>
           <button className="children-add-btn" style={{ marginTop: 12 }}
             onClick={() => { setEditChild(null); setShowForm(true); }}>
             <Plus size={14}/> Thêm ngay

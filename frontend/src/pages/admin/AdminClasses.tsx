@@ -1,4 +1,4 @@
-import { BookOpen, Search, Trash2, ChevronRight, Phone, MapPin, GraduationCap, User, X, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Activity, Calendar, RefreshCw, PauseCircle, PlayCircle } from 'lucide-react';
+import { BookOpen, Search, Trash2, ChevronRight, Phone, MapPin, GraduationCap, User, X, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Activity, Calendar, RefreshCw, PauseCircle, PlayCircle, Video, Copy, ExternalLink } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { AdminCreateClassModal } from './AdminCreateClassModal';
 
@@ -162,6 +162,25 @@ function ClassDetailDrawer({
   const [savingDate, setSavingDate] = useState(false);
   const { toast, show } = useToast();
 
+  /* Meet link state */
+  const [editingMeetLink, setEditingMeetLink] = useState(false);
+  const [meetLinkDraft, setMeetLinkDraft] = useState(cls.meetLink ?? '');
+  const [savingMeetLink, setSavingMeetLink] = useState(false);
+
+  const handleSaveMeetLink = async () => {
+    setSavingMeetLink(true);
+    try {
+      await adminApi.updateMeetLink(cls.id, meetLinkDraft.trim());
+      show('success', 'Đã cập nhật link Meet!');
+      setEditingMeetLink(false);
+      onRefresh();
+    } catch {
+      show('error', 'Lỗi lưu link Meet');
+    } finally {
+      setSavingMeetLink(false);
+    }
+  };
+
   const handleSaveDate = async () => {
     if (!dateDraft) {
       show('error', 'Vui lòng chọn ngày hợp lệ');
@@ -318,6 +337,47 @@ function ClassDetailDrawer({
               <div className="acl-dfield"><span>Buổi/tuần</span><strong>{cls.sessionsPerWeek ?? '—'}</strong></div>
               <div className="acl-dfield"><span>Thời lượng</span><strong>{cls.sessionDurationMin ? `${cls.sessionDurationMin} phút` : '—'}</strong></div>
               {cls.genderRequirement && <div className="acl-dfield"><span>Yêu cầu GS</span><strong>{cls.genderRequirement}</strong></div>}
+
+              {/* Meet Link — chỉ hiển cho lớp ONLINE */}
+              {cls.mode === 'ONLINE' && (
+                <div className="acl-dfield" style={{ gridColumn: '1 / -1', background: 'linear-gradient(135deg, rgba(16,185,129,0.06), rgba(5,150,105,0.06))', padding: '12px 14px', borderRadius: 8, border: '1px solid rgba(16,185,129,0.15)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: '0.82rem', color: '#059669' }}>
+                    <Video size={13}/> Google Meet Link
+                  </span>
+                  {editingMeetLink ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                      <input
+                        value={meetLinkDraft}
+                        onChange={e => setMeetLinkDraft(e.target.value)}
+                        placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                        style={{ flex: 1, padding: '6px 10px', border: '1.5px solid #059669', borderRadius: 6, fontSize: '0.85rem', outline: 'none', color: '#064e3b', fontWeight: 500 }}
+                      />
+                      <button style={{ padding: '6px 14px', fontSize: '0.8rem', background: '#059669', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }} onClick={handleSaveMeetLink} disabled={savingMeetLink}>
+                        {savingMeetLink ? '...' : '✓ Lưu'}
+                      </button>
+                      <button style={{ padding: '6px 12px', fontSize: '0.8rem', background: 'transparent', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }} onClick={() => { setEditingMeetLink(false); setMeetLinkDraft(cls.meetLink ?? ''); }}>Huỷ</button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                      {cls.meetLink ? (
+                        <>
+                          <a href={cls.meetLink} target="_blank" rel="noreferrer" style={{ fontSize: '0.85rem', color: '#059669', fontWeight: 500, textDecoration: 'none', wordBreak: 'break-all' }}>
+                            <ExternalLink size={12} style={{ marginRight: 4 }}/>{cls.meetLink}
+                          </a>
+                          <button style={{ padding: '2px 8px', fontSize: '0.72rem', background: 'rgba(16,185,129,0.1)', color: '#059669', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 4, cursor: 'pointer' }} onClick={() => { navigator.clipboard.writeText(cls.meetLink!); show('success', 'Đã copy link!'); }}>
+                            <Copy size={10}/>
+                          </button>
+                        </>
+                      ) : (
+                        <span style={{ fontSize: '0.85rem', color: '#9ca3af' }}>Chưa có link</span>
+                      )}
+                      <button style={{ padding: '3px 10px', fontSize: '0.75rem', background: 'rgba(16,185,129,0.1)', color: '#059669', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 5, cursor: 'pointer', fontWeight: 600 }} onClick={() => setEditingMeetLink(true)}>
+                        ✏️ {cls.meetLink ? 'Sửa' : 'Thêm link'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </section>
 

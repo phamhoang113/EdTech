@@ -13,6 +13,7 @@ export interface SessionDTO {
   endTime: string;
   meetLink?: string;
   meetLinkSetAt?: string;
+  mode?: 'ONLINE' | 'OFFLINE';
   status: 'DRAFT' | 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'COMPLETED_PENDING' | 'CANCELLED' | 'CANCELLED_BY_TUTOR' | 'CANCELLED_BY_STUDENT' | 'DISPUTED';
   sessionType?: 'REGULAR' | 'MAKEUP' | 'EXTRA';
   tutorNote?: string;
