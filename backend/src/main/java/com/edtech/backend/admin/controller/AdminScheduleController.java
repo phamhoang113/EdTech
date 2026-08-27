@@ -1,6 +1,7 @@
 package com.edtech.backend.admin.controller;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -52,6 +54,17 @@ public class AdminScheduleController {
             @RequestParam SessionStatus status) {
         adminScheduleService.updateStatus(id, status);
         return ResponseEntity.ok(ApiResponse.<String>ok(null, "Cập nhật trạng thái thành công."));
+    }
+
+    @PatchMapping("/{id}/meet-link")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update Google Meet link for a specific session")
+    public ResponseEntity<ApiResponse<String>> updateMeetLink(
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, String> body) {
+        String meetLink = body != null ? body.get("meetLink") : null;
+        adminScheduleService.updateMeetLink(id, meetLink);
+        return ResponseEntity.ok(ApiResponse.<String>ok(null, "Cập nhật link học thành công."));
     }
 
     @GetMapping("/analytics")

@@ -2,6 +2,7 @@ package com.edtech.backend.admin.service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,6 +72,16 @@ public class AdminScheduleService {
         session.setStatus(status);
         sessionRepository.save(session);
         log.info("[ADMIN_SCHEDULE] Status of session {} updated to {}", sessionId, status);
+    }
+
+    @Transactional
+    public void updateMeetLink(UUID sessionId, String meetLink) {
+        SessionEntity session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy buổi học."));
+        session.setMeetLink(meetLink);
+        session.setMeetLinkSetAt(OffsetDateTime.now());
+        sessionRepository.save(session);
+        log.info("[ADMIN_SCHEDULE] Meet link of session {} updated to {}", sessionId, meetLink);
     }
 
     public AdminScheduleAnalyticsDTO getAnalytics(UUID tutorId, String classCode, String tutorName,

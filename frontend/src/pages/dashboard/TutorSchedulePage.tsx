@@ -582,13 +582,21 @@ function SessionDetailPopup({ session, onClose, onEditTime, onDelete, onRequestA
         </div>
 
         {isDraft ? (
-          <div className="tsched-detail-actions">
-            <button className="tsched-detail-edit-btn" onClick={onEditTime}>
-              <Clock size={14} /> Chỉnh giờ
-            </button>
-            <button className="tsched-detail-delete-btn" onClick={onDelete}>
-              <Trash2 size={14} /> Huỷ buổi
-            </button>
+          <div className="tsched-detail-actions" style={{ flexDirection: 'column', gap: '8px' }}>
+            {session.meetLink && (
+              <a href={session.meetLink} target="_blank" rel="noreferrer" className="tsched-time-save-btn" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textDecoration: 'none', background: '#10b981', borderColor: '#10b981' }}>
+                <Video size={14} /> Vào lớp (Google Meet)
+              </a>
+            )}
+            <MeetLinkEditor sessionId={session.id} currentLink={session.meetLink} onUpdate={onNoteUpdate} />
+            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+              <button className="tsched-detail-edit-btn" style={{ flex: 1 }} onClick={onEditTime}>
+                <Clock size={14} /> Chỉnh giờ
+              </button>
+              <button className="tsched-detail-delete-btn" style={{ flex: 1 }} onClick={onDelete}>
+                <Trash2 size={14} /> Huỷ buổi
+              </button>
+            </div>
           </div>
         ) : session.status === 'SCHEDULED' || session.status === 'LIVE' ? (
           <div className="tsched-detail-actions" style={{ flexDirection: 'column', gap: '8px' }}>

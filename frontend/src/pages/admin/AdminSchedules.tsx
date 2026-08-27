@@ -1,4 +1,4 @@
-import { CalendarIcon, AlertCircle, DollarSign, BookOpen, Clock, ChevronLeft, ChevronRight, X, Search } from 'lucide-react';
+import { CalendarIcon, AlertCircle, DollarSign, BookOpen, Clock, ChevronLeft, ChevronRight, X, Search, Video, ExternalLink, Copy, Edit2 } from 'lucide-react';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { getDisplayStatus } from '../../utils/sessionStatus';
 import { adminScheduleApi } from '../../services/adminScheduleApi';
@@ -29,6 +29,11 @@ const AdminSchedules = () => {
   const [loading, setLoading] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+
+  // Meet Link Editor State
+  const [editingMeetLinkId, setEditingMeetLinkId] = useState<string | null>(null);
+  const [meetLinkDraft, setMeetLinkDraft] = useState('');
+  const [savingMeetLink, setSavingMeetLink] = useState(false);
 
   // Filters State
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -202,6 +207,22 @@ const AdminSchedules = () => {
       setTimeout(() => setToast(null), 3000);
     } finally {
       setStatusUpdating(null);
+    }
+  };
+
+  const handleSaveMeetLink = async (sessionId: string) => {
+    try {
+      setSavingMeetLink(true);
+      await adminScheduleApi.updateMeetLink(sessionId, meetLinkDraft.trim());
+      setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, meetLink: meetLinkDraft.trim() || undefined } : s));
+      setToast({ type: 'success', msg: 'Đã cập nhật link học thành công.' });
+      setEditingMeetLinkId(null);
+      setTimeout(() => setToast(null), 3000);
+    } catch (e: any) {
+      setToast({ type: 'error', msg: e?.response?.data?.message || 'Lỗi cập nhật link học' });
+      setTimeout(() => setToast(null), 3000);
+    } finally {
+      setSavingMeetLink(false);
     }
   };
 
@@ -528,6 +549,85 @@ const AdminSchedules = () => {
                                   <h4>Chi tiết</h4>
                                   <p><strong>ID Buổi học:</strong> {s.id}</p>
                                   <p><strong>Ghi chú:</strong> {s.tutorNote || 'Không có'}</p>
+                                  <div style={{ marginTop: 8 }}>
+                                    <strong style={{ fontSize: '0.85rem' }}>Link học (Meet): </strong>
+                                    {editingMeetLinkId === s.id ? (
+                                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}>
+                                        <input
+                                          value={meetLinkDraft}
+                                          onChange={e => setMeetLinkDraft(e.target.value)}
+                                          placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                                          style={{ flex: 1, maxWidth: 360, padding: '5px 10px', border: '1.5px solid #10b981', borderRadius: 6, fontSize: '0.82rem', outline: 'none' }}
+                                          onClick={e => e.stopPropagation()}
+                                        />
+                                        <button
+                                          disabled={savingMeetLink}
+                                          onClick={(e) => { e.stopPropagation(); handleSaveMeetLink(s.id); }}
+                                          style={{ padding: '5px 12px', fontSize: '0.78rem', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}
+                                        >
+                                          {savingMeetLink ? '...' : '✓ Lưu'}
+                                        </button>
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); setEditingMeetLinkId(null); }}
+                                          style={{ padding: '5px 8px', fontSize: '0.78rem', background: 'transparent', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }}
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 2 }}>
+                                        {s.meetLink ? (
+                                          <>
+                                            <a
+                                              href={s.meetLink}
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              onClick={e => e.stopPropagation()}
+                                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#059669', fontWeight: 600, fontSize: '0.82rem', textDecoration: 'none', background: 'rgba(16,185,129,0.08)', padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(16,185,129,0.25)' }}
+                                            >
+                                              <Video size={13} /> Vào lớp Google Meet <ExternalLink size={11} />
+                                            </a>
+                                            <button
+                                              title="Sao chép link"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigator.clipboard.writeText(s.meetLink!);
+                                                setToast({ type: 'success', msg: 'Đã sao chép link học!' });
+                                                setTimeout(() => setToast(null), 2000);
+                                              }}
+                                              style={{ background: '#fff', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer', padding: '3px 8px', fontSize: '0.75rem', color: '#4b5563', display: 'inline-flex', alignItems: 'center', gap: 3 }}
+                                            >
+                                              <Copy size={11} /> Copy
+                                            </button>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setEditingMeetLinkId(s.id);
+                                                setMeetLinkDraft(s.meetLink || '');
+                                              }}
+                                              style={{ background: '#fff', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer', padding: '3px 8px', fontSize: '0.75rem', color: '#6366f1', display: 'inline-flex', alignItems: 'center', gap: 3 }}
+                                            >
+                                              <Edit2 size={11} /> Sửa
+                                            </button>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <span style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '0.82rem' }}>Chưa có link học</span>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setEditingMeetLinkId(s.id);
+                                                setMeetLinkDraft('');
+                                              }}
+                                              style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 6, cursor: 'pointer', padding: '3px 8px', fontSize: '0.75rem', color: '#059669', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 3 }}
+                                            >
+                                              + Thêm link Meet
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                                 <div className="sec-status-change" style={{ marginTop: 12, padding: '12px 16px', background: 'rgba(99,102,241,0.04)', borderRadius: 10, border: '1px solid rgba(99,102,241,0.12)' }}>
                                   <h4 style={{ margin: '0 0 8px', fontSize: '0.85rem', color: '#374151' }}>⚡ Đổi trạng thái</h4>

@@ -44,6 +44,14 @@ export const adminScheduleApi = {
     return res.data;
   },
 
+  /** Cập nhật link học Google Meet cho buổi học */
+  updateMeetLink: async (sessionId: string, meetLink?: string) => {
+    const res = await apiClient.patch<ApiResponse<string>>(`/api/v1/admin/schedules/${sessionId}/meet-link`, {
+      meetLink: meetLink || ''
+    });
+    return res.data;
+  },
+
   /** Lấy thống kê hiệu suất dòng tiền / thiếu buổi */
   getAnalytics: async (startDate: string, endDate: string, tutorId?: string, classCode?: string, tutorName?: string) => {
     const res = await apiClient.get<ApiResponse<AdminScheduleAnalyticsDTO>>('/api/v1/admin/schedules/analytics', {
