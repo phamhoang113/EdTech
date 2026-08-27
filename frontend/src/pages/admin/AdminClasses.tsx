@@ -16,6 +16,14 @@ function fmtVnd(n?: number | null) {
   return n.toLocaleString('vi-VN') + 'đ';
 }
 
+const TUTOR_LEVELS = ['Sinh viên', 'Gia sư Tốt nghiệp', 'Giáo viên'];
+function getDefaultFeeForLevel(level: string): number {
+  const lower = level.toLowerCase();
+  if (lower.includes('sinh viên') || lower.includes('sv')) return 1_600_000;
+  if (lower.includes('giáo viên') || lower.includes('gv')) return 2_800_000;
+  return 2_200_000;
+}
+
 /* ─── Status config ─────────────────────────────────────────────────────── */
 const STATUS_CFG: Record<string, { label: string; cls: string; icon: ReactElement }> = {
   PENDING_APPROVAL: { label: 'Chờ duyệt', cls: 'status-open',      icon: <Clock size={11}/> },
@@ -497,12 +505,13 @@ function ClassDetailDrawer({
                   <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>%</span>
                 </div>
                 {/* Header */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr)', gap: 10, fontSize: '0.78rem', paddingBottom: 8, borderBottom: '1px solid #e5e7eb', marginBottom: 6, fontWeight: 700, color: '#6b7280' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr) 28px', gap: 10, fontSize: '0.78rem', paddingBottom: 8, borderBottom: '1px solid #e5e7eb', marginBottom: 6, fontWeight: 700, color: '#6b7280' }}>
                   <span>Loại GS</span>
                   <span style={{ textAlign: 'right' }}>Lương PH</span>
                   <span style={{ textAlign: 'right' }}>Lương TT set</span>
                   <span style={{ textAlign: 'right' }}>TT giữ</span>
                   <span style={{ textAlign: 'right' }}>Phí nhận lớp</span>
+                  <span></span>
                 </div>
                 {/* Rows */}
                 {feeRowsDraft.map((row, i) => {
@@ -511,9 +520,18 @@ function ClassDetailDrawer({
                   const commission = (ph > 0 && tf > 0) ? ph - tf : 0;
                   const pct = Number(feePctDraft) || 30;
                   const phiNl = Math.round(tf * pct / 100);
+                  const usedLevels = feeRowsDraft.map(r => r.level);
                   return (
-                    <div key={i} style={{ display: 'grid', gridTemplateColumns: 'minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr)', gap: 10, fontSize: '0.85rem', padding: '8px 0', borderBottom: i < feeRowsDraft.length - 1 ? '1px dashed #e5e7eb' : 'none', alignItems: 'center' }}>
-                      <span className="acl-level-tag">{row.level}</span>
+                    <div key={i} style={{ display: 'grid', gridTemplateColumns: 'minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr) 28px', gap: 10, fontSize: '0.85rem', padding: '8px 0', borderBottom: i < feeRowsDraft.length - 1 ? '1px dashed #e5e7eb' : 'none', alignItems: 'center' }}>
+                      <select
+                        value={row.level}
+                        onChange={e => setFeeRowsDraft(prev => prev.map((r, j) => j === i ? { ...r, level: e.target.value } : r))}
+                        style={{ padding: '5px 6px', border: '1.5px solid #d1d5db', borderRadius: 6, fontSize: '0.82rem', outline: 'none', background: '#fff' }}
+                      >
+                        {TUTOR_LEVELS.map(l => (
+                          <option key={l} value={l} disabled={usedLevels.includes(l) && l !== row.level}>{l}</option>
+                        ))}
+                      </select>
                       <input
                         type="number" min={0} step={100000}
                         value={row.parentFee}
@@ -528,11 +546,26 @@ function ClassDetailDrawer({
                       />
                       <span style={{ textAlign: 'right', fontSize: '0.82rem' }}>{commission > 0 ? fmtVnd(commission) : '—'}</span>
                       <span style={{ textAlign: 'right', fontSize: '0.82rem', color: '#db2777' }}>{phiNl > 0 ? fmtVnd(phiNl) : '—'}</span>
+                      <button
+                        onClick={() => setFeeRowsDraft(prev => prev.filter((_, j) => j !== i))}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: 2, fontSize: '1rem', lineHeight: 1 }}
+                        title="Xoá"
+                      >✕</button>
                     </div>
                   );
                 })}
-                {feeRowsDraft.length === 0 && (
-                  <p style={{ color: '#9ca3af', fontSize: '0.85rem', textAlign: 'center', padding: '10px 0' }}>Chưa có mức phí nào. Hãy set phí từ màn Duyệt lớp trước.</p>
+                {/* Thêm loại GS */}
+                {feeRowsDraft.length < TUTOR_LEVELS.length && (
+                  <button
+                    onClick={() => {
+                      const usedLevels = feeRowsDraft.map(r => r.level);
+                      const next = TUTOR_LEVELS.find(l => !usedLevels.includes(l));
+                      if (!next) return;
+                      const defaultFee = getDefaultFeeForLevel(next);
+                      setFeeRowsDraft(prev => [...prev, { level: next, parentFee: String(defaultFee), tutorFee: String(Math.round(defaultFee * 0.7)) }]);
+                    }}
+                    style={{ marginTop: 8, padding: '6px 14px', fontSize: '0.8rem', background: 'rgba(99,102,241,0.08)', color: '#6366f1', border: '1px dashed rgba(99,102,241,0.4)', borderRadius: 6, cursor: 'pointer', fontWeight: 600, width: '100%' }}
+                  >+ Thêm loại gia sư</button>
                 )}
                 {/* Action buttons */}
                 <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'flex-end' }}>
