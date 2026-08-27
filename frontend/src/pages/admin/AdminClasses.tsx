@@ -167,6 +167,43 @@ function ClassDetailDrawer({
   const [meetLinkDraft, setMeetLinkDraft] = useState(cls.meetLink ?? '');
   const [savingMeetLink, setSavingMeetLink] = useState(false);
 
+  /* Fee editing state — chỉ dùng cho lớp OPEN */
+  const [editingFees, setEditingFees] = useState(false);
+  const [savingFees, setSavingFees] = useState(false);
+  const [feePctDraft, setFeePctDraft] = useState(String(cls.feePercentage ?? 30));
+  const [feeRowsDraft, setFeeRowsDraft] = useState<Array<{ level: string; parentFee: string; tutorFee: string }>>(() => {
+    let levels: Array<{ level: string; fee?: number }> = [];
+    let proposals: Array<{ level: string; fee?: number }> = [];
+    try { if (cls.levelFees) { const p = JSON.parse(cls.levelFees); levels = Array.isArray(p) ? p : []; } } catch {}
+    try { if (cls.tutorProposals) { const p = JSON.parse(cls.tutorProposals); proposals = Array.isArray(p) ? p : []; } } catch {}
+    const base = levels.length > 0 ? levels : proposals;
+    return base.map(lv => {
+      const prop = proposals.find(pr => pr.level === lv.level);
+      return {
+        level: lv.level,
+        parentFee: String(lv.fee || 0),
+        tutorFee: String(prop ? (prop.fee || 0) : (lv.fee || 0)),
+      };
+    });
+  });
+
+  const handleSaveFees = async () => {
+    setSavingFees(true);
+    try {
+      const levelFees = JSON.stringify(feeRowsDraft.map(r => ({ level: r.level, fee: Number(r.parentFee) || 0 })));
+      const tutorProposals = JSON.stringify(feeRowsDraft.map(r => ({ level: r.level, fee: Number(r.tutorFee) || 0 })));
+      const feePercentage = Number(feePctDraft) || 30;
+      await adminApi.updateClassFees(cls.id, { levelFees, tutorProposals, feePercentage });
+      show('success', 'Đã lưu học phí!');
+      setEditingFees(false);
+      onRefresh();
+    } catch {
+      show('error', 'Lỗi lưu học phí');
+    } finally {
+      setSavingFees(false);
+    }
+  };
+
   const handleSaveMeetLink = async () => {
     setSavingMeetLink(true);
     try {
@@ -435,10 +472,83 @@ function ClassDetailDrawer({
 
           {/* Fees */}
           <section className="acl-drawer-section">
-            <h3><DollarSign size={13}/> Các mức chi phí</h3>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <DollarSign size={13}/> Các mức chi phí
+              {cls.status === 'OPEN' && !editingFees && (
+                <button
+                  onClick={() => setEditingFees(true)}
+                  style={{ marginLeft: 'auto', padding: '3px 10px', fontSize: '0.75rem', background: 'rgba(99,102,241,0.1)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 5, cursor: 'pointer', fontWeight: 600 }}
+                >✏️ Sửa học phí</button>
+              )}
+            </h3>
 
-            {/* Chưa ACTIVE (OPEN / Chờ PH chọn): hiển thị bảng theo từng level vì chưa xác định phí */}
-            {cls.status !== 'ACTIVE' && (cls.levelFees || cls.tutorProposals) ? (() => {
+            {/* OPEN class — editable mode */}
+            {cls.status === 'OPEN' && editingFees ? (
+              <div className="acl-level-fees-table" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.04), rgba(139,92,246,0.04))', borderRadius: 8, padding: 14, border: '1.5px solid rgba(99,102,241,0.2)', overflowX: 'auto' }}>
+                {/* % phí nhận lớp */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, paddingBottom: 10, borderBottom: '1px solid #e5e7eb' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#4b5563' }}>% phí nhận lớp:</span>
+                  <input
+                    type="number" min={0} max={100} step={5}
+                    value={feePctDraft}
+                    onChange={e => setFeePctDraft(e.target.value)}
+                    style={{ width: 70, padding: '4px 8px', border: '1.5px solid #6366f1', borderRadius: 6, fontSize: '0.85rem', textAlign: 'center', outline: 'none' }}
+                  />
+                  <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>%</span>
+                </div>
+                {/* Header */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr)', gap: 10, fontSize: '0.78rem', paddingBottom: 8, borderBottom: '1px solid #e5e7eb', marginBottom: 6, fontWeight: 700, color: '#6b7280' }}>
+                  <span>Loại GS</span>
+                  <span style={{ textAlign: 'right' }}>Lương PH</span>
+                  <span style={{ textAlign: 'right' }}>Lương TT set</span>
+                  <span style={{ textAlign: 'right' }}>TT giữ</span>
+                  <span style={{ textAlign: 'right' }}>Phí nhận lớp</span>
+                </div>
+                {/* Rows */}
+                {feeRowsDraft.map((row, i) => {
+                  const ph = Number(row.parentFee) || 0;
+                  const tf = Number(row.tutorFee) || 0;
+                  const commission = (ph > 0 && tf > 0) ? ph - tf : 0;
+                  const pct = Number(feePctDraft) || 30;
+                  const phiNl = Math.round(tf * pct / 100);
+                  return (
+                    <div key={i} style={{ display: 'grid', gridTemplateColumns: 'minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(100px, 1.2fr) minmax(80px, 1fr) minmax(100px, 1.2fr)', gap: 10, fontSize: '0.85rem', padding: '8px 0', borderBottom: i < feeRowsDraft.length - 1 ? '1px dashed #e5e7eb' : 'none', alignItems: 'center' }}>
+                      <span className="acl-level-tag">{row.level}</span>
+                      <input
+                        type="number" min={0} step={100000}
+                        value={row.parentFee}
+                        onChange={e => setFeeRowsDraft(prev => prev.map((r, j) => j === i ? { ...r, parentFee: e.target.value } : r))}
+                        style={{ width: '100%', padding: '5px 8px', border: '1.5px solid #d1d5db', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', outline: 'none' }}
+                      />
+                      <input
+                        type="number" min={0} step={100000}
+                        value={row.tutorFee}
+                        onChange={e => setFeeRowsDraft(prev => prev.map((r, j) => j === i ? { ...r, tutorFee: e.target.value } : r))}
+                        style={{ width: '100%', padding: '5px 8px', border: '1.5px solid #10b981', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', outline: 'none', color: '#059669' }}
+                      />
+                      <span style={{ textAlign: 'right', fontSize: '0.82rem' }}>{commission > 0 ? fmtVnd(commission) : '—'}</span>
+                      <span style={{ textAlign: 'right', fontSize: '0.82rem', color: '#db2777' }}>{phiNl > 0 ? fmtVnd(phiNl) : '—'}</span>
+                    </div>
+                  );
+                })}
+                {feeRowsDraft.length === 0 && (
+                  <p style={{ color: '#9ca3af', fontSize: '0.85rem', textAlign: 'center', padding: '10px 0' }}>Chưa có mức phí nào. Hãy set phí từ màn Duyệt lớp trước.</p>
+                )}
+                {/* Action buttons */}
+                <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setEditingFees(false)}
+                    style={{ padding: '6px 14px', fontSize: '0.8rem', background: 'transparent', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }}
+                  >Huỷ</button>
+                  <button
+                    onClick={handleSaveFees}
+                    disabled={savingFees || feeRowsDraft.length === 0}
+                    style={{ padding: '6px 16px', fontSize: '0.8rem', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer', opacity: (savingFees || feeRowsDraft.length === 0) ? 0.6 : 1 }}
+                  >{savingFees ? '...' : '💾 Lưu học phí'}</button>
+                </div>
+              </div>
+            ) : cls.status !== 'ACTIVE' && (cls.levelFees || cls.tutorProposals) ? (() => {
+              /* Chưa ACTIVE (OPEN / Chờ PH chọn) — read-only bảng theo từng level */
               let levels: Array<{ level: string; fee?: number }> = [];
               let proposals: Array<{ level: string; fee?: number }> = [];
               try { 

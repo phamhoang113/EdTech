@@ -122,6 +122,12 @@ export const adminApi = {
     return response.data;
   },
 
+  /** Cập nhật phí (levelFees, tutorProposals, feePercentage) cho lớp OPEN */
+  updateClassFees: async (classId: string, body: { levelFees?: string; tutorProposals?: string; feePercentage?: number }): Promise<ApiResponse<void>> => {
+    const response = await apiClient.patch(`/api/v1/admin/classes/${classId}/fees`, body);
+    return response.data;
+  },
+
   // ─── Users ───────────────────────────────────────────────────────────────
   getUsers: async (role?: UserRole): Promise<ApiResponse<AdminUserListItem[]>> => {
     const params = role ? { role } : {};

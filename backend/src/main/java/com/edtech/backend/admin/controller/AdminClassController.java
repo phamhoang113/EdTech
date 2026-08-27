@@ -23,6 +23,7 @@ import com.edtech.backend.admin.dto.AdminClassScheduleStatsDTO;
 import com.edtech.backend.admin.dto.ApproveClassRequest;
 import com.edtech.backend.admin.dto.CreateClassRequest;
 import com.edtech.backend.admin.dto.SuspendClassRequest;
+import com.edtech.backend.admin.dto.UpdateClassFeesRequest;
 import com.edtech.backend.admin.dto.UpdateLearningStartDateRequest;
 import com.edtech.backend.admin.service.AdminClassService;
 import com.edtech.backend.cls.enums.ClassStatus;
@@ -143,5 +144,14 @@ public class AdminClassController {
             @RequestBody Map<String, String> body) {
         adminClassService.updateMeetLink(id, body.get("meetLink"));
         return ResponseEntity.ok(ApiResponse.ok(null, "Đã cập nhật link Meet"));
+    }
+
+    /** Admin chỉnh sửa phí (levelFees, tutorProposals, feePercentage) cho lớp OPEN */
+    @PatchMapping("/{id}/fees")
+    public ResponseEntity<ApiResponse<Void>> updateClassFees(
+            @PathVariable UUID id,
+            @RequestBody UpdateClassFeesRequest request) {
+        adminClassService.updateClassFees(id, request.levelFees(), request.tutorProposals(), request.feePercentage());
+        return ResponseEntity.ok(ApiResponse.ok(null, "Đã cập nhật học phí"));
     }
 }

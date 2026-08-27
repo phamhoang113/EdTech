@@ -486,6 +486,31 @@ public class AdminClassService {
         classRepository.save(cls);
     }
 
+    /** Cập nhật phí (levelFees, tutorProposals, feePercentage) cho lớp đang OPEN. */
+    @Transactional
+    public void updateClassFees(UUID classId, String levelFees, String tutorProposals, Integer feePercentage) {
+        ClassEntity cls = classRepository.findById(classId)
+                .orElseThrow(() -> new EntityNotFoundException(ERR_CLASS_NOT_FOUND));
+
+        if (cls.getStatus() != ClassStatus.OPEN) {
+            throw new BusinessRuleException("Chỉ được chỉnh sửa phí khi lớp đang ở trạng thái Đang mở (OPEN)");
+        }
+
+        if (levelFees != null && !levelFees.isBlank()) {
+            cls.setLevelFees(levelFees);
+        }
+        if (tutorProposals != null && !tutorProposals.isBlank()) {
+            cls.setTutorProposals(tutorProposals);
+        }
+        if (feePercentage != null && feePercentage > 0) {
+            cls.setFeePercentage(feePercentage);
+        }
+
+        classRepository.save(cls);
+        log.info("[UPDATE_CLASS_FEES] classId={}, levelFees={}, tutorProposals={}, feePercentage={}",
+                classId, levelFees != null, tutorProposals != null, feePercentage);
+    }
+
     // ─── Class Request Approval ────────────────────────────────────────────────
 
     /** Admin duyệt yêu cầu mở lớp từ PH: PENDING_APPROVAL → OPEN.
