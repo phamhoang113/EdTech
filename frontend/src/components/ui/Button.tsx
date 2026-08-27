@@ -22,7 +22,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       .join(' ');
 
     return (
-      <button ref={ref} className={classes} disabled={isLoading || props.disabled} {...props}>
+      <button ref={ref} type={props.type || 'button'} className={classes} disabled={isLoading || props.disabled} {...props}>
         {isLoading && <span className="spinner"></span>}
         <span className="btn-content">{children}</span>
       </button>

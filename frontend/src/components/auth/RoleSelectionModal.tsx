@@ -60,8 +60,8 @@ export const RoleSelectionModal = ({ onClose, onBack }: RoleSelectionModalProps)
 
   const handleConfirm = () => {
     if (!selectedRole) return;
-    onClose();
     navigate(`/register?role=${selectedRole}`);
+    onClose();
   };
 
   const selectedInfo = selectedRole ? roles.find(r => r.key === selectedRole) : null;

@@ -360,7 +360,13 @@ export const LoginModal = ({ onClose, initialMode = 'login' }: LoginModalProps) 
 
                 <Button
                   fullWidth
-                  onClick={() => { if (selectedRole) { onClose(); navigate(`/register?role=${selectedRole}`); } }}
+                  type="button"
+                  onClick={() => {
+                    if (selectedRole) {
+                      navigate(`/register?role=${selectedRole}`);
+                      onClose();
+                    }
+                  }}
                   className="continue-btn"
                 >
                   ✅ Đúng rồi, tiếp tục đăng ký
