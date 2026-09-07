@@ -24,6 +24,41 @@ function getDefaultFeeForLevel(level: string): number {
   return 2_200_000;
 }
 
+/** Tạo text đăng bài cho 1 lớp */
+function generateCopyText(cls: AdminClassListItem): string {
+  let feeStr = 'Thỏa thuận';
+  if ((cls.tutorFee ?? 0) > 0) {
+    feeStr = (cls.tutorFee ?? 0).toLocaleString('vi-VN') + 'đ/tháng';
+  } else {
+    let levels: any[] = [];
+    let proposals: any[] = [];
+    try { if (cls.levelFees) { levels = JSON.parse(cls.levelFees); if (!Array.isArray(levels)) levels = []; } } catch {}
+    try { if (cls.tutorProposals) { proposals = JSON.parse(cls.tutorProposals); if (!Array.isArray(proposals)) proposals = []; } } catch {}
+    const combinedFees = levels.length > 0
+      ? levels.map(lv => { const p = proposals.find((pr: any) => pr.level === lv.level); return { fee: p ? (p.fee || 0) : 0 }; })
+      : proposals.map((p: any) => ({ fee: p.fee || 0 }));
+    const validFees = combinedFees.filter(f => f.fee > 0).map(f => f.fee);
+    if (validFees.length > 0) {
+      const minFee = Math.min(...validFees);
+      const maxFee = Math.max(...validFees);
+      feeStr = minFee === maxFee
+        ? `${minFee.toLocaleString('vi-VN')}đ/tháng`
+        : `${minFee.toLocaleString('vi-VN')}đ - ${maxFee.toLocaleString('vi-VN')}đ/tháng`;
+    }
+  }
+  const modeLabel = cls.mode === 'ONLINE' ? 'Online' : 'Tại nhà';
+  const timeFramePart = cls.timeFrame ? ` (${cls.timeFrame})` : '';
+  return `Mã lớp: ${cls.classCode}
+🔯Dạy: ${cls.title}
+- Hình thức: ${modeLabel}
+- Số học viên: 1hs
+- Số buổi/ tuần: ${cls.sessionsPerWeek ?? '—'}b${timeFramePart}
+- Tgian: ${cls.sessionDurationMin ?? '—'} phút
+- Học phí: ${feeStr}
+- Địa chỉ: ${cls.address || 'Học Online'}
+👉Yêu cầu: ${cls.genderRequirement || 'Không yêu cầu'}`;
+}
+
 /* ─── Status config ─────────────────────────────────────────────────────── */
 const STATUS_CFG: Record<string, { label: string; cls: string; icon: ReactElement }> = {
   PENDING_APPROVAL: { label: 'Chờ duyệt', cls: 'status-open',      icon: <Clock size={11}/> },
@@ -329,54 +364,7 @@ function ClassDetailDrawer({
               {cls.status === 'OPEN' && (
                 <button
                   onClick={() => {
-                    let feeStr = 'Thỏa thuận';
-                    if ((cls.tutorFee ?? 0) > 0) {
-                      feeStr = (cls.tutorFee ?? 0).toLocaleString('vi-VN') + 'đ/tháng';
-                    } else {
-                      let levels: any[] = [];
-                      let proposals: any[] = [];
-                      try { 
-                        if (cls.levelFees) {
-                          const parsed = JSON.parse(cls.levelFees);
-                          levels = Array.isArray(parsed) ? parsed : [];
-                        }
-                      } catch {}
-                      try { 
-                        if (cls.tutorProposals) {
-                          const parsed = JSON.parse(cls.tutorProposals);
-                          proposals = Array.isArray(parsed) ? parsed : [];
-                        }
-                      } catch {}
-                      
-                      const combinedFees = levels.length > 0 ? levels.map(lv => {
-                        const p = proposals.find(pr => pr.level === lv.level);
-                        return { fee: p ? (p.fee || 0) : 0 };
-                      }) : proposals.map(p => ({ fee: p.fee || 0 }));
-                      
-                      const validFees = combinedFees.filter(f => f.fee > 0).map(f => f.fee);
-                      if (validFees.length > 0) {
-                        const minFee = Math.min(...validFees);
-                        const maxFee = Math.max(...validFees);
-                        if (minFee === maxFee) {
-                          feeStr = `${minFee.toLocaleString('vi-VN')}đ/tháng`;
-                        } else {
-                          feeStr = `${minFee.toLocaleString('vi-VN')}đ - ${maxFee.toLocaleString('vi-VN')}đ/tháng`;
-                        }
-                      }
-                    }
-
-                    const modeLabel = cls.mode === 'ONLINE' ? 'Online' : 'Tại nhà';
-                    const timeFramePart = cls.timeFrame ? ` (${cls.timeFrame})` : '';
-                    const text = `Mã lớp: ${cls.classCode}
-🔯Dạy: ${cls.subject.toUpperCase()} LỚP ${cls.grade}
-- Hình thức: ${modeLabel}
-- Số học viên: 1hs
-- Số buổi/ tuần: ${cls.sessionsPerWeek ?? '—'}b${timeFramePart}
-- Tgian: ${cls.sessionDurationMin ?? '—'} phút
-- Học phí: ${feeStr}
-- Địa chỉ: ${cls.address || 'Học Online'}
-👉Yêu cầu: ${cls.genderRequirement || 'Không yêu cầu'}`;
-                    navigator.clipboard.writeText(text);
+                    navigator.clipboard.writeText(generateCopyText(cls));
                     show('success', 'Đã copy tin đăng!');
                   }}
                   style={{ marginLeft: 'auto', padding: '4px 10px', fontSize: '0.8rem', borderRadius: 6, background: 'rgba(99,102,241,0.1)', color: '#6366f1', border: '1px solid currentColor', cursor: 'pointer', fontWeight: 600 }}
@@ -1100,6 +1088,21 @@ export function AdminClasses() {
           <input placeholder="Tìm mã lớp, tên, môn, phụ huynh, gia sư..."
             value={search} onChange={e => setSearch(e.target.value)}/>
         </div>
+        <button
+          onClick={() => {
+            const openClasses = displayed.filter(c => c.status === 'OPEN' || c.status === 'ASSIGNED' || c.status === 'MATCHED');
+            if (openClasses.length === 0) {
+              showToast('error', 'Không có lớp đang mở để copy');
+              return;
+            }
+            const allText = openClasses.map(c => generateCopyText(c)).join('\n\n━━━━━━━━━━━━━━━━━━━━\n\n');
+            navigator.clipboard.writeText(allText);
+            showToast('success', `Đã copy ${openClasses.length} lớp đang mở!`);
+          }}
+          style={{ whiteSpace: 'nowrap', padding: '8px 14px', borderRadius: 8, background: 'rgba(99,102,241,0.1)', color: '#6366f1', border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 6 }}
+        >
+          <Copy size={14}/> Copy tất cả lớp mở
+        </button>
         <div className="acl-tab-bar">
           {STATUS_TABS.map(t => (
             <button key={t} className={`acl-tab ${filter === t ? 'active' : ''}`}

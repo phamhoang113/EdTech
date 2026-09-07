@@ -29,12 +29,15 @@ import com.edtech.backend.cls.enums.ClassStatus;
 import com.edtech.backend.cls.repository.ClassApplicationRepository;
 import com.edtech.backend.cls.repository.ClassRepository;
 import com.edtech.backend.core.exception.EntityNotFoundException;
+import com.edtech.backend.core.service.StorageService;
 import com.edtech.backend.core.util.ImageCompressUtil;
 import com.edtech.backend.notification.entity.NotificationType;
 import com.edtech.backend.notification.service.NotificationService;
 import com.edtech.backend.tutor.entity.TutorProfileEntity;
 import com.edtech.backend.tutor.enums.VerificationStatus;
 import com.edtech.backend.tutor.repository.TutorProfileRepository;
+
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -54,6 +57,7 @@ public class AdminTutorService {
     private final ClassRepository classRepository;
     private final ClassApplicationRepository applicationRepository;
     private final NotificationService notificationService;
+    private final StorageService storageService;
 
     /** Lấy toàn bộ gia sư (kể cả đã xóa mềm) để admin xem */
     public List<AdminTutorListItem> getAllTutors() {
@@ -256,5 +260,24 @@ public class AdminTutorService {
                 .docs(docs)
                 .location(profile.getLocation() != null ? profile.getLocation() : DEFAULT_VALUE)
                 .build();
+    }
+
+    /** Admin cập nhật ảnh bằng cấp cho gia sư */
+    @Transactional
+    public void updateCertificates(UUID userId, MultipartFile[] files) {
+        TutorProfileEntity profile = tutorProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        String.format(ERR_PROFILE_NOT_FOUND, userId)));
+
+        String[] base64Images = new String[files.length];
+        for (int i = 0; i < files.length; i++) {
+            base64Images[i] = storageService.upload(files[i], "tutors/degrees");
+        }
+
+        profile.setCertBase64s(ImageCompressUtil.compressArray(base64Images));
+        tutorProfileRepository.save(profile);
+
+        log.info("Admin updated {} certificate images for tutor userId={}",
+                files.length, userId);
     }
 }

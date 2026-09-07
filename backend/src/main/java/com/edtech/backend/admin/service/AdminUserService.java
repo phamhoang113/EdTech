@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import com.edtech.backend.admin.dto.AdminUserListItem;
 import com.edtech.backend.admin.dto.CreateUserAdminRequest;
 import com.edtech.backend.auth.entity.UserEntity;
 import com.edtech.backend.auth.enums.UserRole;
+import com.edtech.backend.auth.repository.RefreshTokenRepository;
 import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.core.exception.BusinessRuleException;
 import com.edtech.backend.core.util.ImageCompressUtil;
@@ -23,6 +25,7 @@ import com.edtech.backend.tutor.entity.TutorProfileEntity;
 import com.edtech.backend.tutor.enums.VerificationStatus;
 import com.edtech.backend.tutor.repository.TutorProfileRepository;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -31,6 +34,7 @@ public class AdminUserService {
     private final UserRepository userRepository;
     private final TutorProfileRepository tutorProfileRepository;
     private final StudentProfileRepository studentProfileRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final AdminTutorService adminTutorService;
 
@@ -165,7 +169,12 @@ public class AdminUserService {
         }
 
         user.setRole(newRole);
+        user.setHasCompletedOnboarding(false);
         userRepository.save(user);
+
+        // Xóa refresh tokens → buộc user đăng nhập lại với role mới
+        refreshTokenRepository.deleteAllByUserId(userId);
+        log.info("Changed user role: {} → {} for userId={}", oldRole, newRole, userId);
 
         return getUserDetail(userId);
     }

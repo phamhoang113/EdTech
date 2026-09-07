@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './AdminVerification.css';
 import { adminApi } from '../../services/adminApi';
 import type { AdminTutorVerificationResponse, VStatus } from '../../services/adminApi';
@@ -30,6 +30,8 @@ export function AdminVerification() {
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [rateInput, setRateInput] = useState<number>(140000);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const certFileRef = useRef<HTMLInputElement>(null);
+  const [uploadingCert, setUploadingCert] = useState(false);
 
   const showToast = (type: 'success' | 'error', msg: string) => {
     setToast({ type, msg });
@@ -282,6 +284,45 @@ export function AdminVerification() {
                 </div>
               </div>
             )}
+
+            {/* Nút đổi ảnh bằng cấp */}
+            <div style={{ padding: '0 16px 8px', display: 'flex', gap: 8 }}>
+              <input
+                ref={certFileRef}
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ display: 'none' }}
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files || []);
+                  if (files.length === 0) return;
+                  setUploadingCert(true);
+                  try {
+                    await adminApi.updateTutorCertificates(selected.id, files);
+                    showToast('success', `Đã cập nhật ${files.length} ảnh bằng cấp`);
+                    await fetchTutors();
+                  } catch (err: any) {
+                    showToast('error', err?.response?.data?.message ?? 'Cập nhật ảnh thất bại');
+                  } finally {
+                    setUploadingCert(false);
+                    if (certFileRef.current) certFileRef.current.value = '';
+                  }
+                }}
+              />
+              <button
+                onClick={() => certFileRef.current?.click()}
+                disabled={uploadingCert}
+                style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: '0.82rem', fontWeight: 600,
+                  background: 'rgba(99,102,241,0.1)', color: '#6366f1',
+                  border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  opacity: uploadingCert ? 0.6 : 1,
+                }}
+              >
+                📎 {uploadingCert ? 'Đang tải...' : 'Đổi ảnh bằng cấp'}
+              </button>
+            </div>
 
             {/* Giá dạy 1h */}
             <div className="admin-verification__section">

@@ -37,17 +37,11 @@ apiClient.interceptors.response.use(
           return apiClient(original);
         } catch {
           useAuthStore.getState().logout();
-          const currentPath = window.location.pathname;
-          if (currentPath.startsWith('/admin') || currentPath.startsWith('/dashboard')) {
-            window.location.href = '/';
-          }
+          window.location.href = '/';
         }
       } else {
         useAuthStore.getState().logout();
-        const currentPath = window.location.pathname;
-        if (currentPath.startsWith('/admin') || currentPath.startsWith('/dashboard')) {
-          window.location.href = '/';
-        }
+        window.location.href = '/';
       }
     }
     return Promise.reject(error);

@@ -282,8 +282,14 @@ public class AuthServiceImpl implements AuthService {
 
         if (linkedOpt.isPresent()) {
             UserEntity user = linkedOpt.get().getUser();
-            log.info("OAuth login via linked provider [{}] for user: {}", provider, email);
-            return generateTokenResponse(user);
+            if (Boolean.TRUE.equals(user.getIsDeleted())) {
+                // User bị xóa mềm → xóa linked provider orphan, tiếp tục tìm kiếm
+                log.warn("OAuth linked provider found deleted user [{}] for email: {}. Cleaning up.", provider, email);
+                linkedProviderRepository.delete(linkedOpt.get());
+            } else {
+                log.info("OAuth login via linked provider [{}] for user: {}", provider, email);
+                return generateTokenResponse(user);
+            }
         }
 
         // Tìm user có matching email (auto-link nếu chưa linked)

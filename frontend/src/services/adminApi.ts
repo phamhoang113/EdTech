@@ -204,6 +204,16 @@ export const adminApi = {
     return response.data;
   },
 
+  /** Admin cập nhật ảnh bằng cấp cho gia sư */
+  updateTutorCertificates: async (userId: string, files: File[]): Promise<ApiResponse<void>> => {
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file));
+    const response = await apiClient.put(`/api/v1/admin/tutors/${userId}/certificates`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
   // ─── Class Applications ──────────────────────────────────────────────────
 
   getClassApplications: async (status?: string): Promise<ApiResponse<ClassApplicationItem[]>> => {

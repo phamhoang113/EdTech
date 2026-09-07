@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.edtech.backend.admin.dto.AdminTutorListItem;
 import com.edtech.backend.admin.dto.AdminTutorVerificationResponse;
@@ -57,5 +59,14 @@ public class AdminTutorController {
     public ApiResponse<Void> rejectTutor(@PathVariable UUID id) {
         adminTutorService.rejectTutor(id);
         return ApiResponse.ok(null, "Từ chối gia sư thành công");
+    }
+
+    /** Admin cập nhật ảnh bằng cấp cho gia sư */
+    @PutMapping("/api/v1/admin/tutors/{userId}/certificates")
+    public ApiResponse<Void> updateCertificates(
+            @PathVariable UUID userId,
+            @RequestParam("files") MultipartFile[] files) {
+        adminTutorService.updateCertificates(userId, files);
+        return ApiResponse.ok(null, "Cập nhật ảnh bằng cấp thành công");
     }
 }

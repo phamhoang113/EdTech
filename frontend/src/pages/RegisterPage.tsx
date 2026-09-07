@@ -96,7 +96,7 @@ export const RegisterPage = () => {
       // Check trùng SĐT TRƯỚC khi gen OTP → tiết kiệm chi phí SMS
       const phoneExists = await checkPhoneApi(formattedPhone);
       if (phoneExists) {
-        setError('Số điện thoại này đã được đăng ký. Vui lòng đăng nhập hoặc sử dụng số khác.');
+        setError('Số điện thoại này đã được đăng ký. Bạn có thể đăng nhập bằng số này.');
         setIsLoading(false);
         return;
       }
@@ -214,6 +214,17 @@ export const RegisterPage = () => {
             <AlertCircle size={16} />
             <span>{error}</span>
           </div>
+        )}
+
+        {error?.includes('đã được đăng ký') && (
+          <button
+            type="button"
+            className="register-submit-btn"
+            style={{ marginBottom: '12px', background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)' }}
+            onClick={() => navigate('/')}
+          >
+            Đăng nhập ngay →
+          </button>
         )}
 
         {step === 'FORM' ? (
