@@ -1,12 +1,8 @@
-import { BookOpen, GraduationCap, X, Phone, CheckCircle, Activity, UserCheck, Clock, XCircle, Plus, ChevronRight, Calendar, TrendingUp, Award, Sparkles } from 'lucide-react';
+import { BookOpen, GraduationCap, X, Phone, CheckCircle, Activity, UserCheck, Clock, XCircle, Plus, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { studentApi } from '../../services/studentApi';
 import type { ParentClass, TutorApplicant } from '../../services/parentApi';
-import { sessionApi } from '../../services/sessionApi';
-import type { SessionDTO } from '../../services/sessionApi';
-import { getDisplayStatus } from '../../utils/sessionStatus';
 import { StudentRequestClassModal } from '../../components/student/StudentRequestClassModal';
 import { SharedTutorDetailModal } from '../../components/shared/TutorDetailModal';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
@@ -22,19 +18,6 @@ function fmtDate(iso: string | null | undefined) {
   if (!iso) return '—';
   const d = new Date(iso);
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-}
-
-function formatShortCurrency(amount: number) {
-  if (amount === 0) return '0 ₫';
-  if (amount >= 1_000_000) {
-    const m = amount / 1_000_000;
-    return Number.isInteger(m) ? `${m}M` : `${m.toFixed(1)}M`;
-  }
-  if (amount >= 1_000) {
-    const k = amount / 1_000;
-    return Number.isInteger(k) ? `${k}K` : `${k.toFixed(1)}K`;
-  }
-  return amount.toString();
 }
 
 /* ─── Status Badge ───────────────────────────────────────────────────────── */
@@ -62,8 +45,8 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-/* ─── Tutors Modal (xem GS đề xuất cho lớp) ─────────────────────────────── */
-function TutorsModal({ cls, onClose, onSelect }: {
+/* ─── Tutors Modal (xem GS đề xuất) ─────────────────────────────────────── */
+export function TutorsModal({ cls, onClose, onSelect }: {
   cls: ParentClass;
   onClose: () => void;
   onSelect: (appId: string, name: string) => void;
@@ -141,15 +124,19 @@ function TutorsModal({ cls, onClose, onSelect }: {
   );
 }
 
-/* ─── My Classes Panel (giống ParentDashboard) ────────────────────────────── */
-function MyClassesPanel({ classes, loading, onViewTutors }: {
+/* ─── My Classes Panel (Dùng style chuẩn dash-my-class-card giống Parent) ── */
+export function MyClassesPanel({ classes, loading, onViewTutors }: {
   classes: ParentClass[];
   loading: boolean;
   onViewTutors: (cls: ParentClass) => void;
 }) {
   if (loading) return <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Đang tải...</p>;
   if (classes.length === 0) return (
-    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Bạn chưa có lớp nào. Nhấn "Yêu cầu mở lớp" để bắt đầu.</p>
+    <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-text-muted)' }}>
+      <BookOpen size={40} style={{ opacity: 0.25, marginBottom: 12 }}/>
+      <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>Bạn chưa có lớp học nào</h3>
+      <p style={{ fontSize: '0.85rem', marginTop: 6 }}>Nhấn nút "Yêu cầu mở lớp" để gửi yêu cầu tìm gia sư.</p>
+    </div>
   );
 
   return (
@@ -200,15 +187,13 @@ function MyClassesPanel({ classes, loading, onViewTutors }: {
 
 /* ─── Main ───────────────────────────────────────────────────────────────── */
 export const StudentRequestsPage = () => {
-  const { user } = useAuthStore();
-  const navigate = useNavigate();
+  useAuthStore();
   const [classes, setClasses] = useState<ParentClass[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRequestClass, setShowRequestClass] = useState(false);
   const [tutorsModal, setTutorsModal] = useState<ParentClass | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [classesKey, setClassesKey] = useState(0);
-  const [upcomingSessions, setUpcomingSessions] = useState<SessionDTO[]>([]);
 
   useEffect(() => {
     setLoading(true);
@@ -216,17 +201,6 @@ export const StudentRequestsPage = () => {
       .then(res => setClasses(res.data ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
-
-    // Fetch upcoming sessions
-    sessionApi.getSessions().then(res => {
-      const data = Array.isArray(res.data) ? res.data : (res.data as unknown as { data: SessionDTO[] })?.data ?? [];
-      const now = new Date();
-      const upcoming = data
-        .filter(s => getDisplayStatus(s.status, s.sessionDate, s.endTime) === 'SCHEDULED' && new Date(s.sessionDate) >= new Date(now.toDateString()))
-        .sort((a, b) => new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime())
-        .slice(0, 4);
-      setUpcomingSessions(upcoming);
-    }).catch(() => {});
   }, [classesKey]);
 
   const showToast = (type: 'success' | 'error', msg: string) => {
@@ -237,7 +211,7 @@ export const StudentRequestsPage = () => {
   const handleRequestSuccess = () => {
     setShowRequestClass(false);
     setClassesKey(k => k + 1);
-    showToast('success', '✅ Đã gửi yêu cầu mở lớp!');
+    showToast('success', '✅ Đã gửi yêu cầu mở lớp thành công!');
     window.dispatchEvent(new CustomEvent('refresh-notifications'));
   };
 
@@ -252,134 +226,31 @@ export const StudentRequestsPage = () => {
     }
   };
 
-  const name = user?.fullName ?? 'Học sinh';
-  const h = new Date().getHours();
-  const greeting = h < 12 ? 'Chào buổi sáng' : h < 18 ? 'Chào buổi chiều' : 'Chào buổi tối';
-
-  // Stats
-  const activeClasses = classes.filter(c =>
-    ['PENDING_APPROVAL', 'OPEN', 'ASSIGNED', 'MATCHED', 'ACTIVE'].includes(c.status)
-  );
-  const totalFeeRaw = activeClasses.reduce((sum, c) => sum + (c.parentFee || 0), 0);
-  const totalFeeFormatted = formatShortCurrency(totalFeeRaw);
-
   return (
     <>
-      {/* Greeting */}
-      <div className="dash-greeting">
-        <div className="greeting-left">
-          <p className="greeting-hi">{greeting} 👋</p>
-          <h1 className="greeting-name">{name}</h1>
-          <span className="greeting-tag">🎒 Học sinh</span>
+      <div className="dash-section-head" style={{ marginBottom: 20 }}>
+        <div>
+          <h2 className="dash-section-title" style={{ fontSize: '1.4rem' }}>Lớp học của tôi</h2>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: 4 }}>
+            Quản lý các lớp học và yêu cầu tìm kiếm gia sư
+          </p>
         </div>
-        <div className="greeting-emoji" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <button onClick={() => setShowRequestClass(true)} style={{
+        <button
+          onClick={() => setShowRequestClass(true)}
+          style={{
             display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px',
             borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
             color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', fontFamily: 'inherit',
             boxShadow: '0 4px 12px rgba(99,102,241,0.35)',
-          }}>
-            <Plus size={16}/> Yêu cầu mở lớp
-          </button>
-          <span>📚</span>
-        </div>
+          }}
+        >
+          <Plus size={18}/> Yêu cầu mở lớp
+        </button>
       </div>
 
-      {/* Onboarding banner — khi chưa có lớp nào */}
-      {!loading && classes.length === 0 && (
-        <div className="onboard-banners">
-          <div className="onboard-card onboard-tutor" onClick={() => setShowRequestClass(true)}>
-            <div className="onboard-card-glow" />
-            <div className="onboard-icon-wrap"><Sparkles size={26} /></div>
-            <div className="onboard-content">
-              <p className="onboard-step">Bắt đầu ngay</p>
-              <h3 className="onboard-title">Yêu cầu mở lớp</h3>
-              <p className="onboard-desc">Gửi yêu cầu mở lớp để admin xét duyệt và gia sư đăng ký nhận lớp.</p>
-            </div>
-            <div className="onboard-arrow"><ChevronRight size={22} /></div>
-          </div>
-        </div>
-      )}
-
-      {/* Stats */}
-      <section>
-        <div className="dash-stats-grid">
-          {[
-            { val: `${activeClasses.length}`, lbl: 'Lớp đang học',   icon: <BookOpen size={20}/>,    cls: 'color-indigo'  },
-            { val: totalFeeFormatted,          lbl: 'Học phí tháng',  icon: <TrendingUp size={20}/>,  cls: 'color-amber'   },
-            { val: `${upcomingSessions.length}`, lbl: 'Buổi sắp tới', icon: <Calendar size={20}/>,   cls: 'color-violet'  },
-            { val: `${classes.length}`,        lbl: 'Tổng lớp',       icon: <Award size={20}/>,       cls: 'color-emerald' },
-          ].map((s, i) => (
-            <div key={i} className={`dash-stat-card ${s.cls}`}>
-              <div className="stat-icon-box">{s.icon}</div>
-              <div className="stat-info">
-                <span className="stat-val">{s.val}</span>
-                <span className="stat-lbl">{s.lbl}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* My Classes panel */}
       <div className="dash-panel">
-        <div className="dash-section-head">
-          <h2 className="dash-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <BookOpen size={16} className="text-secondary"/> Lớp học của tôi
-          </h2>
-          <button className="dash-see-all" onClick={() => setShowRequestClass(true)}>
-            <Plus size={14}/> Yêu cầu mới
-          </button>
-        </div>
         <MyClassesPanel classes={classes} loading={loading} onViewTutors={setTutorsModal} />
       </div>
-
-      {/* Lịch học sắp tới */}
-      <div className="dash-cols">
-        <div className="dash-panel">
-          <div className="dash-section-head">
-            <span className="dash-section-title">📅 Lịch học sắp tới</span>
-            <button className="dash-see-all" onClick={() => navigate('/student/schedule')}>Xem tất cả <ChevronRight size={14}/></button>
-          </div>
-          <div className="upcoming-list">
-            {upcomingSessions.length === 0 ? (
-              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Không có buổi học nào sắp tới.</p>
-            ) : (
-              upcomingSessions.map(s => (
-                <div key={s.id} className="upcoming-item">
-                  <span className="upcoming-avatar">📚</span>
-                  <div className="upcoming-info">
-                    <p className="upcoming-subj">{s.classTitle}</p>
-                    <p className="upcoming-who">{s.tutorName} · {s.subject}</p>
-                  </div>
-                  <div className="upcoming-time"><Clock size={12}/><span>{s.startTime?.substring(0, 5) ?? '--:--'}</span></div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Quick actions */}
-      <section>
-        <div className="dash-section-head">
-          <span className="dash-section-title">⚡ Thao tác nhanh</span>
-        </div>
-        <div className="dash-qa-grid">
-          {[
-            { emoji: '📋', label: 'Yêu cầu mở lớp', onClick: () => setShowRequestClass(true) },
-            { emoji: '📅', label: 'Lịch học',        onClick: () => navigate('/student/schedule') },
-            { emoji: '📚', label: 'Bài tập & Tài liệu', onClick: () => navigate('/student/teaching') },
-            { emoji: '💳', label: 'Thanh toán',      onClick: () => navigate('/student/payment') },
-          ].map((a, i) => (
-            <button key={i} className="dash-qa-card" onClick={a.onClick}>
-              <span className="qa-emoji">{a.emoji}</span>
-              <span className="qa-label">{a.label}</span>
-              <ChevronRight size={15} className="qa-arr"/>
-            </button>
-          ))}
-        </div>
-      </section>
 
       {/* Toast */}
       {toast && (

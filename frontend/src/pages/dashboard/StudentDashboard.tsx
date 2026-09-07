@@ -1,4 +1,4 @@
-import { BookOpen, Award, Calendar, ChevronRight, Clock, UserPlus, Heart, X, Users } from 'lucide-react';
+import { BookOpen, Award, Calendar, ChevronRight, Clock, UserPlus, Heart, X, Users, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getDisplayStatus } from '../../utils/sessionStatus';
 import { useNavigate } from 'react-router-dom';
@@ -6,7 +6,10 @@ import { useAuthStore } from '../../store/useAuthStore';
 
 import { studentApi } from '../../services/studentApi';
 import type { ParentLinkResponse } from '../../services/studentApi';
+import type { ParentClass } from '../../services/parentApi';
 import type { SessionDTO } from '../../services/sessionApi';
+import { MyClassesPanel, TutorsModal } from './StudentRequestsPage';
+import { StudentRequestClassModal } from '../../components/student/StudentRequestClassModal';
 import './Dashboard.css';
 
 /* ── Helpers ──────────────────────────────────────────── */
@@ -35,7 +38,10 @@ export const StudentDashboard = () => {
   const [showParentInfo, setShowParentInfo] = useState(false);
   const [newParentPhone, setNewParentPhone] = useState('');
   const [sessions, setSessions] = useState<SessionDTO[]>([]);
-  const [classCount, setClassCount] = useState(0);
+  const [classes, setClasses] = useState<ParentClass[]>([]);
+  const [loadingClasses, setLoadingClasses] = useState(true);
+  const [showRequestClass, setShowRequestClass] = useState(false);
+  const [tutorsModal, setTutorsModal] = useState<ParentClass | null>(null);
   const [parentLinkDismissed, setParentLinkDismissed] = useState(
     () => localStorage.getItem(PARENT_LINK_DISMISSED_KEY) === 'true'
   );
@@ -43,17 +49,18 @@ export const StudentDashboard = () => {
   useEffect(() => {
     fetchLinks();
     fetchSessions();
-    // Lấy danh sách lớp trực tiếp (bao gồm OPEN, ASSIGNED — chưa có session)
+    fetchClasses();
+  }, []);
+
+  const fetchClasses = () => {
+    setLoadingClasses(true);
     studentApi.getMyClasses()
       .then(res => {
-        const data = res.data ?? [];
-        const active = data.filter((c: any) =>
-          ['PENDING_APPROVAL', 'OPEN', 'ASSIGNED', 'MATCHED', 'ACTIVE'].includes(c.status)
-        );
-        setClassCount(active.length);
+        setClasses(res.data ?? []);
       })
-      .catch(() => {});
-  }, []);
+      .catch(() => {})
+      .finally(() => setLoadingClasses(false));
+  };
 
   const fetchLinks = async () => {
     try {
@@ -107,6 +114,17 @@ export const StudentDashboard = () => {
     }
   };
 
+  const handleSelectTutor = async (applicationId: string, tutorName: string) => {
+    try {
+      await studentApi.selectTutor(applicationId);
+      alert(`Đã chọn ${tutorName}! Lớp sẽ bắt đầu sớm.`);
+      setTutorsModal(null);
+      fetchClasses();
+    } catch (e: any) {
+      alert(e?.response?.data?.message ?? 'Chọn gia sư thất bại');
+    }
+  };
+
   const name = user?.fullName ?? 'Học sinh';
   const h = new Date().getHours();
   const greeting = h < 12 ? 'Chào buổi sáng' : h < 18 ? 'Chào buổi chiều' : 'Chào buổi tối';
@@ -120,7 +138,10 @@ export const StudentDashboard = () => {
     const ds = getDisplayStatus(s.status, s.sessionDate, s.endTime);
     return ds === 'COMPLETED' || s.status === 'COMPLETED_PENDING';
   });
-  // classCount đã fetch từ API, bao gồm cả lớp chưa có session
+  
+  const activeClasses = classes.filter(c =>
+    ['PENDING_APPROVAL', 'OPEN', 'ASSIGNED', 'MATCHED', 'ACTIVE'].includes(c.status)
+  );
 
   // Has parent link? Used for payment visibility logic
   const hasParentLink = links.some(l => l.linkStatus === 'ACCEPTED');
@@ -197,7 +218,7 @@ export const StudentDashboard = () => {
       <section>
         <div className="dash-stats-grid">
           {[
-            { val: `${classCount}`, lbl: 'Lớp đang học', icon: <BookOpen size={20}/>, cls: 'color-indigo' },
+            { val: `${activeClasses.length}`, lbl: 'Lớp đang học', icon: <BookOpen size={20}/>, cls: 'color-indigo' },
             { val: `${upcomingSessions.length}`, lbl: 'Buổi sắp tới', icon: <Calendar size={20}/>, cls: 'color-violet' },
             { val: `${completedSessions.length}`, lbl: 'Buổi hoàn thành', icon: <Award size={20}/>, cls: 'color-emerald' },
             { val: `${sessions.length}`, lbl: 'Tổng buổi học', icon: <Clock size={20}/>, cls: 'color-amber' },
@@ -212,6 +233,21 @@ export const StudentDashboard = () => {
           ))}
         </div>
       </section>
+
+      {/* My Classes panel — hiển thị cho HS tự quản lý (chưa liên kết PH) giống bên ParentDashboard */}
+      {!hasParentLink && (
+        <div className="dash-panel">
+          <div className="dash-section-head">
+            <h2 className="dash-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <BookOpen size={16} className="text-secondary"/> Lớp học của tôi
+            </h2>
+            <button className="dash-see-all" onClick={() => setShowRequestClass(true)}>
+              <Plus size={14}/> Yêu cầu mới
+            </button>
+          </div>
+          <MyClassesPanel classes={classes} loading={loadingClasses} onViewTutors={setTutorsModal} />
+        </div>
+      )}
 
       {/* Two cols */}
       <div className="dash-cols">
@@ -379,6 +415,27 @@ export const StudentDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal: Request Class */}
+      {showRequestClass && (
+        <StudentRequestClassModal
+          onClose={() => setShowRequestClass(false)}
+          onSuccess={() => {
+            setShowRequestClass(false);
+            fetchClasses();
+            window.dispatchEvent(new CustomEvent('refresh-notifications'));
+          }}
+        />
+      )}
+
+      {/* Modal: View Tutors */}
+      {tutorsModal && (
+        <TutorsModal
+          cls={tutorsModal}
+          onClose={() => setTutorsModal(null)}
+          onSelect={handleSelectTutor}
+        />
       )}
     </>
   );
