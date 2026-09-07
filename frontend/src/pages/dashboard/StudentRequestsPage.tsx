@@ -1,13 +1,18 @@
-import { BookOpen, GraduationCap, X, Phone, CheckCircle, Activity, UserCheck, Clock, XCircle, Plus, ChevronRight } from 'lucide-react';
+import { BookOpen, GraduationCap, X, Phone, CheckCircle, Activity, UserCheck, Clock, XCircle, Plus, ChevronRight, Calendar, TrendingUp, Award, Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { studentApi } from '../../services/studentApi';
 import type { ParentClass, TutorApplicant } from '../../services/parentApi';
+import { sessionApi } from '../../services/sessionApi';
+import type { SessionDTO } from '../../services/sessionApi';
+import { getDisplayStatus } from '../../utils/sessionStatus';
 import { StudentRequestClassModal } from '../../components/student/StudentRequestClassModal';
 import { SharedTutorDetailModal } from '../../components/shared/TutorDetailModal';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import './Dashboard.css';
 
+/* ─── Helpers ────────────────────────────────────────────────────────────── */
 function fmtCurrency(n: number | null | undefined) {
   if (n == null) return '—';
   return n.toLocaleString('vi-VN') + ' ₫';
@@ -19,6 +24,20 @@ function fmtDate(iso: string | null | undefined) {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 }
 
+function formatShortCurrency(amount: number) {
+  if (amount === 0) return '0 ₫';
+  if (amount >= 1_000_000) {
+    const m = amount / 1_000_000;
+    return Number.isInteger(m) ? `${m}M` : `${m.toFixed(1)}M`;
+  }
+  if (amount >= 1_000) {
+    const k = amount / 1_000;
+    return Number.isInteger(k) ? `${k}K` : `${k.toFixed(1)}K`;
+  }
+  return amount.toString();
+}
+
+/* ─── Status Badge ───────────────────────────────────────────────────────── */
 const STATUS_CFG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   PENDING_APPROVAL: { label: 'Chờ duyệt',  color: '#f59e0b', icon: <Clock size={11}/> },
   OPEN:             { label: 'Đang mở',     color: '#6366f1', icon: <BookOpen size={11}/> },
@@ -43,6 +62,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+/* ─── Tutors Modal (xem GS đề xuất cho lớp) ─────────────────────────────── */
 function TutorsModal({ cls, onClose, onSelect }: {
   cls: ParentClass;
   onClose: () => void;
@@ -121,21 +141,92 @@ function TutorsModal({ cls, onClose, onSelect }: {
   );
 }
 
+/* ─── My Classes Panel (giống ParentDashboard) ────────────────────────────── */
+function MyClassesPanel({ classes, loading, onViewTutors }: {
+  classes: ParentClass[];
+  loading: boolean;
+  onViewTutors: (cls: ParentClass) => void;
+}) {
+  if (loading) return <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Đang tải...</p>;
+  if (classes.length === 0) return (
+    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Bạn chưa có lớp nào. Nhấn "Yêu cầu mở lớp" để bắt đầu.</p>
+  );
+
+  return (
+    <div className="people-list" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {classes.map(cls => (
+        <div key={cls.id} className="dash-my-class-card">
+          <div className="dash-my-class-icon">
+            {cls.subject.slice(0, 2).toUpperCase()}
+          </div>
+          <div className="dash-my-class-info">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {cls.title}
+              </div>
+              {cls.classCode && (
+                <span style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 700, background: '#eef2ff', padding: '1px 7px', borderRadius: '10px', flexShrink: 0 }}>
+                  #{cls.classCode}
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: 2, whiteSpace: 'normal', wordBreak: 'break-word' }}>
+              {cls.subject} • {cls.grade}{cls.parentFee > 0 ? ` • ${fmtCurrency(cls.parentFee)}/tháng` : ''} • {fmtDate(cls.createdAt)}
+            </div>
+            {cls.tutorName && (
+              <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: 4, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <GraduationCap size={12}/> Gia sư: {cls.tutorName}
+              </div>
+            )}
+          </div>
+          <div className="dash-my-class-actions">
+            <StatusBadge status={cls.status}/>
+            {(cls.status === 'OPEN' || cls.hasPendingProposals) && (
+              <button onClick={() => onViewTutors(cls)} style={{
+                display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px',
+                borderRadius: 8, border: '1.5px solid rgba(99,102,241,0.3)',
+                background: 'rgba(99,102,241,0.06)', color: '#6366f1',
+                fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              }}>
+                <GraduationCap size={12}/> GS đề xuất
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Main ───────────────────────────────────────────────────────────────── */
 export const StudentRequestsPage = () => {
-  useAuthStore();
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [classes, setClasses] = useState<ParentClass[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRequestClass, setShowRequestClass] = useState(false);
   const [tutorsModal, setTutorsModal] = useState<ParentClass | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [classesKey, setClassesKey] = useState(0);
+  const [upcomingSessions, setUpcomingSessions] = useState<SessionDTO[]>([]);
 
   useEffect(() => {
     setLoading(true);
-    studentApi.getMyClasses().then(res => {
-      setClasses(res.data ?? []);
-    }).catch(() => {})
-    .finally(() => setLoading(false));
+    studentApi.getMyClasses()
+      .then(res => setClasses(res.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+
+    // Fetch upcoming sessions
+    sessionApi.getSessions().then(res => {
+      const data = Array.isArray(res.data) ? res.data : (res.data as unknown as { data: SessionDTO[] })?.data ?? [];
+      const now = new Date();
+      const upcoming = data
+        .filter(s => getDisplayStatus(s.status, s.sessionDate, s.endTime) === 'SCHEDULED' && new Date(s.sessionDate) >= new Date(now.toDateString()))
+        .sort((a, b) => new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime())
+        .slice(0, 4);
+      setUpcomingSessions(upcoming);
+    }).catch(() => {});
   }, [classesKey]);
 
   const showToast = (type: 'success' | 'error', msg: string) => {
@@ -146,7 +237,8 @@ export const StudentRequestsPage = () => {
   const handleRequestSuccess = () => {
     setShowRequestClass(false);
     setClassesKey(k => k + 1);
-    showToast('success', 'Đã gửi yêu cầu mở lớp!');
+    showToast('success', '✅ Đã gửi yêu cầu mở lớp!');
+    window.dispatchEvent(new CustomEvent('refresh-notifications'));
   };
 
   const handleSelectTutor = async (applicationId: string, tutorName: string) => {
@@ -160,105 +252,157 @@ export const StudentRequestsPage = () => {
     }
   };
 
+  const name = user?.fullName ?? 'Học sinh';
+  const h = new Date().getHours();
+  const greeting = h < 12 ? 'Chào buổi sáng' : h < 18 ? 'Chào buổi chiều' : 'Chào buổi tối';
+
+  // Stats
+  const activeClasses = classes.filter(c =>
+    ['PENDING_APPROVAL', 'OPEN', 'ASSIGNED', 'MATCHED', 'ACTIVE'].includes(c.status)
+  );
+  const totalFeeRaw = activeClasses.reduce((sum, c) => sum + (c.parentFee || 0), 0);
+  const totalFeeFormatted = formatShortCurrency(totalFeeRaw);
+
   return (
     <>
+      {/* Greeting */}
+      <div className="dash-greeting">
+        <div className="greeting-left">
+          <p className="greeting-hi">{greeting} 👋</p>
+          <h1 className="greeting-name">{name}</h1>
+          <span className="greeting-tag">🎒 Học sinh</span>
+        </div>
+        <div className="greeting-emoji" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button onClick={() => setShowRequestClass(true)} style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px',
+            borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+            color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', fontFamily: 'inherit',
+            boxShadow: '0 4px 12px rgba(99,102,241,0.35)',
+          }}>
+            <Plus size={16}/> Yêu cầu mở lớp
+          </button>
+          <span>📚</span>
+        </div>
+      </div>
 
-          <div className="dash-section-head" style={{ marginBottom: 20 }}>
-            <div>
-              <h2 className="dash-section-title" style={{ fontSize: '1.4rem' }}>Yêu cầu học tập</h2>
-              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: 4 }}>
-                Quản lý các yêu cầu mở lớp và tìm kiếm gia sư
-              </p>
+      {/* Onboarding banner — khi chưa có lớp nào */}
+      {!loading && classes.length === 0 && (
+        <div className="onboard-banners">
+          <div className="onboard-card onboard-tutor" onClick={() => setShowRequestClass(true)}>
+            <div className="onboard-card-glow" />
+            <div className="onboard-icon-wrap"><Sparkles size={26} /></div>
+            <div className="onboard-content">
+              <p className="onboard-step">Bắt đầu ngay</p>
+              <h3 className="onboard-title">Yêu cầu mở lớp</h3>
+              <p className="onboard-desc">Gửi yêu cầu mở lớp để admin xét duyệt và gia sư đăng ký nhận lớp.</p>
             </div>
-            <button onClick={() => setShowRequestClass(true)} style={{
-              display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px',
-              borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-              color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', fontFamily: 'inherit',
-              boxShadow: '0 4px 12px rgba(99,102,241,0.35)',
-            }}>
-              <Plus size={18}/> Tạo yêu cầu mới
-            </button>
+            <div className="onboard-arrow"><ChevronRight size={22} /></div>
           </div>
-
-          <div className="dash-panel">
-            {loading ? (
-              <p style={{ color: 'var(--color-text-muted)', padding: 24, textAlign: 'center' }}>Đang tải...</p>
-            ) : classes.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 48, color: 'var(--color-text-muted)' }}>
-                <BookOpen size={48} style={{ opacity: 0.2, marginBottom: 16 }}/>
-                <h3>Chưa có yêu cầu nào</h3>
-                <p style={{ fontSize: '0.9rem', marginTop: 8 }}>Bạn có thể tạo yêu cầu mở lớp để tìm kiếm gia sư phù hợp.</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {classes.map(cls => (
-                  <div key={cls.id} style={{
-                    background: 'var(--color-surface-2)', borderRadius: 12, padding: '16px',
-                    border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: 16,
-                  }}>
-                    <div style={{
-                      width: 48, height: 48, borderRadius: 12, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-                      color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '1.2rem', fontWeight: 800, flexShrink: 0,
-                    }}>
-                      {cls.subject.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
-                        <div style={{ fontWeight: 700, fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {cls.title}
-                        </div>
-                        {cls.classCode && (
-                          <span style={{ fontSize: '0.75rem', color: '#6366f1', fontWeight: 700, background: '#eef2ff', padding: '2px 8px', borderRadius: '12px', flexShrink: 0 }}>
-                            #{cls.classCode}
-                          </span>
-                        )}
-                        <StatusBadge status={cls.status}/>
-                      </div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                        <span>📚 {cls.subject}</span>
-                        <span>🎓 {cls.grade}</span>
-                        {cls.parentFee > 0 && <span>💰 {fmtCurrency(cls.parentFee)}/tháng</span>}
-                        <span>🕒 {fmtDate(cls.createdAt)}</span>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                      {(cls.status === 'OPEN' || cls.hasPendingProposals) && (
-                        <button onClick={() => setTutorsModal(cls)} style={{
-                          display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
-                          borderRadius: 8, border: '1.5px solid rgba(99,102,241,0.3)',
-                          background: 'rgba(99,102,241,0.06)', color: '#6366f1',
-                          fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                        }}>
-                          <GraduationCap size={16}/> Xem đề xuất
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-
-      {/* Toasts & Modals */}
-      {toast && (
-        <div style={{
-          position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
-          padding: '10px 20px', borderRadius: 12, fontWeight: 600, fontSize: '0.88rem',
-          background: toast.type === 'success' ? '#ecfdf5' : '#fef2f2',
-          color: toast.type === 'success' ? '#065f46' : '#b91c1c',
-          border: `1px solid ${toast.type === 'success' ? 'rgba(5,150,105,0.3)' : 'rgba(239,68,68,0.3)'}`,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
-        }}>
-          {toast.type === 'success' ? '✓ ' : '✕ '}{toast.msg}
         </div>
       )}
 
+      {/* Stats */}
+      <section>
+        <div className="dash-stats-grid">
+          {[
+            { val: `${activeClasses.length}`, lbl: 'Lớp đang học',   icon: <BookOpen size={20}/>,    cls: 'color-indigo'  },
+            { val: totalFeeFormatted,          lbl: 'Học phí tháng',  icon: <TrendingUp size={20}/>,  cls: 'color-amber'   },
+            { val: `${upcomingSessions.length}`, lbl: 'Buổi sắp tới', icon: <Calendar size={20}/>,   cls: 'color-violet'  },
+            { val: `${classes.length}`,        lbl: 'Tổng lớp',       icon: <Award size={20}/>,       cls: 'color-emerald' },
+          ].map((s, i) => (
+            <div key={i} className={`dash-stat-card ${s.cls}`}>
+              <div className="stat-icon-box">{s.icon}</div>
+              <div className="stat-info">
+                <span className="stat-val">{s.val}</span>
+                <span className="stat-lbl">{s.lbl}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* My Classes panel */}
+      <div className="dash-panel">
+        <div className="dash-section-head">
+          <h2 className="dash-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <BookOpen size={16} className="text-secondary"/> Lớp học của tôi
+          </h2>
+          <button className="dash-see-all" onClick={() => setShowRequestClass(true)}>
+            <Plus size={14}/> Yêu cầu mới
+          </button>
+        </div>
+        <MyClassesPanel classes={classes} loading={loading} onViewTutors={setTutorsModal} />
+      </div>
+
+      {/* Lịch học sắp tới */}
+      <div className="dash-cols">
+        <div className="dash-panel">
+          <div className="dash-section-head">
+            <span className="dash-section-title">📅 Lịch học sắp tới</span>
+            <button className="dash-see-all" onClick={() => navigate('/student/schedule')}>Xem tất cả <ChevronRight size={14}/></button>
+          </div>
+          <div className="upcoming-list">
+            {upcomingSessions.length === 0 ? (
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Không có buổi học nào sắp tới.</p>
+            ) : (
+              upcomingSessions.map(s => (
+                <div key={s.id} className="upcoming-item">
+                  <span className="upcoming-avatar">📚</span>
+                  <div className="upcoming-info">
+                    <p className="upcoming-subj">{s.classTitle}</p>
+                    <p className="upcoming-who">{s.tutorName} · {s.subject}</p>
+                  </div>
+                  <div className="upcoming-time"><Clock size={12}/><span>{s.startTime?.substring(0, 5) ?? '--:--'}</span></div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick actions */}
+      <section>
+        <div className="dash-section-head">
+          <span className="dash-section-title">⚡ Thao tác nhanh</span>
+        </div>
+        <div className="dash-qa-grid">
+          {[
+            { emoji: '📋', label: 'Yêu cầu mở lớp', onClick: () => setShowRequestClass(true) },
+            { emoji: '📅', label: 'Lịch học',        onClick: () => navigate('/student/schedule') },
+            { emoji: '📚', label: 'Bài tập & Tài liệu', onClick: () => navigate('/student/teaching') },
+            { emoji: '💳', label: 'Thanh toán',      onClick: () => navigate('/student/payment') },
+          ].map((a, i) => (
+            <button key={i} className="dash-qa-card" onClick={a.onClick}>
+              <span className="qa-emoji">{a.emoji}</span>
+              <span className="qa-label">{a.label}</span>
+              <ChevronRight size={15} className="qa-arr"/>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: 'fixed', top: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999,
+          padding: '14px 28px', borderRadius: 14, fontWeight: 700, fontSize: '0.95rem',
+          background: toast.type === 'success' ? '#ecfdf5' : '#fef2f2',
+          color: toast.type === 'success' ? '#065f46' : '#b91c1c',
+          border: `1.5px solid ${toast.type === 'success' ? 'rgba(5,150,105,0.4)' : 'rgba(239,68,68,0.4)'}`,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+          animation: 'slideDown 0.3s ease-out',
+          maxWidth: '90vw',
+        }}>
+          {toast.msg}
+        </div>
+      )}
+
+      {/* Modal: Request Class */}
       {showRequestClass && (
         <StudentRequestClassModal onClose={() => setShowRequestClass(false)} onSuccess={handleRequestSuccess}/>
       )}
 
+      {/* Modal: View Tutors */}
       {tutorsModal && (
         <TutorsModal cls={tutorsModal} onClose={() => setTutorsModal(null)} onSelect={handleSelectTutor}/>
       )}

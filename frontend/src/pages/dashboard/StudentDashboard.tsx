@@ -35,6 +35,7 @@ export const StudentDashboard = () => {
   const [showParentInfo, setShowParentInfo] = useState(false);
   const [newParentPhone, setNewParentPhone] = useState('');
   const [sessions, setSessions] = useState<SessionDTO[]>([]);
+  const [classCount, setClassCount] = useState(0);
   const [parentLinkDismissed, setParentLinkDismissed] = useState(
     () => localStorage.getItem(PARENT_LINK_DISMISSED_KEY) === 'true'
   );
@@ -42,6 +43,16 @@ export const StudentDashboard = () => {
   useEffect(() => {
     fetchLinks();
     fetchSessions();
+    // Lấy danh sách lớp trực tiếp (bao gồm OPEN, ASSIGNED — chưa có session)
+    studentApi.getMyClasses()
+      .then(res => {
+        const data = res.data ?? [];
+        const active = data.filter((c: any) =>
+          ['PENDING_APPROVAL', 'OPEN', 'ASSIGNED', 'MATCHED', 'ACTIVE'].includes(c.status)
+        );
+        setClassCount(active.length);
+      })
+      .catch(() => {});
   }, []);
 
   const fetchLinks = async () => {
@@ -109,7 +120,7 @@ export const StudentDashboard = () => {
     const ds = getDisplayStatus(s.status, s.sessionDate, s.endTime);
     return ds === 'COMPLETED' || s.status === 'COMPLETED_PENDING';
   });
-  const uniqueClassIds = new Set(sessions.filter(s => s.status !== 'CANCELLED').map(s => s.classId));
+  // classCount đã fetch từ API, bao gồm cả lớp chưa có session
 
   // Has parent link? Used for payment visibility logic
   const hasParentLink = links.some(l => l.linkStatus === 'ACCEPTED');
@@ -186,7 +197,7 @@ export const StudentDashboard = () => {
       <section>
         <div className="dash-stats-grid">
           {[
-            { val: `${uniqueClassIds.size}`, lbl: 'Lớp đang học', icon: <BookOpen size={20}/>, cls: 'color-indigo' },
+            { val: `${classCount}`, lbl: 'Lớp đang học', icon: <BookOpen size={20}/>, cls: 'color-indigo' },
             { val: `${upcomingSessions.length}`, lbl: 'Buổi sắp tới', icon: <Calendar size={20}/>, cls: 'color-violet' },
             { val: `${completedSessions.length}`, lbl: 'Buổi hoàn thành', icon: <Award size={20}/>, cls: 'color-emerald' },
             { val: `${sessions.length}`, lbl: 'Tổng buổi học', icon: <Clock size={20}/>, cls: 'color-amber' },
