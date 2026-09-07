@@ -91,8 +91,8 @@ public class AdminClassService {
 
         if (entities.isEmpty()) return new ArrayList<>();
 
-        // Batch load users
-        List<UUID> parentIds = entities.stream().map(ClassEntity::getParentId).distinct().collect(Collectors.toList());
+        // Batch load users (filter null parentId cho lớp chưa gán PH)
+        List<UUID> parentIds = entities.stream().map(ClassEntity::getParentId).filter(java.util.Objects::nonNull).distinct().collect(Collectors.toList());
         List<UUID> tutorIds  = entities.stream().filter(e -> e.getTutorId() != null).map(ClassEntity::getTutorId).distinct().collect(Collectors.toList());
         List<UUID> allIds = new ArrayList<>(parentIds);
         allIds.addAll(tutorIds);
@@ -205,9 +205,12 @@ public class AdminClassService {
 
     @Transactional
     public AdminClassListItem createClass(CreateClassRequest request) {
-        // Validate parent exists
-        UserEntity parent = userRepository.findById(request.parentId())
-                .orElseThrow(() -> new EntityNotFoundException(ERR_PARENT_NOT_FOUND));
+        // Validate parent nếu có
+        UserEntity parent = null;
+        if (request.parentId() != null) {
+            parent = userRepository.findById(request.parentId())
+                    .orElseThrow(() -> new EntityNotFoundException(ERR_PARENT_NOT_FOUND));
+        }
 
         // Get admin id from security context
         UUID adminId = resolveAdminId();
@@ -221,7 +224,7 @@ public class AdminClassService {
 
         ClassEntity cls = ClassEntity.builder()
                 .adminId(adminId)
-                .parentId(request.parentId())
+                .parentId(request.parentId())  // nullable
                 .title(request.title())
                 .subject(request.subject())
                 .grade(request.grade())
@@ -247,9 +250,29 @@ public class AdminClassService {
 
         cls.setClassCode(generateClassCode());
         ClassEntity saved = classRepository.save(cls);
-        log.info("[CREATE_CLASS_ON_BEHALF] adminId={}, classId={}, classCode={}", adminId, saved.getId(), saved.getClassCode());
+        log.info("[CREATE_CLASS_ON_BEHALF] adminId={}, classId={}, classCode={}, hasParent={}",
+                adminId, saved.getId(), saved.getClassCode(), request.parentId() != null);
 
         return buildSingleItem(saved, parent, null, null, 0L);
+    }
+
+    // ─── Assign Parent ───────────────────────────────────────────────────────
+
+    /** Gán Phụ huynh cho lớp chưa có PH */
+    @Transactional
+    public void assignParentToClass(UUID classId, UUID parentId) {
+        ClassEntity cls = findActiveClassOrThrow(classId);
+
+        if (cls.getParentId() != null) {
+            throw new BusinessRuleException("Lớp đã có Phụ huynh, không thể gán lại.");
+        }
+
+        UserEntity parent = userRepository.findById(parentId)
+                .orElseThrow(() -> new EntityNotFoundException(ERR_PARENT_NOT_FOUND));
+
+        cls.setParentId(parentId);
+        classRepository.save(cls);
+        log.info("[ASSIGN_PARENT] classId={}, parentId={}, parentName={}", classId, parentId, parent.getFullName());
     }
 
     // ─── Update Status ────────────────────────────────────────────────────────
@@ -586,12 +609,14 @@ public class AdminClassService {
         classRepository.save(cls);
         log.info("[REJECT_CLASS] classId={}, reason={}", classId, reason);
 
-        // Thông báo phụ huynh: lớp bị từ chối
-        String rejectMsg = (reason != null && !reason.isBlank())
-                ? String.format("Yêu cầu mở lớp %s bị từ chối. Lý do: %s", cls.getTitle(), reason)
-                : String.format("Yêu cầu mở lớp %s bị từ chối.", cls.getTitle());
-        notificationService.sendNotification(cls.getParentId(), NotificationType.CLASS_CANCELLED,
-                "Lớp bị từ chối", rejectMsg, "CLASS", classId);
+        // Thông báo phụ huynh: lớp bị từ chối (chỉ gửi khi đã có PH)
+        if (cls.getParentId() != null) {
+            String rejectMsg = (reason != null && !reason.isBlank())
+                    ? String.format("Yêu cầu mở lớp %s bị từ chối. Lý do: %s", cls.getTitle(), reason)
+                    : String.format("Yêu cầu mở lớp %s bị từ chối.", cls.getTitle());
+            notificationService.sendNotification(cls.getParentId(), NotificationType.CLASS_CANCELLED,
+                    "Lớp bị từ chối", rejectMsg, "CLASS", classId);
+        }
     }
 
     // ─── Schedule Stats ───────────────────────────────────────────────────────

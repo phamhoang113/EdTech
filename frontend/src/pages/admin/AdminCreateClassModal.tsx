@@ -176,7 +176,6 @@ export function AdminCreateClassModal({ onClose, onSuccess, showToast }: AdminCr
 
   // Submit Class Handler
   const handleSubmitClass = async () => {
-    if (!selectedParent) { setError('Vui lòng chọn hoặc tạo Phụ huynh trước.'); return; }
     if (!effectiveSubject) { setError('Vui lòng chọn môn học.'); return; }
     if (!form.grade)       { setError('Vui lòng chọn khối/lớp.'); return; }
     if (form.mode === 'IN_PERSON' && !form.address.trim()) { setError('Vui lòng chọn địa chỉ học.'); return; }
@@ -207,7 +206,7 @@ export function AdminCreateClassModal({ onClose, onSuccess, showToast }: AdminCr
     setSubmittingClass(true); setError('');
     try {
       await adminApi.createClass({
-        parentId: selectedParent.id,
+        parentId: selectedParent?.id,
         title: buildTitle() || `Lớp ${effectiveSubject}`,
         subject: effectiveSubject,
         grade: form.grade,
@@ -241,7 +240,7 @@ export function AdminCreateClassModal({ onClose, onSuccess, showToast }: AdminCr
             <div>
               <div className="rcm-header-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>📝</div>
               <h2 className="rcm-title">Mở lớp học hộ Phụ Huynh</h2>
-              <p className="rcm-subtitle">Trạng thái sẽ bắt đầu ở PENDING_APPROVAL. Admin có thể set lương gia sư sau đó.</p>
+              <p className="rcm-subtitle">PH không bắt buộc — có thể tạo lớp trước rồi gán PH sau. Trạng thái bắt đầu ở PENDING_APPROVAL.</p>
             </div>
             <button className="rcm-close" onClick={onClose} aria-label="Đóng"><X size={18}/></button>
           </div>
@@ -254,7 +253,7 @@ export function AdminCreateClassModal({ onClose, onSuccess, showToast }: AdminCr
           {/* Section 0: PARENT */}
           <div className="rcm-section">
             <div className="rcm-section-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span><span className="rcm-sl-dot"/> 👤 Bắt buộc: Chọn Phụ huynh / Học sinh <span className="rcm-label-req">*</span></span>
+              <span><span className="rcm-sl-dot"/> 👤 Chọn Phụ huynh / Học sinh (không bắt buộc)</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 {!selectedParent && (
                   <select
@@ -374,7 +373,7 @@ export function AdminCreateClassModal({ onClose, onSuccess, showToast }: AdminCr
             )}
           </div>
 
-          <div style={{ opacity: selectedParent ? 1 : 0.4, pointerEvents: selectedParent ? 'auto' : 'none' }}>
+          <div style={{ opacity: 1 }}>
             {/* Section 1 — Thông tin lớp */}
             <div className="rcm-section">
               <div className="rcm-section-label">
@@ -508,8 +507,8 @@ export function AdminCreateClassModal({ onClose, onSuccess, showToast }: AdminCr
             type="button" 
             className="rcm-btn-submit" 
             onClick={handleSubmitClass}
-            disabled={!selectedParent || submittingClass || levelFees.length === 0}
-            style={{ opacity: (!selectedParent || submittingClass || levelFees.length === 0) ? 0.6 : 1, cursor: (!selectedParent || submittingClass || levelFees.length === 0) ? 'not-allowed' : 'pointer', background: '#10b981' }}
+            disabled={submittingClass || levelFees.length === 0}
+            style={{ opacity: (submittingClass || levelFees.length === 0) ? 0.6 : 1, cursor: (submittingClass || levelFees.length === 0) ? 'not-allowed' : 'pointer', background: '#10b981' }}
           >
             {submittingClass ? <span className="rcm-spinner"/> : 'Xác nhận tạo lớp'}
           </button>

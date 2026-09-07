@@ -46,6 +46,10 @@ public class SystemSettingsService {
                 .emailOnPayment(parseBool(map, "email_on_payment", true))
                 // Giao diện
                 .primaryColor(map.getOrDefault("primary_color", "#6366f1"))
+                // Thanh toán
+                .vietqrBankBin(map.getOrDefault("VIETQR_BANK_BIN", ""))
+                .vietqrBankAccount(map.getOrDefault("VIETQR_BANK_ACCOUNT", ""))
+                .vietqrAccountName(map.getOrDefault("VIETQR_ACCOUNT_NAME", ""))
                 .build();
     }
 
@@ -68,6 +72,10 @@ public class SystemSettingsService {
         upsert("email_on_new_class",      String.valueOf(dto.isEmailOnNewClass()));
         upsert("email_on_payment",        String.valueOf(dto.isEmailOnPayment()));
         upsert("primary_color",           dto.getPrimaryColor());
+        // Thanh toán
+        upsert("VIETQR_BANK_BIN",         dto.getVietqrBankBin() != null ? dto.getVietqrBankBin() : "");
+        upsert("VIETQR_BANK_ACCOUNT",     dto.getVietqrBankAccount() != null ? dto.getVietqrBankAccount() : "");
+        upsert("VIETQR_ACCOUNT_NAME",     dto.getVietqrAccountName() != null ? dto.getVietqrAccountName() : "");
         return getSettings();
     }
 

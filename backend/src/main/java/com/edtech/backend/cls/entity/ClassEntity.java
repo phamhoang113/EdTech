@@ -43,7 +43,7 @@ public class ClassEntity extends BaseEntity {
     @Column(name = "admin_id", nullable = false)
     private UUID adminId;
 
-    @Column(name = "parent_id", nullable = false)
+    @Column(name = "parent_id")
     private UUID parentId;
 
     @Column(name = "tutor_id")

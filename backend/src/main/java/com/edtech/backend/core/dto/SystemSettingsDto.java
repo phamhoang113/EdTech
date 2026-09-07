@@ -35,4 +35,9 @@ public class SystemSettingsDto {
 
     // ── Giao diện ─────────────────────────────────────────────────────────
     String primaryColor;
+
+    // ── Thanh toán (VietQR) ───────────────────────────────────────────────
+    String vietqrBankBin;       // Mã BIN ngân hàng (VD: 970418 = BIDV)
+    String vietqrBankAccount;   // Số tài khoản
+    String vietqrAccountName;   // Tên chủ tài khoản
 }

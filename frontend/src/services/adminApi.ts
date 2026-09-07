@@ -95,6 +95,10 @@ export interface SystemSettings {
   emailOnPayment: boolean;
   // Giao diện
   primaryColor: string;
+  // Thanh toán (VietQR)
+  vietqrBankBin: string;
+  vietqrBankAccount: string;
+  vietqrAccountName: string;
 }
 
 export const adminApi = {
@@ -258,6 +262,11 @@ export const adminApi = {
 
   createClass: async (body: CreateClassBody): Promise<ApiResponse<AdminClassListItem>> => {
     const response = await apiClient.post('/api/v1/admin/classes', body);
+    return response.data;
+  },
+
+  assignParent: async (classId: string, parentId: string): Promise<ApiResponse<void>> => {
+    const response = await apiClient.patch(`/api/v1/admin/classes/${classId}/parent`, null, { params: { parentId } });
     return response.data;
   },
 
@@ -473,7 +482,7 @@ export interface AdminClassScheduleStatsDTO {
 }
 
 export interface CreateClassBody {
-  parentId: string;
+  parentId?: string;  // optional — admin có thể tạo lớp chưa gán PH
   title: string;
   subject: string;
   grade: string;

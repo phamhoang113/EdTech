@@ -46,9 +46,9 @@ public class StudentBillingService {
 
     @Transactional(readOnly = true)
     public List<BillingDTO> getBillingsForStudent(UUID studentId) {
-        String bankBin = systemSettingRepository.findByKey("VIETQR_BANK_BIN").map(SystemSettingEntity::getValue).orElse("BIDV");
-        String bankAccount = systemSettingRepository.findByKey("VIETQR_BANK_ACCOUNT").map(SystemSettingEntity::getValue).orElse("0976947441");
-        String accountName = systemSettingRepository.findByKey("VIETQR_ACCOUNT_NAME").map(SystemSettingEntity::getValue).orElse("Pham Phu Hoang");
+        String bankBin = systemSettingRepository.findByKey("VIETQR_BANK_BIN").map(SystemSettingEntity::getValue).orElse("970418");
+        String bankAccount = systemSettingRepository.findByKey("VIETQR_BANK_ACCOUNT").map(SystemSettingEntity::getValue).orElse("");
+        String accountName = systemSettingRepository.findByKey("VIETQR_ACCOUNT_NAME").map(SystemSettingEntity::getValue).orElse("");
         // Remove spaces for url param just in case
         final String finalAccountName = accountName.replace(" ", "%20");
 

@@ -14,7 +14,7 @@ import jakarta.validation.constraints.Positive;
  * levelFees: JSON string "[{\"level\":\"Sinh viên\",\"tutor_fee\":500000}]"
  */
 public record CreateClassRequest(
-        @NotNull UUID parentId,
+        UUID parentId,  // nullable — admin có thể tạo lớp chưa gán PH
 
         @NotBlank String title,
         @NotBlank String subject,

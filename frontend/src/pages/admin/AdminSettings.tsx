@@ -1,4 +1,4 @@
-import { Save, Globe, Shield, Bell, Database, Palette, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { Save, Globe, Shield, Bell, Database, Palette, CheckCircle, AlertTriangle, Loader2, CreditCard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import { adminApi } from '../../services/adminApi';
@@ -9,6 +9,7 @@ import './AdminSettings.css';
 const SECTIONS = [
   { id: 'general',    label: 'Chung',         icon: <Globe size={16}/> },
   { id: 'platform',   label: 'Nền tảng',      icon: <Database size={16}/> },
+  { id: 'payment',    label: 'Thanh toán',     icon: <CreditCard size={16}/> },
   { id: 'security',   label: 'Bảo mật',       icon: <Shield size={16}/> },
   { id: 'notify',     label: 'Thông báo',     icon: <Bell size={16}/> },
   { id: 'appearance', label: 'Giao diện',     icon: <Palette size={16}/> },
@@ -30,6 +31,9 @@ const DEFAULT: SystemSettings = {
   emailOnNewClass: false,
   emailOnPayment: true,
   primaryColor: '#6366f1',
+  vietqrBankBin: '',
+  vietqrBankAccount: '',
+  vietqrAccountName: '',
 };
 
 /** Áp màu chủ đạo vào CSS variable ngay lập tức */
@@ -314,6 +318,83 @@ export function AdminSettings() {
                   <span style={{ padding: '5px 14px', borderRadius: 20, background: settings.primaryColor + '15', color: settings.primaryColor, fontSize: '0.8rem', fontWeight: 700 }}>
                     Badge
                   </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Thanh toán ── */}
+          {activeSection === 'payment' && (
+            <div className="as-section">
+              <h2 className="as-section__title">Cấu hình thanh toán (VietQR)</h2>
+              <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: 16 }}>
+                Cấu hình tài khoản ngân hàng để tạo mã QR thanh toán cho Phụ huynh. Thông tin này sẽ hiển thị trên trang thanh toán.
+              </p>
+              <div className="as-group">
+                <label className="as-label">Mã BIN ngân hàng <span style={{ color: '#ef4444' }}>*</span></label>
+                <input className="as-input" value={settings.vietqrBankBin} onChange={e => set('vietqrBankBin', e.target.value)} placeholder="Ví dụ: 970418"/>
+                <span className="as-hint">Mã BIN theo chuẩn VietQR. Xem bảng bên dưới.</span>
+              </div>
+              <div className="as-group">
+                <label className="as-label">Số tài khoản <span style={{ color: '#ef4444' }}>*</span></label>
+                <input className="as-input" value={settings.vietqrBankAccount} onChange={e => set('vietqrBankAccount', e.target.value)} placeholder="Nhập số tài khoản ngân hàng"/>
+              </div>
+              <div className="as-group">
+                <label className="as-label">Tên chủ tài khoản <span style={{ color: '#ef4444' }}>*</span></label>
+                <input className="as-input" value={settings.vietqrAccountName} onChange={e => set('vietqrAccountName', e.target.value)} placeholder="Ví dụ: NGUYEN VAN A"/>
+                <span className="as-hint">Viết HOA không dấu, đúng tên trên tài khoản ngân hàng.</span>
+              </div>
+
+              {/* Preview QR */}
+              {settings.vietqrBankBin && settings.vietqrBankAccount && (
+                <div className="as-group" style={{ marginTop: 12 }}>
+                  <label className="as-label">Xem trước mã QR</label>
+                  <div style={{ background: '#f8fafc', padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', display: 'inline-block' }}>
+                    <img
+                      src={`https://img.vietqr.io/image/${settings.vietqrBankBin}-${settings.vietqrBankAccount}-compact.jpg?amount=100000&addInfo=TEST&accountName=${encodeURIComponent(settings.vietqrAccountName || 'TEST')}`}
+                      width={180} height={180}
+                      alt="VietQR Preview"
+                      style={{ borderRadius: 8 }}
+                      crossOrigin="anonymous"
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  </div>
+                  <span className="as-hint">QR mẫu với số tiền 100,000đ và nội dung "TEST"</span>
+                </div>
+              )}
+
+              {/* Bảng mã BIN */}
+              <div className="as-group" style={{ marginTop: 16 }}>
+                <label className="as-label" style={{ marginBottom: 8 }}>Bảng mã BIN phổ biến</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
+                  {[
+                    { bin: '970418', name: 'BIDV' },
+                    { bin: '970436', name: 'Vietcombank' },
+                    { bin: '970415', name: 'VietinBank' },
+                    { bin: '970422', name: 'MB Bank' },
+                    { bin: '970416', name: 'ACB' },
+                    { bin: '970405', name: 'AgriBank' },
+                    { bin: '970448', name: 'OCB' },
+                    { bin: '970407', name: 'Techcombank' },
+                    { bin: '970423', name: 'TPBank' },
+                    { bin: '970432', name: 'VPBank' },
+                    { bin: '970403', name: 'Sacombank' },
+                    { bin: '970454', name: 'VietCapital' },
+                  ].map(b => (
+                    <button
+                      key={b.bin}
+                      onClick={() => set('vietqrBankBin', b.bin)}
+                      style={{
+                        padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer',
+                        background: settings.vietqrBankBin === b.bin ? 'rgba(99,102,241,0.1)' : '#fff',
+                        color: settings.vietqrBankBin === b.bin ? '#6366f1' : '#475569',
+                        fontWeight: settings.vietqrBankBin === b.bin ? 700 : 500,
+                        fontSize: '0.82rem', textAlign: 'left',
+                      }}
+                    >
+                      <strong>{b.bin}</strong> — {b.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>

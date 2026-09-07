@@ -7,7 +7,7 @@ import { AdminCreateClassModal } from './AdminCreateClassModal';
 import type { ReactElement } from 'react';
 
 import { adminApi } from '../../services/adminApi';
-import type { AdminClassListItem, ClassStatus, AdminClassScheduleStatsDTO } from '../../services/adminApi';
+import type { AdminClassListItem, ClassStatus, AdminClassScheduleStatsDTO, AdminUserListItem } from '../../services/adminApi';
 import './AdminClasses.css';
 
 /* ─── Helpers ───────────────────────────────────────────────────────────── */
@@ -103,7 +103,7 @@ function ClassCard({
       <div className="acl-card-people">
         <div className="acl-person">
           <User size={12}/>
-          <span>PH: <strong>{cls.parentName ?? '—'}</strong></span>
+          <span>PH: <strong>{cls.parentName ?? <span style={{ color: '#f59e0b', fontStyle: 'italic' }}>Chưa gán</span>}</strong></span>
           {cls.parentPhone && <span className="acl-phone"><Phone size={11}/>{cls.parentPhone}</span>}
         </div>
         {cls.tutorName ? (
@@ -194,6 +194,50 @@ function ClassDetailDrawer({
       };
     });
   });
+
+  /* Assign Parent state */
+  const [assigningParent, setAssigningParent] = useState(false);
+  const [parentSearchQuery, setParentSearchQuery] = useState('');
+  const [parentSearchResults, setParentSearchResults] = useState<AdminUserListItem[]>([]);
+  const [parentSearching, setParentSearching] = useState(false);
+  const [savingParent, setSavingParent] = useState(false);
+
+  const handleSearchParent = async () => {
+    const keyword = parentSearchQuery.trim().toLowerCase();
+    if (!keyword) return;
+    setParentSearching(true);
+    try {
+      const [parentRes, studentRes] = await Promise.all([
+        adminApi.getUsers('PARENT'),
+        adminApi.getUsers('STUDENT'),
+      ]);
+      const allUsers = [...parentRes.data, ...studentRes.data];
+      const matches = allUsers.filter(u =>
+        u.phone?.includes(keyword) ||
+        u.fullName.toLowerCase().includes(keyword) ||
+        (u.email && u.email.toLowerCase().includes(keyword))
+      );
+      setParentSearchResults(matches);
+    } catch {
+      show('error', 'Lỗi khi tìm kiếm');
+    } finally {
+      setParentSearching(false);
+    }
+  };
+
+  const handleAssignParent = async (parentId: string) => {
+    setSavingParent(true);
+    try {
+      await adminApi.assignParent(cls.id, parentId);
+      show('success', 'Đã gán Phụ huynh cho lớp');
+      setAssigningParent(false);
+      onRefresh();
+    } catch (err: any) {
+      show('error', err?.response?.data?.message ?? 'Gán PH thất bại');
+    } finally {
+      setSavingParent(false);
+    }
+  };
 
   const handleSaveFees = async () => {
     setSavingFees(true);
@@ -445,7 +489,60 @@ function ClassDetailDrawer({
           <section className="acl-drawer-section">
             <h3><User size={13}/> Phụ huynh & Gia sư</h3>
             <div className="acl-dgrid">
-              <div className="acl-dfield"><span>Phụ huynh</span><strong>{cls.parentName ?? '—'}</strong></div>
+              {cls.parentName ? (
+                <div className="acl-dfield"><span>Phụ huynh</span><strong>{cls.parentName}</strong></div>
+              ) : (
+                <div className="acl-dfield">
+                  <span>Phụ huynh</span>
+                  {!assigningParent ? (
+                    <button
+                      onClick={() => setAssigningParent(true)}
+                      style={{ padding: '4px 10px', fontSize: '0.78rem', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      + Gán PH
+                    </button>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <input
+                          autoFocus
+                          placeholder="Tìm SĐT, tên..."
+                          value={parentSearchQuery}
+                          onChange={e => setParentSearchQuery(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && handleSearchParent()}
+                          style={{ flex: 1, padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: '0.82rem' }}
+                        />
+                        <button onClick={handleSearchParent} disabled={parentSearching} style={{ padding: '6px 12px', fontSize: '0.78rem', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>
+                          {parentSearching ? '...' : 'Tìm'}
+                        </button>
+                        <button onClick={() => { setAssigningParent(false); setParentSearchResults([]); setParentSearchQuery(''); }} style={{ padding: '6px 10px', fontSize: '0.78rem', background: 'transparent', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }}>
+                          Huỷ
+                        </button>
+                      </div>
+                      {parentSearchResults.length > 0 && (
+                        <div style={{ maxHeight: 150, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {parentSearchResults.map(u => (
+                            <div
+                              key={u.id}
+                              onClick={() => !savingParent && handleAssignParent(u.id)}
+                              style={{ padding: '8px 10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, cursor: savingParent ? 'wait' : 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}
+                            >
+                              <div>
+                                <strong>{u.fullName}</strong>
+                                <span style={{ fontSize: '0.7rem', marginLeft: 6, padding: '1px 6px', background: u.role === 'PARENT' ? 'rgba(99,102,241,0.1)' : 'rgba(16,185,129,0.1)', color: u.role === 'PARENT' ? '#6366f1' : '#10b981', borderRadius: 8 }}>
+                                  {u.role === 'PARENT' ? 'PH' : 'HS'}
+                                </span>
+                                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 2 }}>{u.phone || u.email || ''}</div>
+                              </div>
+                              <span style={{ fontSize: '0.7rem', padding: '2px 8px', background: 'rgba(99,102,241,0.1)', color: '#6366f1', borderRadius: 12, fontWeight: 600 }}>Chọn</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="acl-dfield"><span>SĐT PH</span><strong>{cls.parentPhone ?? '—'}</strong></div>
               <div className="acl-dfield"><span>Gia sư</span><strong>{cls.tutorName ?? 'Chưa có'}</strong></div>
               <div className="acl-dfield"><span>SĐT GS</span><strong>{cls.tutorPhone ?? '—'}</strong></div>

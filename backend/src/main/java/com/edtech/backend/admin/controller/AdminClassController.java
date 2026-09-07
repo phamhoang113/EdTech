@@ -89,6 +89,15 @@ public class AdminClassController {
         return ResponseEntity.ok(ApiResponse.ok(adminClassService.getScheduleStats(id)));
     }
 
+    /** Gán Phụ huynh cho lớp chưa có PH */
+    @PatchMapping("/{id}/parent")
+    public ResponseEntity<ApiResponse<Void>> assignParent(
+            @PathVariable UUID id,
+            @RequestParam UUID parentId) {
+        adminClassService.assignParentToClass(id, parentId);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Đã gán phụ huynh cho lớp"));
+    }
+
     /** Xóa mềm lớp (nếu ASSIGNED → revert về OPEN + xóa tutorId) */
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteClass(@PathVariable UUID id) {
