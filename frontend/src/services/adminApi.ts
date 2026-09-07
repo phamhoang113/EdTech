@@ -426,6 +426,8 @@ export interface AdminTutorListItem {
   dateOfBirth?: string | null;
   achievements?: string | null;
   createdAt: string;
+  bankName?: string | null;
+  bankAccountNumber?: string | null;
 }
 
 export type ClassStatus = 'OPEN' | 'ASSIGNED' | 'MATCHED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'AUTO_CLOSED' | 'SUSPENDED';

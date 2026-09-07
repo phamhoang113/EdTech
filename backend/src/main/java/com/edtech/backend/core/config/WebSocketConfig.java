@@ -2,6 +2,10 @@ package com.edtech.backend.core.config;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.converter.MessageConverter;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +38,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final ObjectMapper objectMapper;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -52,6 +57,18 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*") // Allow all origins for dev
                 .withSockJS(); // Fallback option
+    }
+
+    /**
+     * Inject Spring-managed ObjectMapper (có JavaTimeModule) vào WebSocket message converter,
+     * để LocalDateTime được serialize thành ISO string thay vì array.
+     */
+    @Override
+    public boolean configureMessageConverters(List<MessageConverter> messageConverters) {
+        MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
+        converter.setObjectMapper(objectMapper);
+        messageConverters.add(converter);
+        return false;
     }
 
     @Override

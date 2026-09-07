@@ -1,4 +1,4 @@
-import { GraduationCap, Phone, MapPin, Trash2, Search, CheckCircle, XCircle, Clock, AlertTriangle, X, BookOpen, DollarSign, ChevronRight, User, FileText } from 'lucide-react';
+import { GraduationCap, Phone, MapPin, Trash2, Search, CheckCircle, XCircle, Clock, AlertTriangle, X, BookOpen, DollarSign, ChevronRight, User, FileText, Landmark } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 
 import { adminApi } from '../../services/adminApi';
@@ -166,6 +166,15 @@ function TutorDetailDrawer({
                 <span>Phí nền tảng/tháng</span>
                 <strong>{formatVnd(tutor.platformFeePerMonth)}</strong>
               </div>
+            </div>
+          </section>
+
+          {/* Payment info */}
+          <section className="at-drawer-section">
+            <h3><Landmark size={14}/> Thông tin thanh toán</h3>
+            <div className="at-drawer-grid">
+              <div className="at-drawer-field"><span>Ngân hàng</span><strong>{tutor.bankName || '—'}</strong></div>
+              <div className="at-drawer-field"><span>Số tài khoản</span><strong>{tutor.bankAccountNumber || '—'}</strong></div>
             </div>
           </section>
 

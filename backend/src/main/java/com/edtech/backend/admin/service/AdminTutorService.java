@@ -118,6 +118,8 @@ public class AdminTutorService {
                     .estimatedMonthlyEarnings(monthlyEarnings)
                     .platformFeePerMonth(platformFee)
                     .createdAt(u.getCreatedAt())
+                    .bankName(p.getBankName())
+                    .bankAccountNumber(p.getBankAccountNumber())
                     .build());
         }
         return result;

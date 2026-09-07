@@ -1,4 +1,4 @@
-import { LayoutDashboard, Calendar, User, Users, MessageSquare, CreditCard, LogOut, BookOpen, ClipboardList, Bot } from 'lucide-react';
+import { LayoutDashboard, Calendar, User, Users, MessageSquare, CreditCard, LogOut, BookOpen, ClipboardList, Bot, PlusCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -9,9 +9,10 @@ import { studentApi } from '../../services/studentApi';
 interface StudentSidebarProps {
   active?: 'overview' | 'schedule' | 'teaching' | 'messages' | 'achievements' | 'parents' | 'payments' | 'profile' | 'requests' | 'ai';
   hasParent?: boolean;
+  onRequestClass?: () => void;
 }
 
-export function StudentSidebar({ active = 'overview', hasParent: initialHasParent = false }: StudentSidebarProps) {
+export function StudentSidebar({ active = 'overview', hasParent: initialHasParent = false, onRequestClass }: StudentSidebarProps) {
   const { logout } = useAuthStore();
   const navigate = useNavigate();
   const { unreadMessages } = useNotificationStore();
@@ -62,6 +63,18 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
         </Link>
 
         <div className="dash-sidebar-section">
+          {/* CTA button: Yêu cầu mở lớp — chỉ hiển thị cho HS không có PH (giống ParentSidebar) */}
+          {!loadingParent && !hasParent && onRequestClass && (
+            <div style={{ padding: '0 10px', marginBottom: '16px' }}>
+              <button
+                className="dash-sidebar-cta"
+                onClick={() => { onRequestClass(); close(); }}
+              >
+                <PlusCircle size={18}/><span> Yêu cầu mở lớp</span>
+              </button>
+            </div>
+          )}
+
           <span className="dash-sidebar-section-label">Học tập</span>
           <button 
             className={`dash-sidebar-item ${active === 'overview' ? 'active' : ''}`}
@@ -93,7 +106,7 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
               className={`dash-sidebar-item ${active === 'requests' ? 'active' : ''}`}
               onClick={() => handleNav('/student/requests')}
             >
-              <BookOpen size={18} /> Yêu cầu học tập
+              <BookOpen size={18} /> Lớp học
             </button>
           )}
           <button 

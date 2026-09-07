@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 
 import { StudentSidebar } from './StudentSidebar';
 import { DashboardHeader } from '../layout/DashboardHeader';
+import { StudentRequestClassModal } from './StudentRequestClassModal';
 import '../../pages/dashboard/Dashboard.css';
 
 /**
@@ -11,6 +13,7 @@ import '../../pages/dashboard/Dashboard.css';
  */
 export function StudentLayout() {
   const location = useLocation();
+  const [showReqClass, setShowReqClass] = useState(false);
 
   // Xác định tab active từ URL
   const resolveActiveTab = (): 'overview' | 'schedule' | 'messages' | 'achievements' | 'parents' | 'payments' | 'profile' | 'requests' | 'ai' => {
@@ -27,13 +30,25 @@ export function StudentLayout() {
 
   return (
     <div className="dash-page">
-      <StudentSidebar active={resolveActiveTab()} />
+      <StudentSidebar active={resolveActiveTab()} onRequestClass={() => setShowReqClass(true)} />
       <main className="dash-main">
         <DashboardHeader />
         <div className="dash-body">
           <Outlet />
         </div>
       </main>
+
+      {/* Global Modal — Yêu cầu mở lớp (cho HS không có PH) */}
+      {showReqClass && (
+        <StudentRequestClassModal
+          onClose={() => setShowReqClass(false)}
+          onSuccess={() => {
+            setShowReqClass(false);
+            window.dispatchEvent(new Event('refresh-notifications'));
+          }}
+        />
+      )}
     </div>
   );
 }
+

@@ -47,4 +47,8 @@ public class AdminTutorListItem {
     /** Phí nền tảng/tháng từ GS = sum(platformFee) các lớp đang dạy */
     BigDecimal platformFeePerMonth;
     Instant createdAt;
+
+    // ── Payment info ────────────────────────────────────────────────────────
+    String bankName;
+    String bankAccountNumber;
 }

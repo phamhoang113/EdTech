@@ -12,9 +12,21 @@ import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import './NotificationDropdown.css';
 
+/**
+ * Parse createdAt — xử lý cả ISO string lẫn array format từ WebSocket.
+ * Jackson có thể serialize LocalDateTime thành [2026,9,7,15,50,0] nếu thiếu JavaTimeModule.
+ */
+function parseNotificationDate(createdAt: string | number[]): Date {
+  if (Array.isArray(createdAt)) {
+    const [year, month, day, hour = 0, minute = 0, second = 0] = createdAt;
+    return new Date(year, month - 1, day, hour, minute, second);
+  }
+  return new Date(createdAt);
+}
+
 export function NotificationDropdown() {
   const [notifications, setNotifications] = useState<NotificationResponseDTO[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { unreadNotifs: unreadCount, setUnreadNotifs: setUnreadCount } = useNotificationStore();
   const [isOpen, setIsOpen] = useState(false);
   const [pushPermission, setPushPermission] = useState<NotificationPermission>(
     'Notification' in window ? Notification.permission : 'denied'
@@ -44,9 +56,6 @@ export function NotificationDropdown() {
     onNotification: (notif) => {
       setNotifications(prev => [notif, ...prev]);
     },
-    onUnreadCountUpdate: (count) => {
-      setUnreadCount(count);
-    }
   });
 
   useEffect(() => {
@@ -107,7 +116,8 @@ export function NotificationDropdown() {
       ]);
 
       setNotifications(notifRes.data?.content || []);
-      setUnreadCount(countRes.data?.count || 0);
+      // Sync unread count vào Zustand store (source of truth cho badge)
+      useNotificationStore.getState().setUnreadNotifs(countRes.data?.count || 0);
       useNotificationStore.getState().setUnreadMessages(msgCountRes.data?.count || 0);
     } catch (error) {
       console.error('Lỗi khi tải thông báo:', error);
@@ -130,7 +140,7 @@ export function NotificationDropdown() {
       try {
         await notificationApi.markAsRead(notif.id);
         setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        setUnreadCount(Math.max(0, unreadCount - 1));
       } catch (error) {
         console.error(error);
       }
@@ -155,7 +165,9 @@ export function NotificationDropdown() {
         navigate(role === 'ADMIN' ? '/admin/schedules' : `${rolePrefix}/schedule`);
         break;
       case 'APPLICATION':
-        navigate(role === 'ADMIN' ? '/admin/class-applications' : `${rolePrefix}/dashboard`);
+        navigate(role === 'ADMIN' ? '/admin/class-applications'
+          : role === 'PARENT' ? '/parent/applicants'
+          : `${rolePrefix}/dashboard`);
         break;
       case 'INVOICE':
         navigate(role === 'ADMIN' ? '/admin/payments' : `${rolePrefix}/payment`);
@@ -263,7 +275,7 @@ export function NotificationDropdown() {
                     <p className="notification-title">{notif.title}</p>
                     <p className="notification-text">{notif.body}</p>
                     <span className="notification-time">
-                      {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: vi })}
+                      {formatDistanceToNow(parseNotificationDate(notif.createdAt), { addSuffix: true, locale: vi })}
                     </span>
                   </div>
                   {!notif.isRead && <div className="notification-dot" />}
@@ -273,7 +285,15 @@ export function NotificationDropdown() {
           </div>
           
           <div className="notification-footer">
-            <button onClick={() => { setIsOpen(false); navigate('/notifications'); }}>
+            <button onClick={() => {
+              setIsOpen(false);
+              const role = useAuthStore.getState().user?.role;
+              const prefix = role === 'ADMIN' ? '/admin'
+                : role === 'TUTOR' ? '/tutor'
+                : role === 'STUDENT' ? '/student'
+                : '/parent';
+              navigate(`${prefix}/dashboard`);
+            }}>
               Xem tất cả thông báo
             </button>
           </div>
