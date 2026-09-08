@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, GraduationCap, Trash2, Plus, Upload, X } from 'lucide-react';
+import { User, GraduationCap, Plus, Upload, X } from 'lucide-react';
 import { tutorApi, type UpdateTutorProfileRequest } from '../../services/tutorApi';
 import { classApi } from '../../services/classApi';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -378,7 +378,7 @@ export default function TutorProfilePage() {
                     }
                     const allFiles = [...existingFiles, ...Array.from(e.target.files)];
                     const result = await tutorApi.updateMyCertificates(allFiles);
-                    setCertImages((result.certBase64s ?? []).filter(img => img && img.trim().length > 50));
+                    setCertImages((result.certBase64s ?? []).filter((img: string) => img && img.trim().length > 50));
                     setCertMsg({ type: 'success', text: 'Cập nhật thành công!' });
                     setTimeout(() => setCertMsg(null), 3000);
                   } catch { setCertMsg({ type: 'error', text: 'Upload thất bại.' }); }
@@ -412,7 +412,7 @@ export default function TutorProfilePage() {
                               files.push(new File([blob], `cert_${i}.jpg`, { type: blob.type }));
                             }
                             const result = await tutorApi.updateMyCertificates(files);
-                            setCertImages((result.certBase64s ?? []).filter(im => im && im.trim().length > 50));
+                            setCertImages((result.certBase64s ?? []).filter((im: string) => im && im.trim().length > 50));
                             setCertMsg({ type: 'success', text: 'Đã xóa!' }); setTimeout(() => setCertMsg(null), 3000);
                           } catch { setCertMsg({ type: 'error', text: 'Xóa thất bại.' }); }
                           finally { setCertUploading(false); }

@@ -7,7 +7,7 @@ import { useSidebarStore } from '../../store/useSidebarStore';
 import { studentApi } from '../../services/studentApi';
 
 interface StudentSidebarProps {
-  active?: 'overview' | 'schedule' | 'teaching' | 'messages' | 'achievements' | 'parents' | 'payments' | 'profile' | 'requests';
+  active?: 'overview' | 'schedule' | 'teaching' | 'messages' | 'achievements' | 'parents' | 'payments' | 'profile' | 'requests' | 'notifications';
   hasParent?: boolean;
   onRequestClass?: () => void;
 }

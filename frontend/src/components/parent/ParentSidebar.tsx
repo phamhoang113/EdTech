@@ -6,7 +6,7 @@ import { useNotificationStore } from '../../store/useNotificationStore';
 import { useSidebarStore } from '../../store/useSidebarStore';
 
 export function ParentSidebar({ active, onRequestClass }: {
-  active: 'overview' | 'children' | 'applicants' | 'schedule' | 'teaching' | 'messages' | 'profile' | 'report' | 'payment';
+  active: 'overview' | 'children' | 'applicants' | 'schedule' | 'teaching' | 'messages' | 'profile' | 'report' | 'payment' | 'notifications';
   onRequestClass?: () => void;
 }) {
   const navigate = useNavigate();

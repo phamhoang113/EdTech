@@ -84,6 +84,7 @@ function TutorDetailDrawer({
   detail,
   onClose,
   onDelete,
+  onRefresh,
 }: {
   tutor: AdminTutorListItem;
   detail: AdminTutorVerificationResponse | null;
@@ -113,7 +114,7 @@ function TutorDetailDrawer({
       }
       // Gộp ảnh cũ + ảnh mới
       const allFiles = [...existingFiles, ...Array.from(files)];
-      await adminApi.updateTutorCertificates(tutor.id, allFiles);
+      await adminApi.updateTutorCertificates(tutor.userId, allFiles);
       onRefresh();
     } catch (error) {
       console.error('Upload cert failed:', error);
@@ -135,11 +136,11 @@ function TutorDetailDrawer({
         remainingFiles.push(new File([blob], doc.name + '.jpg', { type: blob.type }));
       }
       if (remainingFiles.length > 0) {
-        await adminApi.updateTutorCertificates(tutor.id, remainingFiles);
+        await adminApi.updateTutorCertificates(tutor.userId, remainingFiles);
       } else {
         // Upload 1 file rỗng không hợp lý → cần API xóa hết
         // Tạm thời: upload ảnh placeholder
-        await adminApi.updateTutorCertificates(tutor.id, []);
+        await adminApi.updateTutorCertificates(tutor.userId, []);
       }
       onRefresh();
     } catch (error) {

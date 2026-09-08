@@ -20,6 +20,7 @@ export interface TutorProfileResponse {
   bankName: string | null;
   bankAccountNumber: string | null;
   bankOwnerName: string | null;
+  certBase64s?: string[];
 }
 
 export interface UpdateTutorProfileRequest {
