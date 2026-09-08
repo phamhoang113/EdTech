@@ -41,7 +41,7 @@ export function ParentSidebar({ active, onRequestClass }: {
             </button>
           </div>
 
-          <span className="dash-sidebar-section-label">Quản lý lớp học</span>
+          <span className="dash-sidebar-section-label">📚 Quản lý lớp học</span>
           <button 
             className={`dash-sidebar-item ${active === 'overview' ? 'active' : ''}`} 
             onClick={() => handleNav('/parent/dashboard')}
@@ -75,6 +75,8 @@ export function ParentSidebar({ active, onRequestClass }: {
           >
             <ClipboardList size={18}/> Học tập
           </button>
+
+          <span className="dash-sidebar-section-label">💬 Liên lạc</span>
           <button 
             className={`dash-sidebar-item ${active === 'messages' ? 'active' : ''}`}
             onClick={() => handleNav('/parent/messages')}
@@ -87,7 +89,7 @@ export function ParentSidebar({ active, onRequestClass }: {
             )}
           </button>
 
-          <span className="dash-sidebar-section-label">Tiện ích & Tài chính</span>
+          <span className="dash-sidebar-section-label">👤 Tài khoản & Tài chính</span>
           <button 
             className={`dash-sidebar-item ${active === 'profile' ? 'active' : ''}`}
             onClick={() => handleNav('/parent/profile')}

@@ -1,7 +1,7 @@
 # Facebook Page — Gia Sư Tinh Hoa
 
 > **Page:** https://www.facebook.com/giasutinhhoa.vn
-> **Cập nhật:** 2026-08-22
+> **Cập nhật:** 2026-09-08
 
 ---
 
@@ -17,6 +17,7 @@
 | 06 | [06_tan_sinh_vien_lam_gia_su](./06_tan_sinh_vien_lam_gia_su/) | Tân sinh viên làm gia sư | Target: Sinh viên + Phụ huynh |
 | 07 | [07_chuan_bi_nam_hoc_moi](./07_chuan_bi_nam_hoc_moi/) | Chuẩn bị năm học mới | Target: Phụ huynh — Seasonal |
 | 08 | [08_loi_ich_su_dung](./08_loi_ich_su_dung/) | Lợi ích khi sử dụng Gia Sư Tinh Hoa | Target: Phụ huynh + Gia sư — Evergreen |
+| 09 | [09_dau_hieu_ngop_nam_hoc_moi](./09_dau_hieu_ngop_nam_hoc_moi/) | 3 Dấu hiệu con bị ngợp đầu năm học | Target: Phụ huynh chuyển cấp — Seasonal |
 
 ---
 

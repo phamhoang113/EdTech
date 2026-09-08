@@ -14,6 +14,8 @@ import com.edtech.backend.auth.repository.UserRepository;
 import com.edtech.backend.core.exception.EntityNotFoundException;
 import com.edtech.backend.core.service.StorageService;
 import com.edtech.backend.core.util.ImageCompressUtil;
+import com.edtech.backend.notification.entity.NotificationType;
+import com.edtech.backend.notification.service.NotificationService;
 import com.edtech.backend.tutor.dto.request.UpdateTutorProfileRequest;
 import com.edtech.backend.tutor.dto.response.TutorProfileResponse;
 import com.edtech.backend.tutor.entity.TutorProfileEntity;
@@ -30,6 +32,7 @@ public class TutorProfileService {
     private final TutorProfileRepository tutorProfileRepository;
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final NotificationService notificationService;
 
     public TutorProfileResponse getMyProfileByUsername(String username) {
         UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(username)
@@ -126,7 +129,37 @@ public class TutorProfileService {
 
         log.info("User {} submitted tutor profile for verification. Type: {}", user.getId(), tutorType);
 
+        // Gửi thông báo cho tất cả Admin
+        notificationService.sendNotificationToAdmins(
+                NotificationType.VERIFICATION_SUBMITTED,
+                "Gia sư cần xác minh",
+                String.format("Gia sư %s vừa gửi hồ sơ xác minh. Vui lòng xem xét và phê duyệt.", user.getFullName()),
+                "VERIFICATION",
+                user.getId()
+        );
+
         return mapToResponse(savedProfile, user);
+    }
+
+    /** Gia sư tự cập nhật ảnh bằng cấp */
+    @Transactional
+    public TutorProfileResponse updateMyCertificates(String username, MultipartFile[] files) {
+        UserEntity user = userRepository.findByIdentifierAndIsDeletedFalse(username)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng."));
+
+        TutorProfileEntity profile = tutorProfileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Chưa có hồ sơ gia sư."));
+
+        String[] base64Images = new String[files.length];
+        for (int i = 0; i < files.length; i++) {
+            base64Images[i] = storageService.upload(files[i], "tutors/degrees");
+        }
+
+        profile.setCertBase64s(ImageCompressUtil.compressArray(base64Images));
+        TutorProfileEntity saved = tutorProfileRepository.save(profile);
+
+        log.info("Tutor {} updated {} certificate images", user.getId(), files.length);
+        return mapToResponse(saved, user);
     }
 
     private TutorProfileResponse mapToResponse(TutorProfileEntity profile, UserEntity user) {

@@ -155,6 +155,13 @@ export const router = createBrowserRouter([
               return { Component: DashboardPage };
             },
           },
+          {
+            path: '/profile',
+            lazy: async () => {
+              const mod = await import('../pages/profile/UserProfilePage');
+              return { Component: mod.default };
+            },
+          },
           /* ── Parent Layout ── */
           {
             lazy: async () => {
@@ -223,6 +230,13 @@ export const router = createBrowserRouter([
                 lazy: async () => {
                   const { ParentTeachingPage } = await import('../pages/dashboard/ParentTeachingPage');
                   return { Component: ParentTeachingPage };
+                },
+              },
+              {
+                path: '/parent/notifications',
+                lazy: async () => {
+                  const { NotificationsPage } = await import('../pages/dashboard/NotificationsPage');
+                  return { Component: NotificationsPage };
                 },
               },
             ],
@@ -296,6 +310,13 @@ export const router = createBrowserRouter([
                 lazy: async () => {
                   const { StudentAIPage } = await import('../pages/dashboard/StudentAIPage');
                   return { Component: StudentAIPage };
+                },
+              },
+              {
+                path: '/student/notifications',
+                lazy: async () => {
+                  const { NotificationsPage } = await import('../pages/dashboard/NotificationsPage');
+                  return { Component: NotificationsPage };
                 },
               },
             ],

@@ -139,6 +139,15 @@ export const tutorApi = {
     return unwrap(res);
   },
 
+  updateMyCertificates: async (files: File[]): Promise<TutorProfileResponse> => {
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file));
+    const res = await apiClient.put('/api/v1/tutors/profile/certificates', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return unwrap(res);
+  },
+
   // ─── Dashboard data ──────────────────────────────────────
   getMyClasses: async (): Promise<TutorClassDTO[]> => {
     const res = await apiClient.get('/api/v1/tutor/classes');

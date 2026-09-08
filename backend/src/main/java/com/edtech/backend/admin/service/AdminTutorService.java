@@ -230,8 +230,16 @@ public class AdminTutorService {
         
         // Only cert (degree/certificate) images are stored - CCCD is number only
         if (profile.getCertBase64s() != null && profile.getCertBase64s().length > 0) {
-            String decompressedCert = ImageCompressUtil.decompress(profile.getCertBase64s()[0]);
-            docs.add(AdminTutorVerificationResponse.DocItem.builder().name("Bằng cấp/Chứng chỉ").icon("🎓").url(decompressedCert).build());
+            for (int i = 0; i < profile.getCertBase64s().length; i++) {
+                String decompressedCert = ImageCompressUtil.decompress(profile.getCertBase64s()[i]);
+                if (decompressedCert != null && !decompressedCert.isBlank()) {
+                    docs.add(AdminTutorVerificationResponse.DocItem.builder()
+                            .name("Bằng cấp/Chứng chỉ " + (i + 1))
+                            .icon("🎓")
+                            .url(decompressedCert)
+                            .build());
+                }
+            }
         }
 
         String levelsStr = profile.getTeachingLevels() != null ? String.join(", ", profile.getTeachingLevels()) : DEFAULT_VALUE;

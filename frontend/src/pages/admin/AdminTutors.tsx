@@ -1,5 +1,5 @@
-import { GraduationCap, Phone, MapPin, Trash2, Search, CheckCircle, XCircle, Clock, AlertTriangle, X, BookOpen, DollarSign, ChevronRight, User, FileText, Landmark } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { GraduationCap, Phone, MapPin, Trash2, Search, CheckCircle, XCircle, Clock, AlertTriangle, X, BookOpen, DollarSign, ChevronRight, User, FileText, Landmark, Upload, Plus } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 
 import { adminApi } from '../../services/adminApi';
 import type { AdminTutorListItem, AdminTutorVerificationResponse } from '../../services/adminApi';
@@ -9,6 +9,11 @@ import './AdminTutors.css';
 function formatVnd(amount: number | undefined | null): string {
   if (amount == null) return '—';
   return amount.toLocaleString('vi-VN') + 'đ';
+}
+
+function toImgSrc(img: string): string {
+  if (img.startsWith('http') || img.startsWith('/')) return img;
+  return img.startsWith('data:') ? img : `data:image/png;base64,${img}`;
 }
 
 /* ─── Status badge utils ────────────────────────────────────────────────── */
@@ -84,7 +89,66 @@ function TutorDetailDrawer({
   detail: AdminTutorVerificationResponse | null;
   onClose: () => void;
   onDelete: (t: AdminTutorListItem) => void;
+  onRefresh: () => void;
 }) {
+  const [zoomImg, setZoomImg] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // All doc URLs for prev/next navigation
+  const allDocUrls = (detail?.docs ?? []).map(d => toImgSrc(d.url));
+  const currentZoomIdx = zoomImg ? allDocUrls.indexOf(zoomImg) : -1;
+
+  /** Upload thêm ảnh bằng cấp mới (append vào danh sách hiện tại) */
+  const handleUploadCerts = async (files: FileList) => {
+    if (!files.length) return;
+    setUploading(true);
+    try {
+      // Lấy ảnh hiện tại từ server dưới dạng base64 → chuyển thành File
+      const existingFiles: File[] = [];
+      for (const doc of (detail?.docs ?? [])) {
+        const res = await fetch(toImgSrc(doc.url));
+        const blob = await res.blob();
+        existingFiles.push(new File([blob], doc.name + '.jpg', { type: blob.type }));
+      }
+      // Gộp ảnh cũ + ảnh mới
+      const allFiles = [...existingFiles, ...Array.from(files)];
+      await adminApi.updateTutorCertificates(tutor.id, allFiles);
+      onRefresh();
+    } catch (error) {
+      console.error('Upload cert failed:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  /** Xóa 1 ảnh bằng cấp (re-upload danh sách còn lại) */
+  const handleDeleteCert = async (deleteIdx: number) => {
+    if (!confirm('Xóa ảnh bằng cấp này?')) return;
+    setUploading(true);
+    try {
+      const remainingDocs = (detail?.docs ?? []).filter((_, i) => i !== deleteIdx);
+      const remainingFiles: File[] = [];
+      for (const doc of remainingDocs) {
+        const res = await fetch(toImgSrc(doc.url));
+        const blob = await res.blob();
+        remainingFiles.push(new File([blob], doc.name + '.jpg', { type: blob.type }));
+      }
+      if (remainingFiles.length > 0) {
+        await adminApi.updateTutorCertificates(tutor.id, remainingFiles);
+      } else {
+        // Upload 1 file rỗng không hợp lý → cần API xóa hết
+        // Tạm thời: upload ảnh placeholder
+        await adminApi.updateTutorCertificates(tutor.id, []);
+      }
+      onRefresh();
+    } catch (error) {
+      console.error('Delete cert failed:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="at-drawer-overlay" onClick={onClose}>
       <aside className="at-drawer" onClick={e => e.stopPropagation()}>
@@ -189,27 +253,86 @@ function TutorDetailDrawer({
                 </div>
               </section>
 
-              {/* Bằng cấp / Chứng chỉ */}
-              {detail.docs && detail.docs.length > 0 && (
-                <section className="at-drawer-section">
-                  <h3><GraduationCap size={14}/> Bằng cấp / Chứng chỉ</h3>
+              {/* Bằng cấp / Chứng chỉ — với chỉnh sửa */}
+              <section className="at-drawer-section">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <h3 style={{ margin: 0 }}><GraduationCap size={14}/> Bằng cấp / Chứng chỉ ({detail.docs?.length ?? 0})</h3>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 4, padding: '5px 12px',
+                      borderRadius: 8, border: '1.5px solid rgba(99,102,241,0.3)',
+                      background: 'rgba(99,102,241,0.06)', color: '#6366f1',
+                      fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    <Plus size={13}/> Thêm ảnh
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={e => { if (e.target.files) handleUploadCerts(e.target.files); e.target.value = ''; }}
+                  />
+                </div>
+
+                {uploading && (
+                  <div style={{ textAlign: 'center', padding: 12, color: '#6366f1', fontSize: '0.85rem', fontWeight: 600 }}>
+                    ⏳ Đang xử lý...
+                  </div>
+                )}
+
+                {detail.docs && detail.docs.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {detail.docs.map((doc, i) => (
-                      <div key={i} style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-                        <div style={{ padding: '6px 10px', background: 'var(--color-surface-raised)', fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span>{doc.icon}</span> <span>{doc.name}</span>
+                      <div key={i} style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid var(--color-border)', position: 'relative' }}>
+                        <div style={{ padding: '6px 10px', background: 'var(--color-surface-raised)', fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span>{doc.icon}</span> <span>{doc.name}</span>
+                          </span>
+                          <button
+                            onClick={() => handleDeleteCert(i)}
+                            disabled={uploading}
+                            title="Xóa ảnh này"
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 3, padding: '3px 8px',
+                              borderRadius: 6, border: '1px solid rgba(239,68,68,0.3)',
+                              background: 'rgba(239,68,68,0.06)', color: '#ef4444',
+                              fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                            }}
+                          >
+                            <Trash2 size={11}/> Xóa
+                          </button>
                         </div>
                         <img
-                          src={doc.url}
+                          src={toImgSrc(doc.url)}
                           alt={doc.name}
-                          style={{ width: '100%', maxHeight: 400, objectFit: 'contain', background: '#f8f8fa', cursor: 'pointer' }}
-                          onClick={() => window.open(doc.url, '_blank')}
+                          style={{ width: '100%', maxHeight: 400, objectFit: 'contain', background: '#f8f8fa', cursor: 'zoom-in' }}
+                          onClick={() => setZoomImg(toImgSrc(doc.url))}
                         />
                       </div>
                     ))}
                   </div>
-                </section>
-              )}
+                ) : (
+                  <div style={{ textAlign: 'center', padding: 24, color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                    <Upload size={24} style={{ opacity: 0.3, marginBottom: 8 }}/>
+                    <p>Chưa có ảnh bằng cấp</p>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        marginTop: 8, padding: '8px 16px', borderRadius: 8,
+                        border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                        color: '#fff', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit',
+                      }}
+                    >
+                      <Upload size={14}/> Upload ảnh bằng cấp
+                    </button>
+                  </div>
+                )}
+              </section>
             </>
           )}
 
@@ -242,6 +365,59 @@ function TutorDetailDrawer({
           </div>
         )}
       </aside>
+
+      {/* Lightbox phóng to ảnh bằng cấp */}
+      {zoomImg && (
+        <div onClick={() => setZoomImg(null)} style={{
+          position: 'fixed', inset: 0, zIndex: 10001,
+          background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'zoom-out', padding: 24,
+        }}>
+          <button onClick={() => setZoomImg(null)} style={{
+            position: 'absolute', top: 16, right: 16, width: 40, height: 40, borderRadius: '50%',
+            border: 'none', background: 'rgba(255,255,255,0.9)', color: '#111', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+          }}>✕</button>
+
+          {/* Prev */}
+          {currentZoomIdx > 0 && (
+            <button onClick={(e) => { e.stopPropagation(); setZoomImg(allDocUrls[currentZoomIdx - 1]); }} style={{
+              position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
+              width: 44, height: 44, borderRadius: '50%', border: 'none',
+              background: 'rgba(255,255,255,0.9)', color: '#111', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+            }}>‹</button>
+          )}
+
+          {/* Next */}
+          {currentZoomIdx >= 0 && currentZoomIdx < allDocUrls.length - 1 && (
+            <button onClick={(e) => { e.stopPropagation(); setZoomImg(allDocUrls[currentZoomIdx + 1]); }} style={{
+              position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
+              width: 44, height: 44, borderRadius: '50%', border: 'none',
+              background: 'rgba(255,255,255,0.9)', color: '#111', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+            }}>›</button>
+          )}
+
+          <img src={zoomImg} alt="Phóng to bằng cấp" onClick={(e) => e.stopPropagation()} style={{
+            maxWidth: '85vw', maxHeight: '85vh', objectFit: 'contain',
+            borderRadius: 12, boxShadow: '0 8px 40px rgba(0,0,0,0.5)', cursor: 'default',
+          }}/>
+
+          {/* Counter */}
+          {allDocUrls.length > 1 && currentZoomIdx >= 0 && (
+            <div style={{
+              position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+              background: 'rgba(0,0,0,0.6)', color: '#fff', padding: '6px 16px',
+              borderRadius: 20, fontSize: '0.85rem', fontWeight: 600,
+            }}>{currentZoomIdx + 1} / {allDocUrls.length}</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -424,6 +600,7 @@ export function AdminTutors() {
           detail={getVerificationDetail(selectedTutor.userId)}
           onClose={() => setSelectedTutor(null)}
           onDelete={t => { setSelectedTutor(null); setPendingDelete(t); }}
+          onRefresh={fetchData}
         />
       )}
 

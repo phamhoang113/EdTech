@@ -188,7 +188,7 @@ export function AdminLayout() {
                   <div className="profile-dropdown-divider" />
                   <button
                     className="profile-dropdown-item"
-                    onClick={() => { setShowDropdown(false); navigate('/profile'); }}
+                    onClick={() => { setShowDropdown(false); navigate('/admin/settings'); }}
                   >
                     <UserIcon size={16} /> Hồ sơ cá nhân
                   </button>

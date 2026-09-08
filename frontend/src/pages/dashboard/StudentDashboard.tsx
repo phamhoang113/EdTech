@@ -1,4 +1,4 @@
-import { BookOpen, Award, Calendar, ChevronRight, Clock, UserPlus, Heart, X, Users, Plus } from 'lucide-react';
+import { BookOpen, Calendar, ChevronRight, Clock, UserPlus, Heart, X, Users, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getDisplayStatus } from '../../utils/sessionStatus';
 import { useNavigate } from 'react-router-dom';
@@ -214,14 +214,12 @@ export const StudentDashboard = () => {
         </div>
       )}
 
-      {/* Stats from real data */}
+      {/* Stats — chỉ 2 thống kê quan trọng nhất */}
       <section>
         <div className="dash-stats-grid">
           {[
             { val: `${activeClasses.length}`, lbl: 'Lớp đang học', icon: <BookOpen size={20}/>, cls: 'color-indigo' },
             { val: `${upcomingSessions.length}`, lbl: 'Buổi sắp tới', icon: <Calendar size={20}/>, cls: 'color-violet' },
-            { val: `${completedSessions.length}`, lbl: 'Buổi hoàn thành', icon: <Award size={20}/>, cls: 'color-emerald' },
-            { val: `${sessions.length}`, lbl: 'Tổng buổi học', icon: <Clock size={20}/>, cls: 'color-amber' },
           ].map((s, i) => (
             <div key={i} className={`dash-stat-card ${s.cls}`}>
               <div className="stat-icon-box">{s.icon}</div>
@@ -329,7 +327,7 @@ export const StudentDashboard = () => {
         </div>
       </div>
 
-      {/* Quick actions */}
+      {/* Quick actions — 3 thao tác chính */}
       <section>
         <div className="dash-section-head">
           <span className="dash-section-title">⚡ Thao tác nhanh</span>
@@ -337,9 +335,8 @@ export const StudentDashboard = () => {
         <div className="dash-qa-grid">
           {[
             { emoji: '📅', label: 'Lịch học', onClick: () => navigate('/student/schedule') },
-            { emoji: '💬', label: 'Nhắn tin', onClick: () => navigate('/messages') },
-            { emoji: '👤', label: 'Hồ sơ', onClick: () => navigate('/student/profile') },
-            ...(!hasParentLink ? [{ emoji: '💳', label: 'Thanh toán', onClick: () => navigate('/student/payment') }] : []),
+            { emoji: '💬', label: 'Nhắn tin', onClick: () => navigate('/student/messages') },
+            { emoji: '📝', label: 'Bài tập', onClick: () => navigate('/student/teaching') },
           ].map((a,i) => (
             <button key={i} className="dash-qa-card" onClick={a.onClick}>
               <span className="qa-emoji">{a.emoji}</span>

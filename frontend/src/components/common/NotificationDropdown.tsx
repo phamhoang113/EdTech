@@ -55,6 +55,12 @@ export function NotificationDropdown() {
   useWebSocket({
     onNotification: (notif) => {
       setNotifications(prev => [notif, ...prev]);
+      // Fix: tăng badge count ngay khi nhận notification qua WebSocket
+      if (!notif.isRead) {
+        useNotificationStore.getState().setUnreadNotifs(
+          useNotificationStore.getState().unreadNotifs + 1
+        );
+      }
     },
   });
 
@@ -90,7 +96,10 @@ export function NotificationDropdown() {
     // Lắng nghe click notification từ Service Worker (khi tab đã mở)
     const handleSwMessage = (event: MessageEvent) => {
       if (event.data?.type === 'NOTIFICATION_CLICK' && event.data.entityType) {
-        navigateByEntityType({ entityType: event.data.entityType } as NotificationResponseDTO);
+        navigateToNotification({
+          entityType: event.data.entityType,
+          entityId: event.data.entityId,
+        } as NotificationResponseDTO);
       }
     };
     navigator.serviceWorker?.addEventListener('message', handleSwMessage);
@@ -147,52 +156,91 @@ export function NotificationDropdown() {
     }
     
     setIsOpen(false);
-    navigateByEntityType(notif);
+    navigateToNotification(notif);
   };
 
-  const navigateByEntityType = (notif: NotificationResponseDTO) => {
+  /**
+   * Build redirect path dựa trên entityType + role.
+   * Mỗi entityType map chính xác tới trang phù hợp cho từng role.
+   */
+  const buildRedirectPath = (notif: NotificationResponseDTO): string => {
     const role = useAuthStore.getState().user?.role;
-    const rolePrefix = role === 'ADMIN' ? '/admin'
-      : role === 'TUTOR' ? '/tutor'
-      : role === 'STUDENT' ? '/student'
-      : '/parent';
+    const entityParam = notif.entityId ? `?highlightId=${notif.entityId}` : '';
 
-    switch (notif.entityType) {
-      case 'CLASS':
-        navigate(role === 'ADMIN' ? '/admin/classes' : `${rolePrefix}/dashboard`);
-        break;
-      case 'SESSION':
-        navigate(role === 'ADMIN' ? '/admin/schedules' : `${rolePrefix}/schedule`);
-        break;
-      case 'APPLICATION':
-        navigate(role === 'ADMIN' ? '/admin/class-applications'
-          : role === 'PARENT' ? '/parent/applicants'
-          : `${rolePrefix}/dashboard`);
-        break;
-      case 'INVOICE':
-        navigate(role === 'ADMIN' ? '/admin/payments' : `${rolePrefix}/payment`);
-        break;
-      case 'ABSENCE':
-        navigate(role === 'ADMIN' ? '/admin/absences' : `${rolePrefix}/schedule`);
-        break;
-      case 'CONVERSATION':
-        navigate(role === 'ADMIN' ? '/admin/messages' : `${rolePrefix}/messages`);
-        break;
-      case 'VERIFICATION':
-        navigate('/admin/verification');
-        break;
-      case 'MATERIAL':
-      case 'ASSESSMENT':
-      case 'SUBMISSION':
-        navigate(`${rolePrefix}/teaching`);
-        break;
-      case 'CONTACT_MESSAGE':
-        navigate('/admin/contact-messages');
-        break;
-      default:
-        navigate(`${rolePrefix}/dashboard`);
-        break;
+    // Admin — redirect về trang quản trị tương ứng
+    if (role === 'ADMIN') {
+      const adminMap: Record<string, string> = {
+        CLASS: '/admin/classes',
+        SESSION: '/admin/schedules',
+        APPLICATION: '/admin/class-applications',
+        INVOICE: '/admin/payments',
+        ABSENCE: '/admin/absences',
+        CONVERSATION: '/admin/messages',
+        VERIFICATION: '/admin/verification',
+        CONTACT_MESSAGE: '/admin/contact-messages',
+        MATERIAL: '/admin/classes',
+        ASSESSMENT: '/admin/classes',
+        SUBMISSION: '/admin/classes',
+      };
+      return (adminMap[notif.entityType ?? ''] ?? '/admin/dashboard') + entityParam;
     }
+
+    // Student — redirect tới trang học sinh phù hợp
+    if (role === 'STUDENT') {
+      const studentMap: Record<string, string> = {
+        CLASS: '/student/requests',
+        SESSION: '/student/schedule',
+        APPLICATION: '/student/requests',
+        INVOICE: '/student/payment',
+        ABSENCE: '/student/schedule',
+        CONVERSATION: '/student/messages',
+        MATERIAL: '/student/teaching',
+        ASSESSMENT: '/student/teaching',
+        SUBMISSION: '/student/teaching',
+      };
+      return (studentMap[notif.entityType ?? ''] ?? '/student/dashboard') + entityParam;
+    }
+
+    // Parent — redirect tới trang phụ huynh phù hợp
+    if (role === 'PARENT') {
+      const parentMap: Record<string, string> = {
+        CLASS: '/parent/dashboard',
+        SESSION: '/parent/schedule',
+        APPLICATION: '/parent/applicants',
+        INVOICE: '/parent/payment',
+        ABSENCE: '/parent/schedule',
+        CONVERSATION: '/parent/messages',
+        MATERIAL: '/parent/teaching',
+        ASSESSMENT: '/parent/teaching',
+        SUBMISSION: '/parent/teaching',
+      };
+      return (parentMap[notif.entityType ?? ''] ?? '/parent/dashboard') + entityParam;
+    }
+
+    // Tutor — redirect tới trang gia sư phù hợp
+    const tutorMap: Record<string, string> = {
+      CLASS: '/tutor/classes',
+      SESSION: '/tutor/schedule',
+      APPLICATION: '/tutor/classes',
+      INVOICE: '/tutor/revenue',
+      ABSENCE: '/tutor/schedule',
+      CONVERSATION: '/tutor/messages',
+      MATERIAL: '/tutor/teaching',
+      ASSESSMENT: '/tutor/teaching',
+      SUBMISSION: '/tutor/teaching',
+    };
+    return (tutorMap[notif.entityType ?? ''] ?? '/tutor/dashboard') + entityParam;
+  };
+
+  /**
+   * Navigate tới notification target.
+   * Dùng state.notifTimestamp để force re-render dù cùng URL.
+   */
+  const navigateToNotification = (notif: NotificationResponseDTO) => {
+    const targetPath = buildRedirectPath(notif);
+    navigate(targetPath, {
+      state: { notifTimestamp: Date.now(), entityId: notif.entityId },
+    });
   };
 
   const getIcon = (type: string) => {
@@ -229,7 +277,12 @@ export function NotificationDropdown() {
     <div className="notification-wrapper" ref={dropdownRef}>
       <button 
         className="notif-trigger-btn" 
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          const willOpen = !isOpen;
+          setIsOpen(willOpen);
+          // Refetch data khi mở dropdown để đảm bảo badge count chính xác
+          if (willOpen) fetchInitialData();
+        }}
         title="Thông báo"
       >
         <Bell size={18} />
@@ -292,7 +345,7 @@ export function NotificationDropdown() {
                 : role === 'TUTOR' ? '/tutor'
                 : role === 'STUDENT' ? '/student'
                 : '/parent';
-              navigate(`${prefix}/dashboard`);
+              navigate(`${prefix}/notifications`);
             }}>
               Xem tất cả thông báo
             </button>

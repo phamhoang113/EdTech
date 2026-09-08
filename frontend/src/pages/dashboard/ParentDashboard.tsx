@@ -1,4 +1,4 @@
-import { BookOpen, Award, TrendingUp, Calendar, ChevronRight, Clock, Users, X, Sparkles, Link2, Plus, GraduationCap, Phone, UserCheck, CheckCircle, XCircle, Activity } from 'lucide-react';
+import { BookOpen, Award, Calendar, ChevronRight, Clock, Users, X, Sparkles, Link2, Plus, GraduationCap, Phone, UserCheck, CheckCircle, XCircle, Activity } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getDisplayStatus } from '../../utils/sessionStatus';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
@@ -32,19 +32,6 @@ function fmtDate(iso: string | null | undefined) {
   if (!iso) return '—';
   const d = new Date(iso);
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-}
-
-function formatShortCurrency(amount: number) {
-  if (amount === 0) return '0 ₫';
-  if (amount >= 1_000_000) {
-    const m = amount / 1_000_000;
-    return Number.isInteger(m) ? `${m}M` : `${m.toFixed(1)}M`;
-  }
-  if (amount >= 1_000) {
-    const k = amount / 1_000;
-    return Number.isInteger(k) ? `${k}K` : `${k.toFixed(1)}K`;
-  }
-  return amount.toString();
 }
 
 /* ─── Status Badge ───────────────────────────────────────────────────────── */
@@ -312,12 +299,10 @@ export const ParentDashboard = () => {
   const h = new Date().getHours();
   const greeting = h < 12 ? 'Chào buổi sáng' : h < 18 ? 'Chào buổi chiều' : 'Chào buổi tối';
 
-  // Calculate Monthly Cost dynamically
+  // Active classes for stats
   const activeClasses = myClasses.filter(c => 
     ['PENDING_APPROVAL', 'OPEN', 'ASSIGNED', 'MATCHED', 'ACTIVE'].includes(c.status)
   );
-  const totalFeeRaw = activeClasses.reduce((sum, c) => sum + (c.parentFee || 0), 0);
-  const totalFeeFormatted = formatShortCurrency(totalFeeRaw);
 
   return (
     <>
@@ -371,13 +356,12 @@ export const ParentDashboard = () => {
         </div>
       )}
 
-      {/* Stats */}
+      {/* Stats — 3 thống kê chính */}
       <section>
         <div className="dash-stats-grid">
           {[
             { val: `${studentsCount ?? 0}`, lbl: 'Con em đang học', icon: <Users size={20}/>,      cls: 'color-indigo'  },
             { val: `${activeClasses.length}`, lbl: 'Lớp học',  icon: <Calendar size={20}/>,   cls: 'color-violet'  },
-            { val: totalFeeFormatted,     lbl: 'Chi phí tháng',  icon: <TrendingUp size={20}/>, cls: 'color-amber'   },
             { val: `${upcomingSessions.length}`, lbl: 'Buổi sắp tới', icon: <Award size={20}/>,      cls: 'color-emerald' },
           ].map((s, i) => (
             <div key={i} className={`dash-stat-card ${s.cls}`}>
@@ -430,7 +414,7 @@ export const ParentDashboard = () => {
         </div>
       </div>
 
-      {/* Quick actions */}
+      {/* Quick actions — 3 thao tác chính */}
       <section>
         <div className="dash-section-head">
           <span className="dash-section-title">⚡ Thao tác nhanh</span>
@@ -439,7 +423,6 @@ export const ParentDashboard = () => {
           {[
             { emoji: '📋', label: 'Yêu cầu mở lớp', onClick: () => setShowRequestClass(true) },
             { emoji: '👶', label: 'Quản lý con',     onClick: () => navigate('/parent/children') },
-            { emoji: '📊', label: 'Báo cáo học tập', onClick: () => navigate('/parent/report') },
             { emoji: '💳', label: 'Thanh toán',      onClick: () => navigate('/parent/payment')  },
           ].map((a, i) => (
             <button key={i} className="dash-qa-card" onClick={a.onClick}>

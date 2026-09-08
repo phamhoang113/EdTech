@@ -16,10 +16,12 @@ export function StudentLayout() {
   const [showReqClass, setShowReqClass] = useState(false);
 
   // Xác định tab active từ URL
-  const resolveActiveTab = (): 'overview' | 'schedule' | 'messages' | 'achievements' | 'parents' | 'payments' | 'profile' | 'requests' | 'ai' => {
+  const resolveActiveTab = (): 'overview' | 'schedule' | 'teaching' | 'messages' | 'achievements' | 'parents' | 'payments' | 'profile' | 'requests' | 'ai' | 'notifications' => {
     const path = location.pathname;
     if (path.includes('/student/schedule')) return 'schedule';
+    if (path.includes('/student/teaching')) return 'teaching';
     if (path.includes('/student/messages')) return 'messages';
+    if (path.includes('/student/notifications')) return 'notifications';
     if (path.includes('/student/profile')) return 'profile';
     if (path.includes('/student/parents')) return 'parents';
     if (path.includes('/student/payment')) return 'payments';

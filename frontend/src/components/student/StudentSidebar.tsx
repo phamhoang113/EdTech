@@ -1,4 +1,4 @@
-import { LayoutDashboard, Calendar, User, Users, MessageSquare, CreditCard, LogOut, BookOpen, ClipboardList, Bot, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, Calendar, User, Users, MessageSquare, CreditCard, LogOut, BookOpen, ClipboardList, PlusCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -7,7 +7,7 @@ import { useSidebarStore } from '../../store/useSidebarStore';
 import { studentApi } from '../../services/studentApi';
 
 interface StudentSidebarProps {
-  active?: 'overview' | 'schedule' | 'teaching' | 'messages' | 'achievements' | 'parents' | 'payments' | 'profile' | 'requests' | 'ai';
+  active?: 'overview' | 'schedule' | 'teaching' | 'messages' | 'achievements' | 'parents' | 'payments' | 'profile' | 'requests';
   hasParent?: boolean;
   onRequestClass?: () => void;
 }
@@ -49,11 +49,6 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
     close();
   };
 
-  const handleAddParent = () => {
-    navigate('/student/parents');
-    close();
-  };
-
   return (
     <>
       {isOpen && <div className="dash-sidebar-overlay" onClick={close} />}
@@ -63,7 +58,7 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
         </Link>
 
         <div className="dash-sidebar-section">
-          {/* CTA button: Yêu cầu mở lớp — chỉ hiển thị cho HS không có PH (giống ParentSidebar) */}
+          {/* CTA button: Yêu cầu mở lớp — chỉ hiển thị cho HS không có PH */}
           {!loadingParent && !hasParent && onRequestClass && (
             <div style={{ padding: '0 10px', marginBottom: '16px' }}>
               <button
@@ -75,7 +70,7 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
             </div>
           )}
 
-          <span className="dash-sidebar-section-label">Học tập</span>
+          <span className="dash-sidebar-section-label">📚 Học tập</span>
           <button 
             className={`dash-sidebar-item ${active === 'overview' ? 'active' : ''}`}
             onClick={() => handleNav('/student/dashboard')}
@@ -94,13 +89,6 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
           >
             <ClipboardList size={18} /> Bài tập & Tài liệu
           </button>
-          <button 
-            className={`dash-sidebar-item dash-sidebar-item--ai ${active === 'ai' ? 'active' : ''}`}
-            onClick={() => handleNav('/student/ai')}
-          >
-            <Bot size={18} /> Gia sư AI
-            <span className="item-badge item-badge--ai">AI</span>
-          </button>
           {!loadingParent && !hasParent && (
             <button 
               className={`dash-sidebar-item ${active === 'requests' ? 'active' : ''}`}
@@ -109,6 +97,8 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
               <BookOpen size={18} /> Lớp học
             </button>
           )}
+
+          <span className="dash-sidebar-section-label">💬 Liên lạc</span>
           <button 
             className={`dash-sidebar-item ${active === 'messages' ? 'active' : ''}`}
             onClick={() => handleNav('/student/messages')}
@@ -121,7 +111,7 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
             )}
           </button>
 
-          <span className="dash-sidebar-section-label">Tài khoản</span>
+          <span className="dash-sidebar-section-label">👤 Tài khoản</span>
           <button 
             className={`dash-sidebar-item ${active === 'profile' ? 'active' : ''}`}
             onClick={() => handleNav('/student/profile')}
@@ -130,7 +120,7 @@ export function StudentSidebar({ active = 'overview', hasParent: initialHasParen
           </button>
           <button 
             className={`dash-sidebar-item ${active === 'parents' ? 'active' : ''}`} 
-            onClick={handleAddParent}
+            onClick={() => { navigate('/student/parents'); close(); }}
           >
             <Users size={18} /> Phụ huynh của tôi
           </button>

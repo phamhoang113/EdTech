@@ -16,12 +16,14 @@ export function ParentLayout() {
   const [showReqClass, setShowReqClass] = useState(false);
 
   // Xác định tab active từ URL
-  const resolveActiveTab = (): 'overview' | 'children' | 'applicants' | 'schedule' | 'messages' | 'profile' | 'report' | 'payment' => {
+  const resolveActiveTab = (): 'overview' | 'children' | 'applicants' | 'schedule' | 'teaching' | 'messages' | 'profile' | 'report' | 'payment' | 'notifications' => {
     const path = location.pathname;
     if (path.includes('/parent/children')) return 'children';
     if (path.includes('/parent/applicants')) return 'applicants';
     if (path.includes('/parent/schedule')) return 'schedule';
+    if (path.includes('/parent/teaching')) return 'teaching';
     if (path.includes('/parent/messages')) return 'messages';
+    if (path.includes('/parent/notifications')) return 'notifications';
     if (path.includes('/parent/profile')) return 'profile';
     if (path.includes('/parent/payment')) return 'payment';
     if (path.includes('/parent/report')) return 'report';

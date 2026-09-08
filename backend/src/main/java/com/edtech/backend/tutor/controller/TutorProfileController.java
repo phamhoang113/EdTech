@@ -66,4 +66,15 @@ public class TutorProfileController {
         );
         return ApiResponse.ok(response, "Xác thực hồ sơ thành công. Vui lòng chờ duyệt.");
     }
+
+    /** Gia sư cập nhật ảnh bằng cấp */
+    @PutMapping("/certificates")
+    public ApiResponse<TutorProfileResponse> updateMyCertificates(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam("files") MultipartFile[] files
+    ) {
+        String username = userDetails.getUsername();
+        TutorProfileResponse response = tutorProfileService.updateMyCertificates(username, files);
+        return ApiResponse.ok(response, "Cập nhật ảnh bằng cấp thành công");
+    }
 }

@@ -1,5 +1,6 @@
 import { BookOpen, GraduationCap, X, Phone, CheckCircle, Activity, UserCheck, Clock, XCircle, Plus, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { studentApi } from '../../services/studentApi';
 import type { ParentClass, TutorApplicant } from '../../services/parentApi';
@@ -141,46 +142,94 @@ export function MyClassesPanel({ classes, loading, onViewTutors }: {
 
   return (
     <div className="people-list" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {classes.map(cls => (
-        <div key={cls.id} className="dash-my-class-card">
-          <div className="dash-my-class-icon">
-            {cls.subject.slice(0, 2).toUpperCase()}
-          </div>
-          <div className="dash-my-class-info">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {cls.title}
-              </div>
-              {cls.classCode && (
-                <span style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 700, background: '#eef2ff', padding: '1px 7px', borderRadius: '10px', flexShrink: 0 }}>
-                  #{cls.classCode}
+      {classes.map(cls => {
+        const hasProposals = cls.status === 'OPEN' || cls.hasPendingProposals;
+
+        return (
+          <div
+            key={cls.id}
+            className="dash-my-class-card"
+            style={hasProposals ? {
+              border: '2px solid rgba(99, 102, 241, 0.4)',
+              boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.08), 0 4px 12px rgba(99, 102, 241, 0.12)',
+              position: 'relative',
+            } : { position: 'relative' }}
+          >
+            {/* Banner nổi bật khi có GS đề xuất */}
+            {cls.hasPendingProposals && (
+              <div
+                onClick={() => onViewTutors(cls)}
+                style={{
+                  position: 'absolute', top: -1, left: -1, right: -1,
+                  padding: '8px 16px',
+                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  color: '#fff', fontSize: '0.82rem', fontWeight: 700,
+                  borderRadius: '12px 12px 0 0',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  animation: 'notifPulse 2s ease-in-out 3',
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{
+                    width: 8, height: 8, borderRadius: '50%',
+                    background: '#fbbf24', display: 'inline-block',
+                    animation: 'notifPulse 1.5s ease-in-out infinite',
+                  }} />
+                  🎓 Có gia sư đề xuất cho lớp này!
                 </span>
-              )}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: 2, whiteSpace: 'normal', wordBreak: 'break-word' }}>
-              {cls.subject} • {cls.grade}{cls.parentFee > 0 ? ` • ${fmtCurrency(cls.parentFee)}/tháng` : ''} • {fmtDate(cls.createdAt)}
-            </div>
-            {cls.tutorName && (
-              <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: 4, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <GraduationCap size={12}/> Gia sư: {cls.tutorName}
+                <span style={{ fontSize: '0.78rem', opacity: 0.9 }}>Nhấn để xem →</span>
               </div>
             )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: cls.hasPendingProposals ? 32 : 0 }}>
+              <div className="dash-my-class-icon">
+                {cls.subject.slice(0, 2).toUpperCase()}
+              </div>
+              <div className="dash-my-class-info">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {cls.title}
+                  </div>
+                  {cls.classCode && (
+                    <span style={{ fontSize: '0.7rem', color: '#6366f1', fontWeight: 700, background: '#eef2ff', padding: '1px 7px', borderRadius: '10px', flexShrink: 0 }}>
+                      #{cls.classCode}
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: 2, whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                  {cls.subject} • {cls.grade}{cls.parentFee > 0 ? ` • ${fmtCurrency(cls.parentFee)}/tháng` : ''} • {fmtDate(cls.createdAt)}
+                </div>
+                {cls.tutorName && (
+                  <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: 4, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <GraduationCap size={12}/> Gia sư: {cls.tutorName}
+                  </div>
+                )}
+              </div>
+              <div className="dash-my-class-actions">
+                <StatusBadge status={cls.status}/>
+                {hasProposals && (
+                  <button onClick={() => onViewTutors(cls)} style={{
+                    display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px',
+                    borderRadius: 10,
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    color: '#fff',
+                    fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                    boxShadow: '0 2px 8px rgba(99,102,241,0.35)',
+                    transition: 'transform 0.15s, box-shadow 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(99,102,241,0.45)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(99,102,241,0.35)'; }}
+                  >
+                    <GraduationCap size={13}/> Xem gia sư
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="dash-my-class-actions">
-            <StatusBadge status={cls.status}/>
-            {(cls.status === 'OPEN' || cls.hasPendingProposals) && (
-              <button onClick={() => onViewTutors(cls)} style={{
-                display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px',
-                borderRadius: 8, border: '1.5px solid rgba(99,102,241,0.3)',
-                background: 'rgba(99,102,241,0.06)', color: '#6366f1',
-                fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-              }}>
-                <GraduationCap size={12}/> GS đề xuất
-              </button>
-            )}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -202,6 +251,32 @@ export const StudentRequestsPage = () => {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [classesKey]);
+
+  // Auto-open tutor modal khi redirect từ notification
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const notifTimestamp = (location.state as any)?.notifTimestamp;
+  const stateEntityId = (location.state as any)?.entityId;
+
+  useEffect(() => {
+    if (!classes.length || tutorsModal) return;
+
+    const highlightId = searchParams.get('highlightId') || stateEntityId;
+    if (!highlightId) return;
+
+    // Tìm class theo classId trước
+    let targetClass = classes.find(c => c.id === highlightId);
+
+    // Nếu không tìm thấy theo classId → highlightId có thể là applicationId
+    // → tìm class có pending proposals
+    if (!targetClass) {
+      targetClass = classes.find(c => c.hasPendingProposals);
+    }
+
+    if (targetClass && (targetClass.hasPendingProposals || targetClass.status === 'OPEN')) {
+      setTutorsModal(targetClass);
+    }
+  }, [classes, searchParams, notifTimestamp]);
 
   const showToast = (type: 'success' | 'error', msg: string) => {
     setToast({ type, msg });

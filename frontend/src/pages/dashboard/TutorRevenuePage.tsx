@@ -95,7 +95,7 @@ export default function TutorRevenuePage() {
               <div className="tr-alert-content">
                 <h3>Thiếu thông tin nhận lương</h3>
                 <p>Bạn cần cung cấp Số tài khoản Ngân hàng. Kế toán sẽ tự động dải ngân thù lao vào mùng 5 hàng tháng mà bạn không cần phải rút tiền thủ công.</p>
-                <button className="tr-alert-btn" onClick={() => navigate('/profile')}>Cập nhật ngay</button>
+                <button className="tr-alert-btn" onClick={() => navigate('/tutor/profile')}>Cập nhật ngay</button>
               </div>
             </div>
           )}
