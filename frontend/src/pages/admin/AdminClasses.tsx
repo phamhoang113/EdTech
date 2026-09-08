@@ -364,7 +364,8 @@ function ClassDetailDrawer({
               {cls.status === 'OPEN' && (
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(generateCopyText(cls));
+                    const singleText = `${generateCopyText(cls)}\n\n👉 Gia sư nhận lớp đăng ký tại: https://giasutinhhoa.com`;
+                    navigator.clipboard.writeText(singleText);
                     show('success', 'Đã copy tin đăng!');
                   }}
                   style={{ marginLeft: 'auto', padding: '4px 10px', fontSize: '0.8rem', borderRadius: 6, background: 'rgba(99,102,241,0.1)', color: '#6366f1', border: '1px solid currentColor', cursor: 'pointer', fontWeight: 600 }}
@@ -1095,7 +1096,17 @@ export function AdminClasses() {
               showToast('error', 'Không có lớp đang mở để copy');
               return;
             }
-            const allText = openClasses.map(c => generateCopyText(c)).join('\n\n━━━━━━━━━━━━━━━━━━━━\n\n');
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const dateStr = `${day}/${month}/${year}`;
+
+            const header = `🔥 LỚP MỚI CẦN GIAO TRONG NGÀY ${dateStr} 🔥\n\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+            const body = openClasses.map(c => generateCopyText(c)).join('\n\n━━━━━━━━━━━━━━━━━━━━\n\n');
+            const footer = `\n\n━━━━━━━━━━━━━━━━━━━━\n\n👉 Gia sư xem chi tiết & nhận lớp trực tiếp tại:\n🌐 Website: https://giasutinhhoa.com\n✨ Gia Sư Tinh Hoa — Nền tảng kết nối gia sư uy tín hàng đầu!`;
+
+            const allText = header + body + footer;
             navigator.clipboard.writeText(allText);
             showToast('success', `Đã copy ${openClasses.length} lớp đang mở!`);
           }}
